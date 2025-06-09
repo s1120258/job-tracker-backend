@@ -4,5 +4,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./app ./app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# install pg_isready
+RUN apt-get update && apt-get install -y postgresql-client
+
+COPY . .
+RUN chmod +x /app/wait_for_db.sh

@@ -2,23 +2,34 @@ version: "3.9"
 services:
   backend:
     build: .
+    command:
+      [
+        "/app/wait_for_db.sh",
+        "db",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
     ports:
       - "8000:8000"
-    volumes:
-      - ./app:/app
-    env_file:
-      - .env
     depends_on:
       - db
+    volumes:
+      - .:/app
 
   db:
     image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: jobtracker
+    restart: always
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: job_tracker
     volumes:
       - pgdata:/var/lib/postgresql/data
 

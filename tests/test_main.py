@@ -8,3 +8,13 @@ def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "Hello from Job Tracker API"}
+
+def test_ping_db():
+    response = client.get("/ping-db")
+    assert response.status_code == 200
+    data = response.json()
+    assert "db_connected" in data
+    if data["db_connected"]:
+        assert data["db_connected"] == True
+    else:
+        assert "error" in data and isinstance(data["error"], str)
