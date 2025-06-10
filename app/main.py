@@ -19,6 +19,7 @@ app.add_middleware(
 def read_root():
     return {"message": "Hello from Job Tracker API"}
 
+
 @app.get("/ping-db")
 def ping_db():
     try:
