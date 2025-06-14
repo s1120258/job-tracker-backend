@@ -29,8 +29,8 @@ pip install 'python-jose[cryptography]' 'passlib[bcrypt]'
 ## 🐳 Running with Docker Compose
 
 ```sh
-docker-compose up --build          # Launch Docker containers
-docker-compose down                # Stop containers
+docker compose up --build          # Launch Docker containers
+docker compose down                # Stop containers
 ```
 
 - The backend will be available at [http://localhost:8000](http://localhost:8000)
@@ -59,9 +59,21 @@ alembic init app/db/migrations
 **Run migrations (inside the backend container):**
 
 ```sh
-docker-compose exec backend bash   # Enter the backend container (while docker-compose is running)
-alembic revision --autogenerate -m "create users table"   # Create a new migration
+docker compose exec backend bash   # Enter the backend container (while docker-compose is running)
+alembic revision --autogenerate -m "create new table"   # Create a new migration
 alembic upgrade head               # Apply migrations
+```
+
+---
+
+### ⚠️ Important: After `docker compose down -v`
+
+Running `docker compose down -v` deletes your database volume and all data/tables.
+**After bringing containers back up, you must re-apply migrations to recreate the tables:**
+
+```sh
+docker compose up -d
+docker compose exec backend alembic upgrade head
 ```
 
 ---
