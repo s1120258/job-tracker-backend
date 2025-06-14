@@ -42,8 +42,9 @@ docker compose down                # Stop containers
 
 ```sh
 pytest                             # Run tests
-black app/                         # Format code
-isort app/                         # Sort imports
+black .                            # Format code (locally)
+isort .                            # Sort imports (locally)
+docker compose run --rm backend sh -c "black ."   # Run Black in Docker
 ```
 
 ---
