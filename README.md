@@ -17,6 +17,8 @@ This project provides an API-first backend system with resume parsing, vector-ba
 - Match resumes to job descriptions using vector similarity
 - Get actionable LLM reviews
 - Dashboard-ready backend
+- Centralized configuration management
+- API versioning support
 
 ---
 
@@ -24,6 +26,7 @@ This project provides an API-first backend system with resume parsing, vector-ba
 
 - **Backend:** FastAPI (async, API-first)
 - **Database:** PostgreSQL, SQLAlchemy + Alembic
+- **Configuration:** Pydantic Settings with environment variable support
 - **Resume Parsing:** PyPDF2, python-docx, optional spaCy
 - **LLM & Embeddings:** OpenAI API or local (LangChain), sentence-transformers
 - **Vector DB:** ChromaDB / pgvector / FAISS
@@ -38,3 +41,12 @@ This project provides an API-first backend system with resume parsing, vector-ba
 - ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
 - 🧪 [Testing & CI](docs/TESTING.md)
 - 🤝 [Contributing](docs/CONTRIBUTING.md)
+
+---
+
+## 🔗 API Endpoints
+
+- **Base URL:** `http://localhost:8000/api/v1`
+- **Authentication:** `/api/v1/auth/register`, `/api/v1/auth/token`, `/api/v1/auth/me`
+- **API Documentation:** `http://localhost:8000/docs`
+- **OpenAPI Schema:** `http://localhost:8000/api/v1/openapi.json`

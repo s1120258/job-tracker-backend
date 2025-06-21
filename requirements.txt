@@ -5,6 +5,10 @@ fastapi==0.110.3
 uvicorn[standard]==0.30.0
 email-validator==2.1.1
 
+# Configuration
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+
 # Database
 sqlalchemy==2.0.30
 psycopg2-binary==2.9.9

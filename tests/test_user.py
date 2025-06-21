@@ -40,7 +40,7 @@ def test_register_success(user_create, user_db):
     with patch("app.crud.user.get_user_by_email", return_value=None), patch(
         "app.crud.user.create_user", return_value=user_db
     ):
-        response = client.post("/auth/register", json=user_create)
+        response = client.post("/api/v1/auth/register", json=user_create)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["email"] == user_create["email"]
@@ -49,7 +49,7 @@ def test_register_success(user_create, user_db):
 def test_register_existing_email(user_create, user_db):
     """Test registration with an existing email."""
     with patch("app.crud.user.get_user_by_email", return_value=user_db):
-        response = client.post("/auth/register", json=user_create)
+        response = client.post("/api/v1/auth/register", json=user_create)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()["detail"] == "Email already registered"
 
@@ -83,7 +83,7 @@ def test_login_failures(
         "app.core.security.verify_password", return_value=verify
     ):
         response = client.post(
-            "/auth/token",
+            "/api/v1/auth/token",
             data={"username": email, "password": password},
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -100,7 +100,7 @@ def test_login_success(user_db_with_password, token_response):
         return_value=token_response["access_token"],
     ):
         response = client.post(
-            "/auth/token",
+            "/api/v1/auth/token",
             data={"username": "test@example.com", "password": "testpass"},
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -110,19 +110,6 @@ def test_login_success(user_db_with_password, token_response):
         assert data["token_type"] == "bearer"
 
 
-class UserWithPassword(UserRead):
-    hashed_password: str
-
-    class Config:
-        orm_mode = True
-
-
-@pytest.fixture
-def user_db_with_password():
-    # This object works for both login and /me
-    return UserWithPassword(id=1, email="test@example.com", hashed_password="hashed")
-
-
 def test_me_success(user_db_with_password, token_response):
     """Test /me endpoint with valid token."""
     # Only patch user and password verification
@@ -130,7 +117,7 @@ def test_me_success(user_db_with_password, token_response):
         "app.crud.user.get_user_by_email", return_value=user_db_with_password
     ), patch("app.core.security.verify_password", return_value=True):
         login_resp = client.post(
-            "/auth/token",
+            "/api/v1/auth/token",
             data={"username": "test@example.com", "password": "testpass"},
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -140,7 +127,7 @@ def test_me_success(user_db_with_password, token_response):
             "app.crud.user.get_user_by_email", return_value=user_db_with_password
         ):
             response = client.get(
-                "/auth/me", headers={"Authorization": f"Bearer {token}"}
+                "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
             )
             print("Response status:", response.status_code)
             print("Response body:", response.json())
@@ -153,7 +140,7 @@ def test_me_invalid_token():
     """Test /me endpoint with invalid token."""
     with patch("app.crud.user.get_user_by_email", return_value=None):
         response = client.get(
-            "/auth/me", headers={"Authorization": "Bearer invalidtoken"}
+            "/api/v1/auth/me", headers={"Authorization": "Bearer invalidtoken"}
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.json()["detail"] == "Could not validate credentials"
@@ -171,6 +158,6 @@ def test_register_missing_fields(payload, missing_field):
     with patch("app.crud.user.get_user_by_email", return_value=None), patch(
         "app.crud.user.create_user", return_value=None
     ):
-        response = client.post("/auth/register", json=payload)
+        response = client.post("/api/v1/auth/register", json=payload)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert missing_field in str(response.json())

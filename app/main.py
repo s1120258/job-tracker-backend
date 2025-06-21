@@ -5,19 +5,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db.session import SessionLocal
 from app.api import routes_auth
+from app.core.config import settings
 
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(routes_auth.router, prefix="/auth", tags=["auth"])
+app.include_router(
+    routes_auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"]
+)
 
 
 @app.get("/")

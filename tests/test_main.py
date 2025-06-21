@@ -22,3 +22,9 @@ def test_ping_db():
         assert data["db_connected"] == True
     else:
         assert "error" in data and isinstance(data["error"], str)
+
+
+def test_api_versioning():
+    """Test that API routes are properly versioned"""
+    response = client.get("/api/v1/openapi.json")
+    assert response.status_code == 200

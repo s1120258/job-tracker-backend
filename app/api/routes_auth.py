@@ -7,9 +7,11 @@ from app.db.session import get_db
 from app.crud import user as crud_user
 from app.schemas.user import UserCreate, UserRead, Token
 from app.core import security
+from app.core.config import settings
+from typing import Optional
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/token")
 
 
 @router.post("/register", response_model=UserRead)
@@ -47,9 +49,9 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(
-            token, security.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
+        email: Optional[str] = payload.get("sub")
         if email is None:
             raise credentials_exception
     except JWTError:
