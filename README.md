@@ -1,103 +1,40 @@
-# Job Tracker Backend
+# 📂 Job Application Tracker + Resume Matcher
 
-A FastAPI backend for managing job applications, storing resumes, and providing AI-powered resume matching and feedback using LLMs.
-
----
-
-## 🚀 Features
-
-- User authentication with JWT
-- Job application management
-- Resume storage
-- AI-powered resume matching and feedback (LLM integration)
-- RESTful API with automatic docs (Swagger UI)
+A FastAPI-based backend to help users track job applications, analyze resumes, and receive AI-powered feedback and match scoring against job descriptions.
 
 ---
 
-## 🛠️ Setup
+## 🎯 Overview
 
-```sh
-python -m venv venv                # Create a virtual environment
-source venv/bin/activate           # Activate the virtual environment (Linux/Mac)
-pip install "fastapi[all]" uvicorn sqlalchemy psycopg2-binary alembic python-dotenv
-pip install openai pytest black isort
-pip install 'python-jose[cryptography]' 'passlib[bcrypt]'
-```
+This project provides an API-first backend system with resume parsing, vector-based matching, and LLM feedback. Ideal for developers building intelligent job tracking platforms.
 
 ---
 
-## 🐳 Running with Docker Compose
+## 🚀 Key Features
 
-```sh
-docker compose up --build          # Launch Docker containers
-docker compose down                # Stop containers
-```
-
-- The backend will be available at [http://localhost:8000](http://localhost:8000)
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Track job applications with custom metadata
+- Upload resumes and get LLM-generated improvement feedback
+- Match resumes to job descriptions using vector similarity
+- Get actionable LLM reviews
+- Dashboard-ready backend
 
 ---
 
-## 🧪 Testing & Formatting
+## 🧰 Tech Stack
 
-```sh
-pytest                             # Run tests
-black .                            # Format code (locally)
-isort .                            # Sort imports (locally)
-docker compose run --rm backend sh -c "black ."   # Run Black in Docker
-```
-
----
-
-## 🗄️ Database Migrations
-
-**Initialize Alembic (first time only):**
-
-```sh
-alembic init app/db/migrations
-```
-
-**Run migrations (inside the backend container):**
-
-```sh
-docker compose exec backend bash   # Enter the backend container (while docker-compose is running)
-alembic revision --autogenerate -m "create new table"   # Create a new migration
-alembic upgrade head               # Apply migrations
-```
+- **Backend:** FastAPI (async, API-first)
+- **Database:** PostgreSQL, SQLAlchemy + Alembic
+- **Resume Parsing:** PyPDF2, python-docx, optional spaCy
+- **LLM & Embeddings:** OpenAI API or local (LangChain), sentence-transformers
+- **Vector DB:** ChromaDB / pgvector / FAISS
+- **Authentication:** JWT or OAuth2
+- **Dev Tools:** Docker Compose, pytest, black, CI/CD (GitHub Actions)
 
 ---
 
-### ⚠️ Important: After `docker compose down -v`
+## 📄 Documentation
 
-Running `docker compose down -v` deletes your database volume and all data/tables.
-**After bringing containers back up, you must re-apply migrations to recreate the tables:**
-
-```sh
-docker compose up -d
-docker compose exec backend alembic upgrade head
-```
-
----
-
-## 📂 Project Structure
-
-```
-app/
-  ├── api/           # API route definitions
-  ├── core/          # Security, config, and core logic
-  ├── crud/          # Database CRUD operations
-  ├── db/            # Database setup and migrations
-  ├── models/        # SQLAlchemy models
-  ├── schemas/       # Pydantic schemas
-  └── main.py        # FastAPI entrypoint
-```
-
----
-
-## 📝 Notes
-
-- Make sure your `.env` file is set up with the correct database credentials if needed.
-- When running locally (not in Docker), update `alembic.ini` to use `localhost` as the DB host.
-- When running in Docker Compose, use `db` as the DB host.
-
----
+- ➕ [Full Setup Guide](docs/SETUP.md)
+- ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
+- 🧪 [Testing & CI](docs/TESTING.md)
+- 🤝 [Contributing](docs/CONTRIBUTING.md)
