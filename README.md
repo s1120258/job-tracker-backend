@@ -36,12 +36,11 @@ This project provides an API-first backend system with resume parsing, vector-ba
 
 ## 📄 Documentation
 
+- 📑 [API Specification](docs/API_SPEC.md)
+- 🗂️ [Data Model](docs/DATA_MODEL.md)
 - ➕ [Full Setup Guide](docs/SETUP.md)
 - ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
 - 🧪 [Testing & CI](docs/TESTING.md)
-- 🤝 [Contributing](docs/CONTRIBUTING.md)
-- 📑 [API Specification](docs/API_SPEC.md)
-- 🗂️ [Data Model & ERD](docs/DATA_MODEL.md)
 
 ---
 

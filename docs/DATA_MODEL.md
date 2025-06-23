@@ -18,7 +18,8 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **email**: String, unique
 - **hashed_password**: String
 - **created_at**: Timestamp
-- **Relations**: One user has one resume and many applications
+
+  **Relations**: One user has one resume and many applications
 
 ### resumes
 
@@ -30,7 +31,8 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **extracted_text**: Text
 - **llm_feedback**: Text
 - **embedding**: Vector(1536)
-- **Relations**: One resume per user (enforced in logic)
+
+  **Relations**: One resume per user (enforced in logic)
 
 ### applications
 
@@ -47,14 +49,16 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **notes**: Text
 - **created_at**: Timestamp
 - **updated_at**: Timestamp
-- **Relations**: Many applications per user; one match_score per application
+
+  **Relations**: Many applications per user; one match_score per application
 
 ### match_scores
 
 - **id**: UUID, primary key
 - **application_id**: UUID, foreign key to applications
 - **score**: Float (similarity score)
-- **Relations**: One match score per application
+
+  **Relations**: One match score per application
 
 ---
 
