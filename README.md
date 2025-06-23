@@ -1,69 +1,60 @@
 # 📂 Job Application Tracker + Resume Matcher
 
-A FastAPI-based backend to help users track job applications, analyze resumes, and receive AI-powered feedback and match scoring against job descriptions.
+A FastAPI-based backend to help users track job applications, upload and analyze resumes, and receive AI-powered feedback and matching scores against job descriptions.
 
 ---
 
 ## 🎯 Overview
 
-This project provides an API-first backend system with resume parsing, vector-based matching, and LLM feedback. Ideal for developers building intelligent job tracking platforms.
+This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes resume parsing, vector-based matching, and LLM-generated insights to streamline and enhance job search workflows.
 
 ---
 
 ## 🚀 Key Features
 
-#### ✅ Job Application Tracking
+### ✅ Job Application Tracking  
+Create, update, and manage job applications with status fields, notes, and manually entered job descriptions.
 
-- Create, update, and manage job applications with status, notes, and manually entered job descriptions.
+### 📄 Resume Upload & AI Feedback  
+Upload a single resume (PDF/DOCX), extract its content automatically, and receive actionable improvement suggestions from an LLM.
 
-#### 📄 Resume Upload & AI Feedback
+### 🤖 Resume-to-Job Matching  
+Leverage vector embeddings (OpenAI or sentence-transformers with pgvector) to compare resumes with job descriptions and score compatibility.
 
-- Upload a single resume (PDF/DOCX), automatically extract text, and receive actionable feedback from an LLM.
+### 📊 Analytics-Ready API  
+Built-in backend analytics endpoints to support dashboards — includes application status breakdowns, match score summaries, and trend analysis.
 
-#### 🤖 Resume-to-Job Matching
+### 🔐 Secure Authentication  
+JWT-based user authentication system secures all protected API routes.
 
-- Compare resume and job descriptions using vector embeddings (OpenAI/sentence-transformers + pgvector) and score match quality.
+### ⚙️ Modular & Configurable  
+Environment-driven configuration using Pydantic, with easy customization for different environments.
 
-#### 📊 Analytics-Ready API
-
-- Backend API endpoints to support frontend dashboards — including application status summaries, time trends, and match score statistics.
-
-#### 🔐 Authentication & Authorization
-
-- Secure JWT-based user authentication for all protected routes.
-
-#### ⚙️ Modular & Configurable
-
-- Environment-based config using Pydantic settings; ready for extension.
-
-#### 🧪 Production-Ready Dev Workflow
-
-- Docker Compose setup, full test suite with pytest, formatting with `black`, and CI/CD via GitHub Actions.
+### 🧪 Developer-First Workflow  
+Docker Compose for environment setup, unit and integration tests via `pytest`, code formatting with `black`, and CI/CD powered by GitHub Actions.
 
 ---
 
 ## 🧰 Tech Stack
 
 - **Backend:** FastAPI (async, API-first)
-- **Database:** PostgreSQL, SQLAlchemy + Alembic
-- **Configuration:** Pydantic Settings with environment variable support
+- **Database:** PostgreSQL with SQLAlchemy & Alembic
+- **Configuration:** Pydantic Settings + `.env` support
 - **Resume Parsing:** PyPDF2, python-docx
 - **LLM & Embeddings:** OpenAI API, sentence-transformers, pgvector
 - **Authentication:** JWT
-- **Dev Tools:** Docker Compose, pytest, black, CI/CD (GitHub Actions)
+- **Developer Tools:** Docker Compose, pytest, black, GitHub Actions
 
 ---
 
 ## 📄 Documentation
 
-- 📑 [API Specification](docs/API_SPEC.md)
-- 🗂️ [Data Model](docs/DATA_MODEL.md)
-- ➕ [Full Setup Guide](docs/SETUP.md)
-- ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
-- 🧪 [Testing & CI](docs/TESTING.md)
+- 📑 [API Specification](docs/API_SPEC.md)  
+- 🗂️ [Data Model](docs/DATA_MODEL.md)  
+- ➕ [Full Setup Guide](docs/SETUP.md)  
+- ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)  
+- 🧪 [Testing & CI](docs/TESTING.md)  
 
 ---
 
-For API endpoints, setup instructions, and detailed usage, please refer to the linked documentation above.
-
----
+For API usage, environment setup, and contribution guidelines, please refer to the linked documentation above.
