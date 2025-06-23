@@ -17,10 +17,4 @@ docker-compose.yml # Docker orchestration
 
 ---
 
-## Notes
-
-- The architecture separates concerns cleanly for scalability and maintainability.
-- Use `app/services/` for any custom logic that doesn't fit into CRUD directly.
-- `main.py` initializes the app with routers, middleware, and dependencies.
-- Tests follow a TDD-ready layout with fixtures and coverage in mind.
-- Environment-specific settings can be configured in `.env` and read through `app/core/config.py`.
+For API endpoints, setup instructions, and feature details, see the [README](../README.md) and other docs in the `docs/` folder.

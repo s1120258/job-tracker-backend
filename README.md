@@ -10,13 +10,13 @@ This project provides an API-first backend system with resume parsing, vector-ba
 
 ---
 
-## 🚀 Key Features
+## 🚀 MVP Features
 
-- Track job applications with custom metadata
-- Upload resumes and get LLM-generated improvement feedback
-- Match resumes to job descriptions using vector similarity
+- Track job applications with custom metadata and manual job description input
+- Upload resumes (PDF/DOCX), extract text, and get LLM-generated feedback
+- Match resumes to job descriptions using vector similarity (OpenAI/pgvector)
 - Get actionable LLM reviews
-- Dashboard-ready backend
+- Dashboard-ready backend analytics (API only)
 - Centralized configuration management
 - API versioning support
 
@@ -27,10 +27,9 @@ This project provides an API-first backend system with resume parsing, vector-ba
 - **Backend:** FastAPI (async, API-first)
 - **Database:** PostgreSQL, SQLAlchemy + Alembic
 - **Configuration:** Pydantic Settings with environment variable support
-- **Resume Parsing:** PyPDF2, python-docx, optional spaCy
-- **LLM & Embeddings:** OpenAI API or local (LangChain), sentence-transformers
-- **Vector DB:** ChromaDB / pgvector / FAISS
-- **Authentication:** JWT or OAuth2
+- **Resume Parsing:** PyPDF2, python-docx
+- **LLM & Embeddings:** OpenAI API, sentence-transformers, pgvector
+- **Authentication:** JWT
 - **Dev Tools:** Docker Compose, pytest, black, CI/CD (GitHub Actions)
 
 ---
@@ -41,12 +40,11 @@ This project provides an API-first backend system with resume parsing, vector-ba
 - ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
 - 🧪 [Testing & CI](docs/TESTING.md)
 - 🤝 [Contributing](docs/CONTRIBUTING.md)
+- 📑 [API Specification](docs/API_SPEC.md)
+- 🗂️ [Data Model & ERD](docs/DATA_MODEL.md)
 
 ---
 
-## 🔗 API Endpoints
+For API endpoints, setup instructions, and detailed usage, please refer to the linked documentation above.
 
-- **Base URL:** `http://localhost:8000/api/v1`
-- **Authentication:** `/api/v1/auth/register`, `/api/v1/auth/token`, `/api/v1/auth/me`
-- **API Documentation:** `http://localhost:8000/docs`
-- **OpenAPI Schema:** `http://localhost:8000/api/v1/openapi.json`
+---

@@ -23,7 +23,7 @@ docker compose down               # Stop all containers
 
 App available at: [http://localhost:8000](http://localhost:8000)
 Docs available at: [http://localhost:8000/docs](http://localhost:8000/docs)
-API docs available at: [http://localhost:8000/api/v1/openapi.json](http://localhost:8000/api/v1/openapi.json)
+API docs available at: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
 
 ---
 
@@ -131,3 +131,7 @@ services:
 - Copy `env.example` to `.env` and customize as needed
 - Environment variables always override `.env` file values
 - Missing values fall back to defaults in `config.py`
+
+---
+
+For API usage and project details, see the [README](../README.md) and other docs in the `docs/` folder.

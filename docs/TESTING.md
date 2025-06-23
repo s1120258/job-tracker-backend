@@ -49,3 +49,7 @@ Typical CI pipeline includes:
 - Run tests
 
 You can trigger CI runs automatically on pull requests and commits.
+
+---
+
+For API usage and project details, see the [README](../README.md) and other docs in the `docs/` folder.
