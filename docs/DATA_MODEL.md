@@ -1,4 +1,4 @@
-# 🗂️ Data Model (ERD)
+![job_tracker_schema](https://github.com/user-attachments/assets/cd7c64e8-c65b-4079-869d-eb91d343a53e)# 🗂️ Data Model (ERD)
 
 This document describes the core data model for the Job Tracker backend. It includes an Entity Relationship Diagram (ERD) and a summary of each main table/entity.
 
@@ -6,9 +6,7 @@ This document describes the core data model for the Job Tracker backend. It incl
 
 ## Entity Relationship Diagram
 
-![Entity Relationship Diagram](./ERD.png)
-
----
+![job_tracker_schema](https://github.com/user-attachments/assets/9aea9b85-a715-4dcc-99aa-e3d4a996997e)
 
 ## Table Summaries
 
