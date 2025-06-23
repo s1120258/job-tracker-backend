@@ -10,15 +10,28 @@ This project provides an API-first backend system with resume parsing, vector-ba
 
 ---
 
-## 🚀 MVP Features
+## 🚀 Key Features
 
-- Track job applications with custom metadata and manual job description input
-- Upload resumes (PDF/DOCX), extract text, and get LLM-generated feedback
-- Match resumes to job descriptions using vector similarity (OpenAI/pgvector)
-- Get actionable LLM reviews
-- Dashboard-ready backend analytics (API only)
-- Centralized configuration management
-- API versioning support
+✅ **Job Application Tracking**
+Create, update, and manage job applications with status, notes, and manually entered job descriptions.
+
+📄 **Resume Upload & AI Feedback**
+Upload a single resume (PDF/DOCX), automatically extract text, and receive actionable feedback from an LLM.
+
+🤖 **Resume-to-Job Matching**
+Compare resume and job descriptions using vector embeddings (OpenAI/sentence-transformers + pgvector) and score match quality.
+
+📊 **Analytics-Ready API**
+Backend API endpoints to support frontend dashboards — including application status summaries, time trends, and match score statistics.
+
+🔐 **Authentication & Authorization**
+Secure JWT-based user authentication for all protected routes.
+
+⚙️ **Modular & Configurable**
+Environment-based config using Pydantic settings; ready for extension.
+
+🧪 **Production-Ready Dev Workflow**
+Docker Compose setup, full test suite with pytest, formatting with black, and CI/CD via GitHub Actions.
 
 ---
 
