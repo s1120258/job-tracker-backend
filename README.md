@@ -18,8 +18,8 @@ This project provides an API-first backend system designed for developers buildi
 ### 📄 Resume Upload & AI Feedback  
 - Upload a single resume (PDF/DOCX), extract its content automatically, and receive actionable improvement suggestions from an LLM.
 
-### 🤖 Resume-to-Job Matching  
-- Leverage vector embeddings (OpenAI or sentence-transformers with pgvector) to compare resumes with job descriptions and score compatibility.
+### 🤖 AI Resume-to-Job Matching  
+- Leverage vector embeddings (OpenAI with pgvector) to compare resumes with job descriptions and score compatibility.
 
 ### 📊 Analytics-Ready API  
 - Built-in backend analytics endpoints to support dashboards — includes application status breakdowns, match score summaries, and trend analysis.
@@ -41,7 +41,7 @@ This project provides an API-first backend system designed for developers buildi
 - **Database:** PostgreSQL with SQLAlchemy & Alembic
 - **Configuration:** Pydantic Settings + `.env` support
 - **Resume Parsing:** PyPDF2, python-docx
-- **LLM & Embeddings:** OpenAI API, sentence-transformers, pgvector
+- **LLM & Embeddings:** OpenAI API, pgvector
 - **Authentication:** JWT
 - **Developer Tools:** Docker Compose, pytest, black, GitHub Actions
 
