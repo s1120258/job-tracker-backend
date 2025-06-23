@@ -12,33 +12,33 @@ This project provides an API-first backend system with resume parsing, vector-ba
 
 ## 🚀 Key Features
 
-- ✅ **Job Application Tracking**
+### ✅ Job Application Tracking
 
-  Create, update, and manage job applications with status, notes, and manually entered job descriptions.
+- Create, update, and manage job applications with status, notes, and manually entered job descriptions.
 
-- 📄 **Resume Upload & AI Feedback**
+### 📄 Resume Upload & AI Feedback
 
-  Upload a single resume (PDF/DOCX), automatically extract text, and receive actionable feedback from an LLM.
+- Upload a single resume (PDF/DOCX), automatically extract text, and receive actionable feedback from an LLM.
 
-- 🤖 **Resume-to-Job Matching**
+### 🤖 Resume-to-Job Matching
 
-  Compare resume and job descriptions using vector embeddings (OpenAI/sentence-transformers + pgvector) and score match quality.
+- Compare resume and job descriptions using vector embeddings (OpenAI/sentence-transformers + pgvector) and score match quality.
 
-- 📊 **Analytics-Ready API**
+### 📊 Analytics-Ready API
 
-  Backend API endpoints to support frontend dashboards — including application status summaries, time trends, and match score statistics.
+- Backend API endpoints to support frontend dashboards — including application status summaries, time trends, and match score statistics.
 
-- 🔐 **Authentication & Authorization**
+### 🔐 Authentication & Authorization
 
-  Secure JWT-based user authentication for all protected routes.
+- Secure JWT-based user authentication for all protected routes.
 
-- ⚙️ **Modular & Configurable**
+### ⚙️ Modular & Configurable
 
-  Environment-based config using Pydantic settings; ready for extension.
+- Environment-based config using Pydantic settings; ready for extension.
 
-- 🧪 **Production-Ready Dev Workflow**
+### 🧪 Production-Ready Dev Workflow
 
-  Docker Compose setup, full test suite with pytest, formatting with `black`, and CI/CD via GitHub Actions.
+- Docker Compose setup, full test suite with pytest, formatting with `black`, and CI/CD via GitHub Actions.
 
 ---
 
