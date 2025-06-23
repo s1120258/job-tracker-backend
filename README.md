@@ -13,25 +13,25 @@ This project provides an API-first backend system designed for developers buildi
 ## 🚀 Key Features
 
 ### ✅ Job Application Tracking  
-Create, update, and manage job applications with status fields, notes, and manually entered job descriptions.
+- Create, update, and manage job applications with status fields, notes, and manually entered job descriptions.
 
 ### 📄 Resume Upload & AI Feedback  
-Upload a single resume (PDF/DOCX), extract its content automatically, and receive actionable improvement suggestions from an LLM.
+- Upload a single resume (PDF/DOCX), extract its content automatically, and receive actionable improvement suggestions from an LLM.
 
 ### 🤖 Resume-to-Job Matching  
-Leverage vector embeddings (OpenAI or sentence-transformers with pgvector) to compare resumes with job descriptions and score compatibility.
+- Leverage vector embeddings (OpenAI or sentence-transformers with pgvector) to compare resumes with job descriptions and score compatibility.
 
 ### 📊 Analytics-Ready API  
-Built-in backend analytics endpoints to support dashboards — includes application status breakdowns, match score summaries, and trend analysis.
+- Built-in backend analytics endpoints to support dashboards — includes application status breakdowns, match score summaries, and trend analysis.
 
 ### 🔐 Secure Authentication  
-JWT-based user authentication system secures all protected API routes.
+- JWT-based user authentication system secures all protected API routes.
 
 ### ⚙️ Modular & Configurable  
-Environment-driven configuration using Pydantic, with easy customization for different environments.
+- Environment-driven configuration using Pydantic, with easy customization for different environments.
 
 ### 🧪 Developer-First Workflow  
-Docker Compose for environment setup, unit and integration tests via `pytest`, code formatting with `black`, and CI/CD powered by GitHub Actions.
+- Docker Compose for environment setup, unit and integration tests via `pytest`, code formatting with `black`, and CI/CD powered by GitHub Actions.
 
 ---
 
