@@ -1,6 +1,7 @@
 # app/schemas/user.py
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr
+from uuid import UUID
 
 
 class UserCreate(BaseModel):
@@ -9,12 +10,16 @@ class UserCreate(BaseModel):
 
 
 class UserRead(BaseModel):
-    id: int
+    id: UUID
     email: EmailStr
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: str | None = None
+
+
+class RefreshToken(BaseModel):
+    refresh_token: str
+    token_type: str = "bearer"

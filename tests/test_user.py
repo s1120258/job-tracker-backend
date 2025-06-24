@@ -6,6 +6,7 @@ from fastapi import status
 from unittest.mock import patch, MagicMock
 from app.main import app
 from app.schemas.user import UserRead
+from uuid import uuid4
 
 client = TestClient(app)
 
@@ -17,14 +18,14 @@ def user_create():
 
 @pytest.fixture
 def user_db():
-    return UserRead(id=1, email="test@example.com")
+    return UserRead(id=uuid4(), email="test@example.com")
 
 
 @pytest.fixture
 def user_db_with_password():
     # For login endpoint, needs hashed_password
     user = MagicMock()
-    user.id = 1
+    user.id = uuid4()
     user.email = "test@example.com"
     user.hashed_password = "hashed"
     return user
