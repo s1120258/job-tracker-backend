@@ -1,3 +1,5 @@
+# app/models/application.py
+
 from sqlalchemy import Column, String, Date, Enum, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
