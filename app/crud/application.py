@@ -1,3 +1,5 @@
+# app/crud/application.py
+
 from sqlalchemy.orm import Session
 from app.models.application import Application
 from app.schemas.application import ApplicationCreate, ApplicationUpdate
