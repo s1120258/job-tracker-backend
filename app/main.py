@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db.session import SessionLocal
-from app.api import routes_auth
+from app.api import routes_auth, routes_applications
 from app.core.config import settings
 
 
@@ -24,6 +24,9 @@ app.add_middleware(
 
 app.include_router(
     routes_auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"]
+)
+app.include_router(
+    routes_applications.router, prefix=f"{settings.API_V1_STR}", tags=["applications"]
 )
 
 
