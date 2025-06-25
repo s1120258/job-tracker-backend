@@ -122,8 +122,13 @@ def test_delete_resume_not_found_unit(fake_user):
 
 
 def test_get_resume_feedback_general(fake_user):
-    feedback = ["Add more details to your experience section.", "Include relevant programming languages."]
-    with patch("app.services.resume_feedback.get_general_feedback", return_value=feedback):
+    feedback = [
+        "Add more details to your experience section.",
+        "Include relevant programming languages.",
+    ]
+    with patch(
+        "app.services.resume_feedback.get_general_feedback", return_value=feedback
+    ):
         response = client.get("/api/v1/resume/feedback")
     assert response.status_code == 200
     data = response.json()
@@ -134,10 +139,13 @@ def test_get_resume_feedback_general(fake_user):
 def test_get_resume_feedback_job_specific(fake_user):
     feedback = [
         "Emphasize experience with cloud technologies, as required by the job description.",
-        "Highlight teamwork and communication skills."
+        "Highlight teamwork and communication skills.",
     ]
     job_excerpt = "We are looking for a software engineer with experience in AWS and team projects."
-    with patch("app.services.resume_feedback.get_job_specific_feedback", return_value=(feedback, job_excerpt)):
+    with patch(
+        "app.services.resume_feedback.get_job_specific_feedback",
+        return_value=(feedback, job_excerpt),
+    ):
         response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
     assert response.status_code == 200
     data = response.json()
