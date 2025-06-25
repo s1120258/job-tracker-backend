@@ -50,6 +50,7 @@ docker compose exec backend alembic upgrade head
 
 ```bash
 docker compose exec db psql -U postgres -d job_tracker -c '\dt'
+docker compose exec db psql -U postgres -d job_tracker -c '\d tablename'
 ```
 
 ---
