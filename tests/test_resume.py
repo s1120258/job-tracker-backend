@@ -132,8 +132,9 @@ def test_get_resume_feedback_general(fake_user):
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
     )
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
-         patch("app.services.resume_feedback.get_general_feedback", return_value=feedback):
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
+        "app.services.resume_feedback.get_general_feedback", return_value=feedback
+    ):
         response = client.get("/api/v1/resume/feedback")
     assert response.status_code == 200
     data = response.json()
@@ -153,8 +154,10 @@ def test_get_resume_feedback_job_specific(fake_user):
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
     )
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
-         patch("app.services.resume_feedback.get_job_specific_feedback", return_value=(feedback, job_excerpt)):
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
+        "app.services.resume_feedback.get_job_specific_feedback",
+        return_value=(feedback, job_excerpt),
+    ):
         response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
     assert response.status_code == 200
     data = response.json()
