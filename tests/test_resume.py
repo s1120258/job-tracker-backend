@@ -30,7 +30,6 @@ def test_upload_resume_pdf_unit(fake_user):
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Extracted PDF text",
-        llm_feedback=None,
     )
     with patch("PyPDF2.PdfReader") as mock_pdf_reader, patch(
         "app.crud.resume.create_or_replace_resume", return_value=fake_resume
@@ -39,7 +38,7 @@ def test_upload_resume_pdf_unit(fake_user):
             MagicMock(extract_text=lambda: "Extracted PDF text")
         ]
         response = client.post(
-            "/api/v1/resume/upload",
+            "/api/v1/resume",
             files={"file": ("resume.pdf", pdf_bytes, "application/pdf")},
         )
     assert response.status_code == 201
@@ -55,14 +54,13 @@ def test_upload_resume_docx_unit(fake_user):
         file_name="resume.docx",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Extracted DOCX text",
-        llm_feedback=None,
     )
     with patch("docx.Document") as mock_docx, patch(
         "app.crud.resume.create_or_replace_resume", return_value=fake_resume
     ):
         mock_docx.return_value.paragraphs = [MagicMock(text="Extracted DOCX text")]
         response = client.post(
-            "/api/v1/resume/upload",
+            "/api/v1/resume",
             files={
                 "file": (
                     "resume.docx",
@@ -80,7 +78,7 @@ def test_upload_resume_docx_unit(fake_user):
 def test_upload_resume_unsupported_type(fake_user):
     txt_bytes = io.BytesIO(b"plain text")
     response = client.post(
-        "/api/v1/resume/upload",
+        "/api/v1/resume",
         files={"file": ("resume.txt", txt_bytes, "text/plain")},
     )
     assert response.status_code == 400
@@ -93,7 +91,6 @@ def test_get_resume_unit(fake_user):
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
-        llm_feedback="Feedback",
     )
     with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume):
         response = client.get("/api/v1/resume")
@@ -101,7 +98,7 @@ def test_get_resume_unit(fake_user):
     data = response.json()
     assert data["file_name"] == "resume.pdf"
     assert data["extracted_text"] == "Some extracted text"
-    assert data["llm_feedback"] == "Feedback"
+    assert "llm_feedback" not in data
 
 
 def test_get_resume_not_found_unit(fake_user):
@@ -122,3 +119,28 @@ def test_delete_resume_not_found_unit(fake_user):
         response = client.delete("/api/v1/resume")
     assert response.status_code == 404
     assert response.json()["detail"] == "Resume not found"
+
+
+def test_get_resume_feedback_general(fake_user):
+    feedback = ["Add more details to your experience section.", "Include relevant programming languages."]
+    with patch("app.services.resume_feedback.get_general_feedback", return_value=feedback):
+        response = client.get("/api/v1/resume/feedback")
+    assert response.status_code == 200
+    data = response.json()
+    assert "general_feedback" in data
+    assert data["general_feedback"] == feedback
+
+
+def test_get_resume_feedback_job_specific(fake_user):
+    feedback = [
+        "Emphasize experience with cloud technologies, as required by the job description.",
+        "Highlight teamwork and communication skills."
+    ]
+    job_excerpt = "We are looking for a software engineer with experience in AWS and team projects."
+    with patch("app.services.resume_feedback.get_job_specific_feedback", return_value=(feedback, job_excerpt)):
+        response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
+    assert response.status_code == 200
+    data = response.json()
+    assert "job_specific_feedback" in data
+    assert data["job_specific_feedback"] == feedback
+    assert data["job_description_excerpt"] == job_excerpt
