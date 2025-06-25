@@ -29,18 +29,27 @@ API docs available at: [http://localhost:8000/openapi.json](http://localhost:800
 
 ## 🗄️ Database Migrations
 
+### Create & Apply Migrations
+
 ```bash
 docker compose exec backend alembic revision --autogenerate -m "Add feature"
 docker compose exec backend alembic upgrade head
 ```
 
-### ⚠️ Note on `docker compose down -v`
+### 🧹 Optional: Reset the Database
 
-This deletes the DB volume. Re-apply migrations afterward:
+If you've made significant changes to your data models or want to start from a clean state, you can recreate the database by removing the volume:
 
 ```bash
+docker compose down -v
 docker compose up -d
 docker compose exec backend alembic upgrade head
+```
+
+### 🧪 Verify Tables
+
+```bash
+docker compose exec db psql -U postgres -d job_tracker -c '\dt'
 ```
 
 ---
