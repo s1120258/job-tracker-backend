@@ -66,3 +66,39 @@ def delete_resume(
     if not deleted:
         raise HTTPException(status_code=404, detail="Resume not found")
     return None
+
+
+@router.get("/resume/feedback")
+def get_resume_feedback_general(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    from app.services.resume_feedback import get_general_feedback
+
+    feedback = get_general_feedback(resume.extracted_text)
+    return {"general_feedback": feedback}
+
+
+@router.get("/resume/feedback/{application_id}")
+def get_resume_feedback_job_specific(
+    application_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    from app.services.resume_feedback import get_job_specific_feedback
+
+    feedback, job_excerpt = get_job_specific_feedback(
+        resume.extracted_text, application_id
+    )
+    return {
+        "job_specific_feedback": feedback,
+        "job_description_excerpt": job_excerpt,
+    }

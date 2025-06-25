@@ -126,9 +126,14 @@ def test_get_resume_feedback_general(fake_user):
         "Add more details to your experience section.",
         "Include relevant programming languages.",
     ]
-    with patch(
-        "app.services.resume_feedback.get_general_feedback", return_value=feedback
-    ):
+    fake_resume = MagicMock(
+        id=uuid4(),
+        file_name="resume.pdf",
+        upload_date="2024-06-15T12:00:00Z",
+        extracted_text="Some extracted text",
+    )
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
+         patch("app.services.resume_feedback.get_general_feedback", return_value=feedback):
         response = client.get("/api/v1/resume/feedback")
     assert response.status_code == 200
     data = response.json()
@@ -142,10 +147,14 @@ def test_get_resume_feedback_job_specific(fake_user):
         "Highlight teamwork and communication skills.",
     ]
     job_excerpt = "We are looking for a software engineer with experience in AWS and team projects."
-    with patch(
-        "app.services.resume_feedback.get_job_specific_feedback",
-        return_value=(feedback, job_excerpt),
-    ):
+    fake_resume = MagicMock(
+        id=uuid4(),
+        file_name="resume.pdf",
+        upload_date="2024-06-15T12:00:00Z",
+        extracted_text="Some extracted text",
+    )
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
+         patch("app.services.resume_feedback.get_job_specific_feedback", return_value=(feedback, job_excerpt)):
         response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
     assert response.status_code == 200
     data = response.json()
