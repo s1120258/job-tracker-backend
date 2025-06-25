@@ -21,7 +21,6 @@ class Resume(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     file_name = Column(String, nullable=False)
     extracted_text = Column(Text, nullable=True)
-    llm_feedback = Column(Text, nullable=True)
     upload_date = Column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )

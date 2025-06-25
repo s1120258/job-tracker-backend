@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/resume/upload", response_model=ResumeRead, status_code=status.HTTP_201_CREATED
+    "/resume", response_model=ResumeRead, status_code=status.HTTP_201_CREATED
 )
 async def upload_resume(
     file: UploadFile = File(...),
@@ -41,11 +41,8 @@ async def upload_resume(
     else:
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
-    # TODO: Call LLM for feedback if desired
-    llm_feedback = None
-
     resume_in = ResumeCreate(
-        file_name=file_name, extracted_text=extracted_text, llm_feedback=llm_feedback
+        file_name=file_name, extracted_text=extracted_text
     )
     db_resume = crud_resume.create_or_replace_resume(
         db, user_id=current_user.id, resume_in=resume_in

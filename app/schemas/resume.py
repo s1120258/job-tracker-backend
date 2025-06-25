@@ -9,7 +9,6 @@ from typing import Optional
 class ResumeCreate(BaseModel):
     file_name: str
     extracted_text: Optional[str] = None
-    llm_feedback: Optional[str] = None
 
 
 class ResumeRead(BaseModel):
@@ -17,7 +16,6 @@ class ResumeRead(BaseModel):
     file_name: str
     upload_date: datetime
     extracted_text: Optional[str] = None
-    llm_feedback: Optional[str] = None
 
     class Config:
         from_attributes = True  # For Pydantic v2
