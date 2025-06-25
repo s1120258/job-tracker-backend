@@ -29,7 +29,6 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **file_name**: String
 - **upload_date**: Timestamp
 - **extracted_text**: Text
-- **llm_feedback**: Text
 - **embedding**: Vector(1536)
 
   **Relations**: One resume per user (enforced in logic)

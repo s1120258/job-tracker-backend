@@ -66,11 +66,13 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ### 2. Resumes
 
-| Method | Path             | Description                                               | Auth |
-| ------ | ---------------- | --------------------------------------------------------- | ---- |
-| POST   | `/resume/upload` | Upload/replace resume (PDF/DOCX)                          | ✅   |
-| GET    | `/resume`        | Get current resume info, extracted text, and LLM feedback | ✅   |
-| DELETE | `/resume`        | Delete current resume                                     | ✅   |
+| Method | Path                                | Description                                      | Auth |
+| ------ | ----------------------------------- | ------------------------------------------------ | ---- |
+| POST   | `/resume`                           | Upload/replace resume (PDF/DOCX)                 | ✅   |
+| GET    | `/resume`                           | Get current resume info and extracted text       | ✅   |
+| DELETE | `/resume`                           | Delete current resume                            | ✅   |
+| GET    | `/resume/feedback`                  | Get general LLM feedback for current resume      | ✅   |
+| GET    | `/resume/feedback/{application_id}` | Get job-specific LLM feedback for current resume | ✅   |
 
 #### Example: Upload Resume
 
@@ -83,8 +85,34 @@ For project overview, setup, and data model details, see the [README](../README.
   "id": "uuid",
   "file_name": "resume.pdf",
   "upload_date": "2024-06-15T12:00:00Z",
-  "extracted_text": "John Doe is a software engineer...",
-  "llm_feedback": "Consider adding more detail to your experience section."
+  "extracted_text": "John Doe is a software engineer..."
+}
+```
+
+#### Example: Get General Feedback
+
+**Response:**
+
+```json
+{
+  "general_feedback": [
+    "Add more details to your experience section.",
+    "Include relevant programming languages."
+  ]
+}
+```
+
+#### Example: Get Job-Specific Feedback
+
+**Response:**
+
+```json
+{
+  "job_specific_feedback": [
+    "Emphasize experience with cloud technologies, as required by the job description.",
+    "Highlight teamwork and communication skills."
+  ],
+  "job_description_excerpt": "We are looking for a software engineer with experience in AWS and team projects."
 }
 ```
 
