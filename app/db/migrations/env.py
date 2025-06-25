@@ -9,7 +9,7 @@ from alembic import context
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from app.db.base_class import Base
-from app.models import user, application  # Import all models here
+from app.models import user, application, resume  # Import all models here
 from app.core.config import settings
 
 # Build DB URL from settings

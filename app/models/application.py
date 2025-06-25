@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.base_class import Base
 
 
@@ -33,7 +33,11 @@ class Application(Base):
     interview_date = Column(Date, nullable=True)
     offer_date = Column(Date, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     user = relationship("User", back_populates="applications")

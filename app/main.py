@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db.session import SessionLocal
-from app.api import routes_auth, routes_applications
+from app.api import routes_auth, routes_applications, routes_resumes
 from app.core.config import settings
 
 
@@ -27,6 +27,9 @@ app.include_router(
 )
 app.include_router(
     routes_applications.router, prefix=f"{settings.API_V1_STR}", tags=["applications"]
+)
+app.include_router(
+    routes_resumes.router, prefix=f"{settings.API_V1_STR}", tags=["resumes"]
 )
 
 

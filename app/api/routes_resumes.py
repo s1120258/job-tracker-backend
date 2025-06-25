@@ -1,0 +1,75 @@
+# app/api/routes_resumes.py
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from sqlalchemy.orm import Session
+from typing import List
+from uuid import UUID
+from app.db.session import get_db
+from app.schemas.resume import ResumeCreate, ResumeRead
+from app.crud import resume as crud_resume
+from app.api.routes_auth import get_current_user
+from app.models.user import User
+
+router = APIRouter()
+
+
+@router.post(
+    "/resume/upload", response_model=ResumeRead, status_code=status.HTTP_201_CREATED
+)
+async def upload_resume(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    contents = await file.read()
+    file_name = file.filename
+
+    # Extract text
+    extracted_text = None
+    if file_name.lower().endswith(".pdf"):
+        import io
+        from PyPDF2 import PdfReader
+
+        reader = PdfReader(io.BytesIO(contents))
+        extracted_text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    elif file_name.lower().endswith(".docx"):
+        import io
+        from docx import Document
+
+        doc = Document(io.BytesIO(contents))
+        extracted_text = "\n".join([p.text for p in doc.paragraphs])
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+    # TODO: Call LLM for feedback if desired
+    llm_feedback = None
+
+    resume_in = ResumeCreate(
+        file_name=file_name, extracted_text=extracted_text, llm_feedback=llm_feedback
+    )
+    db_resume = crud_resume.create_or_replace_resume(
+        db, user_id=current_user.id, resume_in=resume_in
+    )
+    return db_resume
+
+
+@router.get("/resume", response_model=ResumeRead)
+def get_resume(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return resume
+
+
+@router.delete("/resume", status_code=status.HTTP_204_NO_CONTENT)
+def delete_resume(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    deleted = crud_resume.delete_resume_by_user(db, user_id=current_user.id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return None
