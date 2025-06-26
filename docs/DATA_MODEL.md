@@ -21,18 +21,6 @@ This document describes the core data model for the Job Tracker backend. It incl
 
   **Relations**: One user has one resume and many applications
 
-### resumes
-
-- **id**: UUID, primary key
-- **user_id**: UUID, foreign key to users
-- **file_path**: String
-- **file_name**: String
-- **upload_date**: Timestamp
-- **extracted_text**: Text
-- **embedding**: Vector(1536)
-
-  **Relations**: One resume per user (enforced in logic)
-
 ### applications
 
 - **id**: UUID, primary key
@@ -50,6 +38,17 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **updated_at**: Timestamp
 
   **Relations**: Many applications per user; one match_score per application
+
+### resumes
+
+- **id**: UUID, primary key
+- **user_id**: UUID, foreign key to users
+- **file_name**: String
+- **upload_date**: Timestamp
+- **extracted_text**: Text
+- **embedding**: Vector(1536)
+
+  **Relations**: One resume per user (enforced in logic)
 
 ### match_scores
 
