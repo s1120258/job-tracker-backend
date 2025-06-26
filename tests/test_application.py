@@ -26,6 +26,7 @@ def fake_application(fake_user):
         company_name="Acme Corp",
         position_title="Engineer",
         job_description_text="Job desc",
+        job_embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
         application_status=ApplicationStatus.applied,
         applied_date="2024-06-15",
         interview_date=None,
@@ -56,6 +57,7 @@ def test_list_applications(fake_user, fake_application):
         data = response.json()
         assert isinstance(data, list)
         assert data[0]["company_name"] == fake_application.company_name
+        assert "job_embedding" in data[0]
 
 
 def test_create_application(fake_user, fake_application):
@@ -78,6 +80,7 @@ def test_create_application(fake_user, fake_application):
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["company_name"] == payload["company_name"]
+        assert "job_embedding" in data
 
 
 def test_get_application(fake_user, fake_application):
@@ -88,6 +91,7 @@ def test_get_application(fake_user, fake_application):
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == str(fake_application.id)
+        assert "job_embedding" in data
 
 
 def test_get_application_not_found(fake_user):
@@ -118,6 +122,7 @@ def test_update_application(fake_user, fake_application):
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == str(fake_application.id)
+        assert "job_embedding" in data
 
 
 def test_delete_application(fake_user, fake_application):

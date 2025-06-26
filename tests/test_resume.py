@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 from uuid import uuid4
 from app.main import app
 from app.models.user import User
+from app.schemas.resume import ResumeRead
 
 client = TestClient(app)
 
@@ -25,12 +26,15 @@ def override_get_current_user(fake_user):
 
 def test_upload_resume_pdf_unit(fake_user):
     pdf_bytes = io.BytesIO(b"%PDF-1.4 test pdf content")
-    fake_resume = MagicMock(
+    fake_resume = ResumeRead(
         id=uuid4(),
+        user_id=fake_user.id,
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Extracted PDF text",
+        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
+
     with patch("PyPDF2.PdfReader") as mock_pdf_reader, patch(
         "app.crud.resume.create_or_replace_resume", return_value=fake_resume
     ):
@@ -45,16 +49,20 @@ def test_upload_resume_pdf_unit(fake_user):
     data = response.json()
     assert data["file_name"] == "resume.pdf"
     assert data["extracted_text"] == "Extracted PDF text"
+    assert "embedding" in data
 
 
 def test_upload_resume_docx_unit(fake_user):
     docx_bytes = io.BytesIO(b"PK\x03\x04 test docx content")
-    fake_resume = MagicMock(
+    fake_resume = ResumeRead(
         id=uuid4(),
+        user_id=fake_user.id,
         file_name="resume.docx",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Extracted DOCX text",
+        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
+
     with patch("docx.Document") as mock_docx, patch(
         "app.crud.resume.create_or_replace_resume", return_value=fake_resume
     ):
@@ -73,6 +81,7 @@ def test_upload_resume_docx_unit(fake_user):
     data = response.json()
     assert data["file_name"] == "resume.docx"
     assert data["extracted_text"] == "Extracted DOCX text"
+    assert "embedding" in data
 
 
 def test_upload_resume_unsupported_type(fake_user):
@@ -86,18 +95,22 @@ def test_upload_resume_unsupported_type(fake_user):
 
 
 def test_get_resume_unit(fake_user):
-    fake_resume = MagicMock(
+    fake_resume = ResumeRead(
         id=uuid4(),
+        user_id=fake_user.id,
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
+        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
+
     with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume):
         response = client.get("/api/v1/resume")
     assert response.status_code == 200
     data = response.json()
     assert data["file_name"] == "resume.pdf"
     assert data["extracted_text"] == "Some extracted text"
+    assert "embedding" in data
     assert "llm_feedback" not in data
 
 
@@ -126,11 +139,13 @@ def test_get_resume_feedback_general(fake_user):
         "Add more details to your experience section.",
         "Include relevant programming languages.",
     ]
-    fake_resume = MagicMock(
+    fake_resume = ResumeRead(
         id=uuid4(),
+        user_id=fake_user.id,
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
+        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
     with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
         "app.services.resume_feedback.get_general_feedback", return_value=feedback
@@ -148,11 +163,13 @@ def test_get_resume_feedback_job_specific(fake_user):
         "Highlight teamwork and communication skills.",
     ]
     job_excerpt = "We are looking for a software engineer with experience in AWS and team projects."
-    fake_resume = MagicMock(
+    fake_resume = ResumeRead(
         id=uuid4(),
+        user_id=fake_user.id,
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
+        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
     with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
         "app.services.resume_feedback.get_job_specific_feedback",
