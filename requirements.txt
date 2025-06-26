@@ -36,3 +36,9 @@ isort==5.13.2
 PyPDF2==3.0.1
 python-docx==1.1.2
 spacy==3.7.4  # optional for advanced parsing
+
+# Vector database
+pgvector==0.2.4
+
+# Added from the code block
+openai==1.12.0

@@ -2,6 +2,7 @@
 
 from sqlalchemy import Column, String, Date, Enum, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
 import enum
 import uuid
@@ -25,7 +26,7 @@ class Application(Base):
     company_name = Column(String, nullable=False)
     position_title = Column(String, nullable=False)
     job_description_text = Column(Text, nullable=False)
-    job_embedding = Column(String, nullable=True)  # Placeholder for vector
+    job_embedding = Column(Vector(1536), nullable=True)
     application_status = Column(
         Enum(ApplicationStatus), nullable=False, default=ApplicationStatus.applied
     )

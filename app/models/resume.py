@@ -3,6 +3,7 @@
 import uuid
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.db.base_class import Base
@@ -21,6 +22,7 @@ class Resume(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     file_name = Column(String, nullable=False)
     extracted_text = Column(Text, nullable=True)
+    embedding = Column(Vector(1536), nullable=True)
     upload_date = Column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )

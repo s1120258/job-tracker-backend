@@ -2,8 +2,13 @@
 
 from sqlalchemy.orm import Session
 from uuid import UUID
+import logging
 from app.models.resume import Resume
 from app.schemas.resume import ResumeCreate
+from app.services.embedding_service import embedding_service
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_resume_by_user(db: Session, user_id: UUID):
@@ -11,11 +16,25 @@ def get_resume_by_user(db: Session, user_id: UUID):
 
 
 def create_or_replace_resume(db: Session, user_id: UUID, resume_in: ResumeCreate):
+    # Check if user already has a resume
     old_resume = get_resume_by_user(db, user_id)
     if old_resume:
         db.delete(old_resume)
         db.commit()
-    db_resume = Resume(user_id=user_id, **resume_in.dict())
+
+    # Generate embedding if not provided
+    if not resume_in.embedding and resume_in.extracted_text:
+        try:
+            embedding = embedding_service.generate_embedding(resume_in.extracted_text)
+            resume_data = resume_in.model_dump()
+            resume_data["embedding"] = embedding
+        except Exception as e:
+            logger.error(f"Failed to generate resume embedding: {str(e)}")
+            resume_data = resume_in.model_dump()
+    else:
+        resume_data = resume_in.model_dump()
+
+    db_resume = Resume(user_id=user_id, **resume_data)
     db.add(db_resume)
     db.commit()
     db.refresh(db_resume)
