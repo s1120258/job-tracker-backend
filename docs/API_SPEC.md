@@ -66,13 +66,11 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ### 2. Resumes
 
-| Method | Path                                | Description                                      | Auth |
-| ------ | ----------------------------------- | ------------------------------------------------ | ---- |
-| POST   | `/resume`                           | Upload/replace resume (PDF/DOCX)                 | ✅   |
-| GET    | `/resume`                           | Get current resume info and extracted text       | ✅   |
-| DELETE | `/resume`                           | Delete current resume                            | ✅   |
-| GET    | `/resume/feedback`                  | Get general LLM feedback for current resume      | ✅   |
-| GET    | `/resume/feedback/{application_id}` | Get job-specific LLM feedback for current resume | ✅   |
+| Method | Path      | Description                                | Auth |
+| ------ | --------- | ------------------------------------------ | ---- |
+| POST   | `/resume` | Upload/replace resume (PDF/DOCX)           | ✅   |
+| GET    | `/resume` | Get current resume info and extracted text | ✅   |
+| DELETE | `/resume` | Delete current resume                      | ✅   |
 
 #### Example: Upload Resume
 
@@ -88,6 +86,15 @@ For project overview, setup, and data model details, see the [README](../README.
   "extracted_text": "John Doe is a software engineer..."
 }
 ```
+
+---
+
+### 3. AI Resume Feedback
+
+| Method | Path                                | Description                                      | Auth |
+| ------ | ----------------------------------- | ------------------------------------------------ | ---- |
+| GET    | `/resume/feedback`                  | Get general LLM feedback for current resume      | ✅   |
+| GET    | `/resume/feedback/{application_id}` | Get job-specific LLM feedback for current resume | ✅   |
 
 #### Example: Get General Feedback
 
@@ -118,7 +125,7 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ---
 
-### 3. AI Resume-to-Job Matching
+### 4. AI Resume-to-Job Matching
 
 | Method | Path                                 | Description                                             | Auth |
 | ------ | ------------------------------------ | ------------------------------------------------------- | ---- |
@@ -139,7 +146,7 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ---
 
-### 4. Analytics
+### 5. Analytics
 
 | Method | Path                                | Description                                       | Auth |
 | ------ | ----------------------------------- | ------------------------------------------------- | ---- |
@@ -163,7 +170,7 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ---
 
-### 5. Authentication
+### 6. Authentication
 
 | Method | Path             | Description           |
 | ------ | ---------------- | --------------------- |
