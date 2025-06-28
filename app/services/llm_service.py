@@ -53,7 +53,11 @@ class LLMService:
             else:
                 raise LLMServiceError(f"Unknown feedback type: {feedback_type}")
 
-            logger.info(f"Generating {feedback_type} feedback for resume")
+            # Calculate optimal max_tokens based on input length
+            input_length = len(resume_text) + (len(job_description) if job_description else 0)
+            max_tokens = self._calculate_optimal_max_tokens(input_length)
+
+            logger.info(f"Generating {feedback_type} feedback for resume with max_tokens={max_tokens}")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -63,7 +67,7 @@ class LLMService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=500,
+                max_tokens=max_tokens,  # Use calculated optimal value
                 temperature=0.7,
             )
 
@@ -153,6 +157,15 @@ Format your response as a numbered list. Each point should be concise but helpfu
             if feedback_list
             else ["Unable to generate specific feedback at this time."]
         )
+
+    def _calculate_optimal_max_tokens(self, input_length: int) -> int:
+        """Calculate optimal max_tokens based on input length"""
+        if input_length < 1000:
+            return 300  # Short input → short output
+        elif input_length < 2000:
+            return 500  # Medium input → medium output
+        else:
+            return 800  # Long input → long output
 
 
 # Global instance
