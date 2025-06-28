@@ -54,10 +54,14 @@ class LLMService:
                 raise LLMServiceError(f"Unknown feedback type: {feedback_type}")
 
             # Calculate optimal max_tokens based on input length
-            input_length = len(resume_text) + (len(job_description) if job_description else 0)
+            input_length = len(resume_text) + (
+                len(job_description) if job_description else 0
+            )
             max_tokens = self._calculate_optimal_max_tokens(input_length)
 
-            logger.info(f"Generating {feedback_type} feedback for resume with max_tokens={max_tokens}")
+            logger.info(
+                f"Generating {feedback_type} feedback for resume with max_tokens={max_tokens}"
+            )
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
