@@ -28,3 +28,4 @@ class Resume(Base):
     )
 
     user = relationship("User", back_populates="resumes")
+    match_scores = relationship("MatchScore", back_populates="resume")
