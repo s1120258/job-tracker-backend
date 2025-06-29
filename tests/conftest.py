@@ -24,3 +24,13 @@ def mock_similarity_service():
     """Mock similarity service for all tests."""
     with patch("app.services.similarity_service.similarity_service"):
         yield
+
+
+# Remove the global dependency override to allow testing authentication
+@pytest.fixture(autouse=True)
+def clear_dependency_overrides():
+    """Clear any dependency overrides after each test."""
+    yield
+    from app.main import app
+
+    app.dependency_overrides.clear()

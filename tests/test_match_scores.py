@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from fastapi import status
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
+import numpy as np
 from app.main import app
 from app.models.user import User
 from app.models.application import Application, ApplicationStatus
@@ -26,6 +27,7 @@ def fake_application(fake_user):
         company_name="Acme Corp",
         position_title="Software Engineer",
         job_description_text="Job description",
+        job_embedding=np.array([0.1] * 1536),  # Add embedding
         application_status=ApplicationStatus.applied,
         applied_date="2024-06-15",
     )
@@ -38,6 +40,7 @@ def fake_resume(fake_user):
         user_id=fake_user.id,
         file_name="resume.pdf",
         extracted_text="Some text",
+        embedding=np.array([0.2] * 1536),  # Add embedding
         upload_date="2024-06-15T12:00:00Z",
     )
 
@@ -54,9 +57,12 @@ def fake_match_score(fake_application, fake_resume):
 
 @pytest.fixture(autouse=True)
 def override_get_current_user(fake_user):
+    """Override get_current_user dependency for most tests."""
+    from app.main import app
+
     app.dependency_overrides[get_current_user] = lambda: fake_user
     yield
-    app.dependency_overrides.clear()
+    # Don't clear here, let the clear_dependency_overrides fixture handle it
 
 
 def auth_headers():
@@ -122,6 +128,7 @@ class TestGetMatchScore:
             company_name="Acme Corp",
             position_title="Software Engineer",
             job_description_text="Job description",
+            job_embedding=np.array([0.1] * 1536),  # Add embedding
             application_status=ApplicationStatus.applied,
             applied_date="2024-06-15",
         )
@@ -197,6 +204,7 @@ class TestRecomputeMatchScore:
             company_name="Acme Corp",
             position_title="Software Engineer",
             job_description_text="Job description",
+            job_embedding=np.array([0.1] * 1536),  # Add embedding
             application_status=ApplicationStatus.applied,
             applied_date="2024-06-15",
         )
@@ -295,11 +303,21 @@ class TestAuthentication:
 
     def test_get_match_score_no_auth(self, fake_application):
         """Test that match score endpoint requires authentication"""
+        # Clear dependency overrides for this test
+        from app.main import app
+
+        app.dependency_overrides.clear()
+
         response = client.get(f"/api/v1/applications/{fake_application.id}/match-score")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_recompute_match_score_no_auth(self, fake_application):
         """Test that recompute endpoint requires authentication"""
+        # Clear dependency overrides for this test
+        from app.main import app
+
+        app.dependency_overrides.clear()
+
         response = client.post(
             f"/api/v1/applications/{fake_application.id}/recompute-match"
         )
