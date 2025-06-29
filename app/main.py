@@ -10,13 +10,20 @@ from app.api import (
     routes_applications,
     routes_resumes,
     routes_match_scores,
+    routes_analytics,
 )
 from app.core.config import settings
 
-# Configure logging for production
+# Configure logging to show detailed error information
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
+# Set specific loggers to DEBUG level
+logging.getLogger("app").setLevel(logging.DEBUG)
+logging.getLogger("app.api.routes_match_scores").setLevel(logging.DEBUG)
+logging.getLogger("app.services.similarity_service").setLevel(logging.DEBUG)
+logging.getLogger("app.crud").setLevel(logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +52,9 @@ app.include_router(
 )
 app.include_router(
     routes_match_scores.router, prefix=f"{settings.API_V1_STR}", tags=["match-scores"]
+)
+app.include_router(
+    routes_analytics.router, prefix=f"{settings.API_V1_STR}", tags=["analytics"]
 )
 
 
