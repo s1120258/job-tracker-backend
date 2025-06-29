@@ -35,8 +35,22 @@ class SimilarityService:
         Returns:
             float: Similarity score between 0 and 1
         """
-        if not resume_embedding or not job_embedding:
-            raise SimilarityServiceError("Both embeddings must be provided")
+        # Handle NumPy arrays properly
+        if resume_embedding is None or (
+            hasattr(resume_embedding, "size") and resume_embedding.size == 0
+        ):
+            raise SimilarityServiceError("Resume embedding must be provided")
+
+        if job_embedding is None or (
+            hasattr(job_embedding, "size") and job_embedding.size == 0
+        ):
+            raise SimilarityServiceError("Job embedding must be provided")
+
+        # Convert to list if they are NumPy arrays
+        if hasattr(resume_embedding, "tolist"):
+            resume_embedding = resume_embedding.tolist()
+        if hasattr(job_embedding, "tolist"):
+            job_embedding = job_embedding.tolist()
 
         if len(resume_embedding) != len(job_embedding):
             raise SimilarityServiceError("Embeddings must have the same dimensions")
@@ -54,10 +68,12 @@ class SimilarityService:
             similarity = dot_product / (resume_magnitude * job_magnitude)
 
             # Ensure the result is between 0 and 1
-            return max(0.0, min(1.0, similarity))
+            final_similarity = max(0.0, min(1.0, similarity))
+
+            return final_similarity
 
         except Exception as e:
-            logger.error(f"Error calculating similarity: {str(e)}")
+            logger.error(f"Error calculating similarity: {str(e)}", exc_info=True)
             raise SimilarityServiceError(f"Failed to calculate similarity: {str(e)}")
 
     def calculate_and_store_match_score(
