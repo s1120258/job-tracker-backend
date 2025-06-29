@@ -8,6 +8,7 @@ app/
 ├── db/          # DB initialization, Alembic config
 ├── models/      # SQLAlchemy ORM models
 ├── schemas/     # Pydantic request/response schemas
+├── services/    # Business/AI services (embeddings, similarity calc, LLM feedback)
 └── main.py      # FastAPI app entrypoint
 
 tests/           # Unit and integration tests
