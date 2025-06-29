@@ -6,7 +6,53 @@ This document describes the core data model for the Job Tracker backend. It incl
 
 ## Entity Relationship Diagram
 
-![job_tracker_schema](https://github.com/user-attachments/assets/9aea9b85-a715-4dcc-99aa-e3d4a996997e)
+```mermaid
+erDiagram
+    USERS {
+        UUID id PK
+        string email
+        string hashed_password
+    }
+
+    APPLICATIONS {
+        UUID id PK
+        UUID user_id FK
+        string company_name
+        string position_title
+        text job_description_text
+        vector job_embedding
+        enum application_status
+        date applied_date
+        date interview_date
+        date offer_date
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RESUMES {
+        UUID id PK
+        UUID user_id FK
+        string file_name
+        text extracted_text
+        vector embedding
+        timestamp upload_date
+    }
+
+    MATCH_SCORES {
+        UUID id PK
+        UUID application_id FK
+        UUID resume_id FK
+        float similarity_score
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USERS ||--o{ APPLICATIONS : "has"
+    USERS ||--o{ RESUMES : "has"
+    APPLICATIONS ||--|| MATCH_SCORES : "generates"
+    RESUMES ||--o{ MATCH_SCORES : "associated"
+```
 
 ---
 
@@ -17,9 +63,8 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **id**: UUID, primary key
 - **email**: String, unique
 - **hashed_password**: String
-- **created_at**: Timestamp
 
-  **Relations**: One user has one resume and many applications
+  **Relations**: One user has many resumes and many applications
 
 ### applications
 
@@ -48,15 +93,16 @@ This document describes the core data model for the Job Tracker backend. It incl
 - **extracted_text**: Text
 - **embedding**: Vector(1536)
 
-  **Relations**: One resume per user (enforced in logic)
+  **Relations**: Many resumes per user; one resume can have many match_scores
 
 ### match_scores
 
 - **id**: UUID, primary key
 - **application_id**: UUID, foreign key to applications
-- **score**: Float (similarity score)
+- **resume_id**: UUID, foreign key to resumes
+- **similarity_score**: Float (0 - 1)
 
-  **Relations**: One match score per application
+  **Relations**: One match score per application; many match_scores per resume
 
 ---
 
