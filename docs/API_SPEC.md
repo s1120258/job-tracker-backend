@@ -207,11 +207,11 @@ POST /jobs/{job_id}/match
 
 ### 5. Analytics
 
-| Method | Path                                | Description                                       | Auth |
-| ------ | ----------------------------------- | ------------------------------------------------- | ---- |
-| GET    | `/analytics/status-summary`         | Get count of applications by status               | ✅   |
-| GET    | `/analytics/applications-over-time` | Get applications count over time (weekly/monthly) | ✅   |
-| GET    | `/analytics/match-score-summary`    | Get average match score across applications       | ✅   |
+| Method | Path                             | Description                               | Auth |
+| ------ | -------------------------------- | ----------------------------------------- | ---- |
+| GET    | `/analytics/status-summary`      | Get count of jobs by status               | ✅   |
+| GET    | `/analytics/jobs-over-time`      | Get jobs count over time (weekly/monthly) | ✅   |
+| GET    | `/analytics/match-score-summary` | Get average match score across jobs       | ✅   |
 
 #### Example: Status Summary
 
