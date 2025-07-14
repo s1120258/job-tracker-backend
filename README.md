@@ -1,4 +1,4 @@
-# 📂 ResMatch API
+# 📂 ResMatch
 
 A FastAPI-based backend to help users track job applications, upload and analyze resumes, and receive AI-powered feedback and matching scores against job descriptions.
 

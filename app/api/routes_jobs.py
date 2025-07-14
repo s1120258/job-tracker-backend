@@ -15,7 +15,7 @@ from app.schemas.job import (
     JobMatchResponse,
     JobApplyRequest,
     JobApplyResponse,
-    JobStatus
+    JobStatus,
 )
 from app.crud import job as crud_job
 from app.crud.resume import get_resume_by_user
@@ -52,17 +52,20 @@ def search_jobs(
     # Convert to search result format
     search_results = []
     for job in jobs:
-        if (not location or (job.location and location.lower() in job.location.lower())) and \
-           (not source or (job.source and source.lower() in job.source.lower())):
-            search_results.append({
-                "title": job.title,
-                "description": job.description,
-                "company": job.company,
-                "location": job.location,
-                "url": job.url,
-                "source": job.source or "Manual",
-                "date_posted": job.date_posted
-            })
+        if (
+            not location or (job.location and location.lower() in job.location.lower())
+        ) and (not source or (job.source and source.lower() in job.source.lower())):
+            search_results.append(
+                {
+                    "title": job.title,
+                    "description": job.description,
+                    "company": job.company,
+                    "location": job.location,
+                    "url": job.url,
+                    "source": job.source or "Manual",
+                    "date_posted": job.date_posted,
+                }
+            )
 
     return {"jobs": search_results}
 
@@ -166,8 +169,7 @@ def calculate_match_score(
         )
 
     if job.job_embedding is None or (
-        hasattr(job.job_embedding, "size")
-        and job.job_embedding.size == 0
+        hasattr(job.job_embedding, "size") and job.job_embedding.size == 0
     ):
         raise HTTPException(
             status_code=400, detail="Job description embedding not available."
@@ -191,13 +193,15 @@ def calculate_match_score(
             job_id=job_id,
             resume_id=resume.id,
             similarity_score=similarity_score,
-            status=JobStatus.matched
+            status=JobStatus.matched,
         )
 
     except SimilarityServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error in calculate_match_score: {str(e)}", exc_info=True)
+        logger.error(
+            f"Unexpected error in calculate_match_score: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=500,
             detail="Internal server error while computing match score",
@@ -239,5 +243,5 @@ def apply_to_job(
         job_id=job_id,
         resume_id=resume.id,
         status=JobStatus.applied,
-        applied_at=datetime.utcnow()
+        applied_at=datetime.utcnow(),
     )

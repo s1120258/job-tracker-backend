@@ -9,7 +9,7 @@ from .job import (
     JobMatchRequest,
     JobMatchResponse,
     JobApplyRequest,
-    JobApplyResponse
+    JobApplyResponse,
 )
 from .resume import ResumeCreate, ResumeRead
 from .match_score import MatchScoreRead

@@ -99,6 +99,7 @@ class JobRead(JobBase):
 
 class JobSearch(BaseModel):
     """Schema for job search parameters"""
+
     keyword: Optional[str] = None
     location: Optional[str] = None
     source: Optional[str] = None  # Filter by job board source
@@ -107,6 +108,7 @@ class JobSearch(BaseModel):
 
 class JobSearchResult(BaseModel):
     """Schema for external job search results (from crawlers)"""
+
     title: str
     description: str
     company: str
@@ -118,11 +120,13 @@ class JobSearchResult(BaseModel):
 
 class JobMatchRequest(BaseModel):
     """Schema for job matching request"""
+
     resume_id: UUID
 
 
 class JobMatchResponse(BaseModel):
     """Schema for job matching response"""
+
     job_id: UUID
     resume_id: UUID
     similarity_score: float
@@ -131,12 +135,14 @@ class JobMatchResponse(BaseModel):
 
 class JobApplyRequest(BaseModel):
     """Schema for job application request"""
+
     resume_id: UUID
     cover_letter_template: Optional[str] = "default"
 
 
 class JobApplyResponse(BaseModel):
     """Schema for job application response"""
+
     job_id: UUID
     resume_id: UUID
     status: JobStatus

@@ -18,7 +18,9 @@ def get_job(db: Session, job_id: UUID) -> Optional[Job]:
     return db.query(Job).filter(Job.id == job_id).first()
 
 
-def get_jobs(db: Session, user_id: UUID, status: Optional[JobStatus] = None) -> List[Job]:
+def get_jobs(
+    db: Session, user_id: UUID, status: Optional[JobStatus] = None
+) -> List[Job]:
     """Get jobs for a user, optionally filtered by status."""
     query = db.query(Job).filter(Job.user_id == user_id)
     if status:
@@ -28,9 +30,12 @@ def get_jobs(db: Session, user_id: UUID, status: Optional[JobStatus] = None) -> 
 
 def get_jobs_by_status(db: Session, user_id: UUID, status: JobStatus) -> List[Job]:
     """Get jobs for a user filtered by specific status."""
-    return db.query(Job).filter(
-        and_(Job.user_id == user_id, Job.status == status)
-    ).order_by(Job.created_at.desc()).all()
+    return (
+        db.query(Job)
+        .filter(and_(Job.user_id == user_id, Job.status == status))
+        .order_by(Job.created_at.desc())
+        .all()
+    )
 
 
 def create_job(db: Session, user_id: UUID, job_in: JobCreate) -> Job:
@@ -112,7 +117,9 @@ def update_job_status(db: Session, job_id: UUID, status: JobStatus) -> Optional[
     return db_job
 
 
-def update_job_match_score(db: Session, job_id: UUID, match_score: float) -> Optional[Job]:
+def update_job_match_score(
+    db: Session, job_id: UUID, match_score: float
+) -> Optional[Job]:
     """Update job match score and set status to 'matched'."""
     db_job = get_job(db, job_id)
     if not db_job:
@@ -143,14 +150,19 @@ def delete_job(db: Session, job_id: UUID) -> bool:
 def search_jobs_by_keyword(db: Session, user_id: UUID, keyword: str) -> List[Job]:
     """Search saved jobs by keyword in title, description, or company."""
     keyword_filter = f"%{keyword.lower()}%"
-    return db.query(Job).filter(
-        and_(
-            Job.user_id == user_id,
-            Job.title.ilike(keyword_filter)
-            | Job.description.ilike(keyword_filter)
-            | Job.company.ilike(keyword_filter)
+    return (
+        db.query(Job)
+        .filter(
+            and_(
+                Job.user_id == user_id,
+                Job.title.ilike(keyword_filter)
+                | Job.description.ilike(keyword_filter)
+                | Job.company.ilike(keyword_filter),
+            )
         )
-    ).order_by(Job.created_at.desc()).all()
+        .order_by(Job.created_at.desc())
+        .all()
+    )
 
 
 def get_job_count_by_status(db: Session, user_id: UUID) -> dict:
