@@ -43,14 +43,20 @@ If you've made significant changes to your data models or want to start from a c
 ```bash
 docker compose down -v
 docker compose up -d
+
+# Re-enable pgvector extension after reset
+docker compose exec db psql -U postgres -d res_match
+CREATE EXTENSION IF NOT EXISTS vector;
+\q
+
 docker compose exec backend alembic upgrade head
 ```
 
 ### 🧪 Verify Tables
 
 ```bash
-docker compose exec db psql -U postgres -d job_tracker -c '\dt'
-docker compose exec db psql -U postgres -d job_tracker -c '\d tablename'
+docker compose exec db psql -U postgres -d res_match -c '\dt'
+docker compose exec db psql -U postgres -d res_match -c '\d tablename'
 ```
 
 ---
