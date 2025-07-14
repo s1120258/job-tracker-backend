@@ -10,8 +10,8 @@ class MatchScore(Base):
     __tablename__ = "match_scores"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("applications.id"), nullable=False, unique=True
+    job_id = Column(
+        UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=False, unique=True
     )
     resume_id = Column(UUID(as_uuid=True), ForeignKey("resumes.id"), nullable=False)
     similarity_score = Column(Float, nullable=False)
@@ -23,5 +23,5 @@ class MatchScore(Base):
     )
 
     # Relationships
-    application = relationship("Application", back_populates="match_score")
+    job = relationship("Job", back_populates="match_scores")
     resume = relationship("Resume", back_populates="match_scores")
