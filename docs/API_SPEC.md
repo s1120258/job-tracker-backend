@@ -124,10 +124,10 @@ GET /jobs/search?keyword=python&location=remote&source=RemoteOK
 
 ### 3. AI Resume Feedback
 
-| Method | Path                                | Description                                      | Auth |
-| ------ | ----------------------------------- | ------------------------------------------------ | ---- |
-| GET    | `/resume/feedback`                  | Get general LLM feedback for current resume      | ✅   |
-| GET    | `/resume/feedback/{application_id}` | Get job-specific LLM feedback for current resume | ✅   |
+| Method | Path                        | Description                                      | Auth |
+| ------ | --------------------------- | ------------------------------------------------ | ---- |
+| GET    | `/resume/feedback`          | Get general LLM feedback for current resume      | ✅   |
+| GET    | `/resume/feedback/{job_id}` | Get job-specific LLM feedback for current resume | ✅   |
 
 #### Example: Get General Feedback
 
