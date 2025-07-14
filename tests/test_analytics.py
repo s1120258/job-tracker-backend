@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from app.main import app
 from app.models.user import User
 from app.models.application import Application, ApplicationStatus
+from app.models.job import Job, JobStatus
 from app.models.match_score import MatchScore
 from app.api.routes_auth import get_current_user
 from app.db.session import get_db
@@ -44,12 +45,12 @@ class TestStatusSummary:
         app.dependency_overrides[get_db] = _override_get_db
         # --------------------------------
 
-        # Mock query chain
+        # Mock query chain - now returns job statuses
         mock_results = [
-            (ApplicationStatus.applied, 5),
-            (ApplicationStatus.interviewing, 2),
-            (ApplicationStatus.offer, 1),
-            (ApplicationStatus.rejected, 3),
+            (JobStatus.applied, 5),
+            (JobStatus.matched, 2),
+            (JobStatus.saved, 1),
+            (JobStatus.rejected, 3),
         ]
         (
             mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value
@@ -57,7 +58,7 @@ class TestStatusSummary:
 
         resp = client.get("/api/v1/analytics/status-summary", headers=auth_headers())
         assert resp.status_code == status.HTTP_200_OK
-        assert resp.json()["total_applications"] == 11
+        assert resp.json()["total_jobs"] == 11
 
         # Clear override
         app.dependency_overrides.clear()
@@ -76,7 +77,7 @@ class TestStatusSummary:
 
         resp = client.get("/api/v1/analytics/status-summary", headers=auth_headers())
         assert resp.status_code == 200
-        assert resp.json()["total_applications"] == 0
+        assert resp.json()["total_jobs"] == 0
         app.dependency_overrides.clear()
 
 

@@ -7,6 +7,7 @@ import numpy as np
 from app.main import app
 from app.models.user import User
 from app.models.application import Application, ApplicationStatus
+from app.models.job import Job, JobStatus
 from app.models.resume import Resume
 from app.models.match_score import MatchScore
 from app.api.routes_auth import get_current_user
@@ -394,3 +395,124 @@ class TestResponseFormat:
 
             # Check value ranges
             assert 0.0 <= data["similarity_score"] <= 1.0
+
+
+# ============================================================================
+# NEW JOB-BASED MATCH SCORE TESTS
+# ============================================================================
+
+@pytest.fixture
+def fake_job(fake_user):
+    """Create a fake job for testing."""
+    return Job(
+        id=uuid4(),
+        user_id=fake_user.id,
+        title="Backend Python Engineer",
+        description="Looking for Python developer with FastAPI experience",
+        company="Tech Startup",
+        location="Remote",
+        url="https://example.com/job/123",
+        source="RemoteOK",
+        date_posted="2024-06-15",
+        status=JobStatus.saved,
+        job_embedding=np.array([0.1] * 1536),
+    )
+
+
+@pytest.fixture
+def fake_job_match_score(fake_job, fake_resume):
+    """Create a fake match score for job-based testing."""
+    return MatchScore(
+        id=uuid4(),
+        user_id=fake_job.user_id,
+        job_id=fake_job.id,
+        resume_id=fake_resume.id,
+        similarity_score=0.82,
+    )
+
+
+class TestJobMatchScores:
+    """Test cases for new job-based match score endpoints."""
+
+    def test_get_job_match_score_success(self, fake_user, fake_job, fake_job_match_score):
+        """Test successful retrieval of job match score"""
+        with patch("app.crud.job.get_job", return_value=fake_job), \
+             patch("app.crud.match_score.get_match_score", return_value=fake_job_match_score):
+
+            response = client.get(
+                f"/api/v1/jobs/{fake_job.id}/match-score",
+                headers=auth_headers(),
+            )
+
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+
+            # Check required fields
+            assert "job_id" in data
+            assert "resume_id" in data
+            assert "similarity_score" in data
+
+            # Check data types and values
+            assert isinstance(data["job_id"], str)
+            assert isinstance(data["resume_id"], str)
+            assert isinstance(data["similarity_score"], (int, float))
+            assert 0.0 <= data["similarity_score"] <= 1.0
+
+    def test_get_job_match_score_not_found(self, fake_user):
+        """Test retrieving match score for non-existent job"""
+        with patch("app.crud.job.get_job", return_value=None):
+            response = client.get(
+                f"/api/v1/jobs/{uuid4()}/match-score",
+                headers=auth_headers(),
+            )
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_get_job_match_score_no_match(self, fake_user, fake_job):
+        """Test retrieving match score when none exists"""
+        with patch("app.crud.job.get_job", return_value=fake_job), \
+             patch("app.crud.match_score.get_match_score", return_value=None):
+
+            response = client.get(
+                f"/api/v1/jobs/{fake_job.id}/match-score",
+                headers=auth_headers(),
+            )
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_get_job_match_score_unauthorized(self, fake_user, fake_job):
+        """Test that users can't access match scores for jobs they don't own"""
+        # Create job owned by different user
+        other_job = fake_job
+        other_job.user_id = uuid4()
+
+        with patch("app.crud.job.get_job", return_value=other_job):
+            response = client.get(
+                f"/api/v1/jobs/{other_job.id}/match-score",
+                headers=auth_headers(),
+            )
+            assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+class TestDeprecatedApplicationEndpoints:
+    """Test that deprecated application-based endpoints return appropriate responses."""
+
+    def test_deprecated_application_match_score(self, fake_user, fake_application):
+        """Test that deprecated application match-score endpoint returns 410 Gone"""
+        response = client.get(
+            f"/api/v1/applications/{fake_application.id}/match-score",
+            headers=auth_headers(),
+        )
+        assert response.status_code == status.HTTP_410_GONE
+        data = response.json()
+        assert "deprecated" in data["detail"].lower()
+        assert "jobs" in data["detail"].lower()
+
+    def test_deprecated_application_recompute_match(self, fake_user, fake_application):
+        """Test that deprecated application recompute-match endpoint returns 410 Gone"""
+        response = client.post(
+            f"/api/v1/applications/{fake_application.id}/recompute-match",
+            headers=auth_headers(),
+        )
+        assert response.status_code == status.HTTP_410_GONE
+        data = response.json()
+        assert "deprecated" in data["detail"].lower()
+        assert "jobs" in data["detail"].lower()
