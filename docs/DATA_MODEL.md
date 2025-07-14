@@ -14,18 +14,19 @@ erDiagram
         string hashed_password
     }
 
-    APPLICATIONS {
+    JOBS {
         UUID id PK
         UUID user_id FK
-        string company_name
-        string position_title
-        text job_description_text
+        string title
+        text description
+        string company
+        string location
+        string url
+        string source
+        date date_posted
+        enum status
+        float match_score
         vector job_embedding
-        enum application_status
-        date applied_date
-        date interview_date
-        date offer_date
-        text notes
         timestamp created_at
         timestamp updated_at
     }
@@ -41,16 +42,16 @@ erDiagram
 
     MATCH_SCORES {
         UUID id PK
-        UUID application_id FK
+        UUID job_id FK
         UUID resume_id FK
         float similarity_score
         timestamp created_at
         timestamp updated_at
     }
 
-    USERS ||--o{ APPLICATIONS : "has"
+    USERS ||--o{ JOBS : "has"
     USERS ||--o{ RESUMES : "has"
-    APPLICATIONS ||--|| MATCH_SCORES : "generates"
+    JOBS ||--|| MATCH_SCORES : "generates"
     RESUMES ||--o{ MATCH_SCORES : "associated"
 ```
 
@@ -64,25 +65,26 @@ erDiagram
 - **email**: String, unique
 - **hashed_password**: String
 
-  **Relations**: One user has many resumes and many applications
+  **Relations**: One user has many resumes and many jobs
 
-### applications
+### jobs
 
 - **id**: UUID, primary key
 - **user_id**: UUID, foreign key to users
-- **company_name**: String
-- **position_title**: String
-- **job_description_text**: Text
-- **job_embedding**: Vector(1536)
-- **application_status**: Enum (applied, interviewing, rejected, offer, accepted)
-- **applied_date**: Date
-- **interview_date**: Date (optional)
-- **offer_date**: Date (optional)
-- **notes**: Text
+- **title**: String, job title
+- **description**: Text, job description (HTML allowed)
+- **company**: String, company name
+- **location**: String, job location (e.g., "Remote", "San Francisco")
+- **url**: String, original job posting URL
+- **source**: String, job board source (e.g., "RemoteOK", "Indeed")
+- **date_posted**: Date, when job was originally posted
+- **status**: Enum (new, saved, matched, applied, rejected)
+- **match_score**: Float, similarity score with user's resume (0-1)
+- **job_embedding**: Vector(1536), embedding of job description
 - **created_at**: Timestamp
 - **updated_at**: Timestamp
 
-  **Relations**: Many applications per user; one match_score per application
+  **Relations**: Many jobs per user; one match_score per job
 
 ### resumes
 
@@ -98,11 +100,11 @@ erDiagram
 ### match_scores
 
 - **id**: UUID, primary key
-- **application_id**: UUID, foreign key to applications
+- **job_id**: UUID, foreign key to jobs
 - **resume_id**: UUID, foreign key to resumes
 - **similarity_score**: Float (0 - 1)
 
-  **Relations**: One match score per application; many match_scores per resume
+  **Relations**: One match score per job; many match_scores per resume
 
 ---
 

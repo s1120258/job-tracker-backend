@@ -17,31 +17,58 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ## 📝 Endpoints
 
-### 1. Applications
+### 1. Jobs
 
-| Method | Path                 | Description                            | Auth |
-| ------ | -------------------- | -------------------------------------- | ---- |
-| GET    | `/applications`      | List all job applications (filterable) | ✅   |
-| POST   | `/applications`      | Create a new job application           | ✅   |
-| GET    | `/applications/{id}` | Get details of a job application       | ✅   |
-| PUT    | `/applications/{id}` | Update a job application               | ✅   |
-| DELETE | `/applications/{id}` | Delete a job application               | ✅   |
+| Method | Path               | Description                     | Auth |
+| ------ | ------------------ | ------------------------------- | ---- |
+| GET    | `/jobs/search`     | Search jobs from job boards     | ✅   |
+| POST   | `/jobs/save`       | Save a job for later            | ✅   |
+| GET    | `/jobs`            | List saved/matched/applied jobs | ✅   |
+| GET    | `/jobs/{id}`       | Get details of a specific job   | ✅   |
+| PUT    | `/jobs/{id}`       | Update job status or notes      | ✅   |
+| DELETE | `/jobs/{id}`       | Delete a saved job              | ✅   |
+| POST   | `/jobs/{id}/match` | Calculate match score for a job | ✅   |
+| POST   | `/jobs/{id}/apply` | Mark job as applied             | ✅   |
 
-#### Example: Create Application
+#### Example: Search Jobs
+
+**Request:**
+
+```
+GET /jobs/search?keyword=python&location=remote&source=RemoteOK
+```
+
+**Response:**
+
+```json
+{
+  "jobs": [
+    {
+      "title": "Backend Python Engineer",
+      "description": "We are looking for an experienced Python developer...",
+      "company": "Tech Startup",
+      "location": "Remote",
+      "url": "https://remoteok.io/remote-jobs/123456",
+      "source": "RemoteOK",
+      "date_posted": "2024-06-15"
+    }
+  ]
+}
+```
+
+#### Example: Save Job
 
 **Request:**
 
 ```json
 {
-  "company_name": "Acme Corp",
-  "position_title": "Software Engineer",
-  "job_description_text": "We are looking for...",
-  "job_embedding": [0.12, 0.34, 0.56],
-  "application_status": "applied",
-  "applied_date": "2024-06-15",
-  "interview_date": null,
-  "offer_date": null,
-  "notes": "First round scheduled"
+  "title": "Backend Python Engineer",
+  "description": "We are looking for an experienced Python developer...",
+  "company": "Tech Startup",
+  "location": "Remote",
+  "url": "https://remoteok.io/remote-jobs/123456",
+  "source": "RemoteOK",
+  "date_posted": "2024-06-15"
 }
 ```
 
@@ -51,15 +78,16 @@ For project overview, setup, and data model details, see the [README](../README.
 {
   "id": "uuid",
   "user_id": "uuid",
-  "company_name": "Acme Corp",
-  "position_title": "Software Engineer",
-  "job_description_text": "We are looking for...",
+  "title": "Backend Python Engineer",
+  "description": "We are looking for an experienced Python developer...",
+  "company": "Tech Startup",
+  "location": "Remote",
+  "url": "https://remoteok.io/remote-jobs/123456",
+  "source": "RemoteOK",
+  "date_posted": "2024-06-15",
+  "status": "saved",
+  "match_score": null,
   "job_embedding": [0.12, 0.34, 0.56],
-  "application_status": "applied",
-  "applied_date": "2024-06-15",
-  "interview_date": null,
-  "offer_date": null,
-  "notes": "First round scheduled",
   "created_at": "2024-06-15T12:00:00Z",
   "updated_at": "2024-06-15T12:00:00Z"
 }
@@ -132,20 +160,46 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ### 4. AI Resume-to-Job Matching
 
-| Method | Path                                 | Description                                             | Auth |
-| ------ | ------------------------------------ | ------------------------------------------------------- | ---- |
-| GET    | `/applications/{id}/match-score`     | Get similarity score between resume and job description | ✅   |
-| POST   | `/applications/{id}/recompute-match` | Recompute match score                                   | ✅   |
+_Note: Matching endpoints are now integrated into the Jobs section above as `/jobs/{id}/match`_
 
-#### Example: Get Match Score
+#### Example: Calculate Match Score
+
+**Request:**
+
+```
+POST /jobs/{job_id}/match
+```
 
 **Response:**
 
 ```json
 {
-  "application_id": "uuid",
+  "job_id": "uuid",
   "resume_id": "uuid",
-  "similarity_score": 0.82
+  "similarity_score": 0.82,
+  "status": "matched"
+}
+```
+
+#### Example: Apply to Job
+
+**Request:**
+
+```json
+{
+  "resume_id": "uuid",
+  "cover_letter_template": "default"
+}
+```
+
+**Response:**
+
+```json
+{
+  "job_id": "uuid",
+  "resume_id": "uuid",
+  "status": "applied",
+  "applied_at": "2024-06-15T12:00:00Z"
 }
 ```
 
