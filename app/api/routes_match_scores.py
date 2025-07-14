@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 import numpy as np
 from app.db.session import get_db
-from app.crud.application import get_application
+from app.crud import job as crud_job
 from app.crud.resume import get_resume_by_user
 from app.crud.match_score import get_match_score, create_or_update_match_score
 from app.api.routes_auth import get_current_user
@@ -15,101 +15,79 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/applications/{application_id}/match-score")
-def get_match_score_endpoint(
+@router.get("/applications/{application_id}/match-score", deprecated=True)
+def get_match_score_endpoint_deprecated(
     application_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    DEPRECATED: Use GET /jobs/{job_id} to get match score.
+    This endpoint will be removed in future versions.
+    """
+    raise HTTPException(
+        status_code=410,
+        detail="This endpoint is deprecated. Use GET /jobs/{job_id} to get match score from the job details.",
+    )
+
+
+@router.post("/applications/{application_id}/recompute-match", deprecated=True)
+def recompute_match_score_deprecated(
+    application_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    DEPRECATED: Use POST /jobs/{job_id}/match to calculate match score.
+    This endpoint will be removed in future versions.
+    """
+    raise HTTPException(
+        status_code=410,
+        detail="This endpoint is deprecated. Use POST /jobs/{job_id}/match to calculate match score.",
+    )
+
+
+# New job-based match score endpoints (these should be in routes_jobs.py)
+@router.get("/jobs/{job_id}/match-score")
+def get_job_match_score(
+    job_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
     Get similarity score between resume and job description.
     """
-    # Verify the application belongs to the user
-    application = get_application(db, application_id)
-    if not application or application.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Application not found")
+    # Verify the job belongs to the user
+    job = crud_job.get_job(db, job_id)
+    if not job or job.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Job not found")
 
-    # Get existing match score
-    match_score = get_match_score(db, application_id)
+    # Get existing match score from match_scores table
+    match_score = get_match_score(db, job_id)
 
     if not match_score:
-        raise HTTPException(
-            status_code=404,
-            detail="Match score not found. Use recompute-match endpoint to calculate.",
-        )
+        # If no match score in table, check if job has match_score field
+        if job.match_score is not None:
+            resume = get_resume_by_user(db, current_user.id)
+            if not resume:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Resume not found. Please upload a resume first.",
+                )
+            return {
+                "job_id": str(job_id),
+                "resume_id": str(resume.id),
+                "similarity_score": job.match_score,
+            }
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="Match score not found. Use POST /jobs/{job_id}/match to calculate.",
+            )
 
     # Return response matching API spec
     return {
-        "application_id": str(match_score.application_id),
+        "job_id": str(match_score.job_id),
         "resume_id": str(match_score.resume_id),
         "similarity_score": match_score.similarity_score,
     }
-
-
-@router.post("/applications/{application_id}/recompute-match")
-def recompute_match_score(
-    application_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Recompute match score.
-    """
-    # Verify the application belongs to the user
-    application = get_application(db, application_id)
-    if not application or application.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    # Get user's resume
-    resume = get_resume_by_user(db, current_user.id)
-    if not resume:
-        raise HTTPException(
-            status_code=404,
-            detail="Resume not found. Please upload a resume first.",
-        )
-
-    # Check if embeddings exist - handle NumPy arrays properly
-    if resume.embedding is None or (
-        hasattr(resume.embedding, "size") and resume.embedding.size == 0
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Resume embedding not available. Please re-upload your resume.",
-        )
-
-    if application.job_embedding is None or (
-        hasattr(application.job_embedding, "size")
-        and application.job_embedding.size == 0
-    ):
-        raise HTTPException(
-            status_code=400, detail="Job description embedding not available."
-        )
-
-    try:
-        # Calculate similarity score
-        similarity_score = similarity_service.calculate_similarity_score(
-            resume.embedding, application.job_embedding
-        )
-
-        # Store the match score
-        match_score = create_or_update_match_score(
-            db, application_id, resume.id, similarity_score
-        )
-
-        # Return response matching API spec
-        return {
-            "application_id": str(match_score.application_id),
-            "resume_id": str(match_score.resume_id),
-            "similarity_score": match_score.similarity_score,
-        }
-
-    except SimilarityServiceError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(
-            f"Unexpected error in recompute_match_score: {str(e)}", exc_info=True
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Internal server error while computing match score",
-        )

@@ -32,11 +32,61 @@ def get_general_feedback(extracted_text: str) -> List[str]:
         return ["An error occurred while generating feedback. Please try again."]
 
 
+def get_job_specific_feedback_with_description(
+    extracted_text: str, job_description: str, job_title: str = ""
+) -> Tuple[List[str], str]:
+    """
+    Return job-specific AI feedback for the given resume text and job description.
+    This is the new function that works with jobs instead of applications.
+    """
+    if not extracted_text or len(extracted_text.strip()) == 0:
+        return (
+            ["Resume text is empty. Please upload a valid resume."],
+            "No job description available.",
+        )
+
+    if not job_description or len(job_description.strip()) == 0:
+        return (
+            [
+                "Job description is empty. Please ensure the job has a valid description."
+            ],
+            "No job description available.",
+        )
+
+    try:
+        job_excerpt = job_title if job_title else "Job Position"
+
+        feedback = llm_service.generate_feedback(
+            resume_text=extracted_text,
+            job_description=job_description,
+            feedback_type="job_specific",
+        )
+
+        return feedback, job_excerpt
+
+    except LLMServiceError as e:
+        logger.error(f"Failed to generate job-specific feedback: {str(e)}")
+        return (
+            [
+                "Unable to generate job-specific feedback at this time. Please try again later.",
+                "Consider reviewing how your skills align with the job requirements.",
+            ],
+            "Error processing job description.",
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in job-specific feedback: {str(e)}")
+        return (
+            ["An error occurred while generating feedback. Please try again."],
+            "Error processing job description.",
+        )
+
+
 def get_job_specific_feedback(
     extracted_text: str, application_id: UUID
 ) -> Tuple[List[str], str]:
     """
-    Return job-specific AI feedback for the given resume text and job (application_id).
+    DEPRECATED: Return job-specific AI feedback for the given resume text and job (application_id).
+    Use get_job_specific_feedback_with_description instead.
     """
     if not extracted_text or len(extracted_text.strip()) == 0:
         return (
