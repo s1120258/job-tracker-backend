@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # API
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Job Tracker API"
+    PROJECT_NAME: str = "ResMatch"
 
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = ["*"]

@@ -60,7 +60,7 @@ app.include_router(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from Job Tracker API"}
+    return {"message": "Hello from ResMatch"}
 
 
 @app.get("/ping-db")

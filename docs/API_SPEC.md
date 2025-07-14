@@ -1,6 +1,6 @@
 # 📑 API Specification
 
-This document describes the API endpoints for the Job Tracker backend. All endpoints are prefixed from the root (no `/api/v1`).
+This document describes the API endpoints for the ResMatch backend. All endpoints are prefixed from the root (no `/api/v1`).
 
 ---
 
