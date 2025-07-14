@@ -35,12 +35,13 @@ For project overview, setup, and data model details, see the [README](../README.
 {
   "company_name": "Acme Corp",
   "position_title": "Software Engineer",
+  "job_description_text": "We are looking for...",
+  "job_embedding": [0.12, 0.34, 0.56],
   "application_status": "applied",
   "applied_date": "2024-06-15",
   "interview_date": null,
   "offer_date": null,
-  "notes": "First round scheduled",
-  "job_description_text": "We are looking for..."
+  "notes": "First round scheduled"
 }
 ```
 
@@ -49,14 +50,16 @@ For project overview, setup, and data model details, see the [README](../README.
 ```json
 {
   "id": "uuid",
+  "user_id": "uuid",
   "company_name": "Acme Corp",
   "position_title": "Software Engineer",
+  "job_description_text": "We are looking for...",
+  "job_embedding": [0.12, 0.34, 0.56],
   "application_status": "applied",
   "applied_date": "2024-06-15",
   "interview_date": null,
   "offer_date": null,
   "notes": "First round scheduled",
-  "job_description_text": "We are looking for...",
   "created_at": "2024-06-15T12:00:00Z",
   "updated_at": "2024-06-15T12:00:00Z"
 }
@@ -81,9 +84,11 @@ For project overview, setup, and data model details, see the [README](../README.
 ```json
 {
   "id": "uuid",
+  "user_id": "uuid",
   "file_name": "resume.pdf",
   "upload_date": "2024-06-15T12:00:00Z",
-  "extracted_text": "John Doe is a software engineer..."
+  "extracted_text": "John Doe is a software engineer...",
+  "embedding": [0.12, 0.34, 0.56]
 }
 ```
 
