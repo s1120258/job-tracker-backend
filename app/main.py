@@ -7,10 +7,10 @@ from sqlalchemy import text
 from app.db.session import SessionLocal
 from app.api import (
     routes_auth,
-    routes_applications,
     routes_resumes,
     routes_match_scores,
     routes_analytics,
+    routes_jobs,
 )
 from app.core.config import settings
 
@@ -41,18 +41,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Authentication routes
 app.include_router(
     routes_auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"]
 )
-app.include_router(
-    routes_applications.router, prefix=f"{settings.API_V1_STR}", tags=["applications"]
-)
+
+# New Jobs routes (primary workflow)
+app.include_router(routes_jobs.router, prefix=f"{settings.API_V1_STR}", tags=["jobs"])
+
+
+# Resume management routes
 app.include_router(
     routes_resumes.router, prefix=f"{settings.API_V1_STR}", tags=["resumes"]
 )
+
+# Match scores routes (updated to support both jobs and legacy applications)
 app.include_router(
     routes_match_scores.router, prefix=f"{settings.API_V1_STR}", tags=["match-scores"]
 )
+
+# Analytics routes (updated to work with jobs)
 app.include_router(
     routes_analytics.router, prefix=f"{settings.API_V1_STR}", tags=["analytics"]
 )

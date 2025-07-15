@@ -14,5 +14,5 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)  # changed
     hashed_password = Column(String, nullable=False)
 
-    applications = relationship("Application", back_populates="user")
+    jobs = relationship("Job", back_populates="user")
     resumes = relationship("Resume", back_populates="user")

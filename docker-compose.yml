@@ -28,7 +28,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: job_tracker
+      POSTGRES_DB: res_match
     volumes:
       - pgdata:/var/lib/postgresql/data
 

@@ -7,6 +7,7 @@ from uuid import UUID
 from app.db.session import get_db
 from app.schemas.resume import ResumeCreate, ResumeRead
 from app.crud import resume as crud_resume
+from app.crud import job as crud_job
 from app.api.routes_auth import get_current_user
 from app.models.user import User
 
@@ -83,21 +84,34 @@ def get_resume_feedback_general(
     return {"general_feedback": feedback}
 
 
-@router.get("/resume/feedback/{application_id}")
+@router.get("/resume/feedback/{job_id}")
 def get_resume_feedback_job_specific(
-    application_id: UUID,
+    job_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Fetch the caller's resume first
     resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
 
-    from app.services.resume_feedback import get_job_specific_feedback
+    # Fetch job and ensure ownership
+    job = crud_job.get_job(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
 
-    feedback, job_excerpt = get_job_specific_feedback(
-        resume.extracted_text, application_id
+    if job.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Job does not belong to current user",
+        )
+
+    from app.services.resume_feedback import get_job_specific_feedback_with_description
+
+    feedback, job_excerpt = get_job_specific_feedback_with_description(
+        resume.extracted_text, job.description, job.title
     )
+
     return {
         "job_specific_feedback": feedback,
         "job_description_excerpt": job_excerpt,

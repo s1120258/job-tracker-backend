@@ -9,18 +9,16 @@ from app.models.match_score import MatchScore
 logger = logging.getLogger(__name__)
 
 
-def get_match_score(db: Session, application_id: UUID) -> Optional[MatchScore]:
-    """Get match score for a specific application."""
-    return (
-        db.query(MatchScore).filter(MatchScore.application_id == application_id).first()
-    )
+def get_match_score(db: Session, job_id: UUID) -> Optional[MatchScore]:
+    """Get match score for a specific job."""
+    return db.query(MatchScore).filter(MatchScore.job_id == job_id).first()
 
 
 def create_or_update_match_score(
-    db: Session, application_id: UUID, resume_id: UUID, similarity_score: float
+    db: Session, job_id: UUID, resume_id: UUID, similarity_score: float
 ) -> MatchScore:
-    """Create or update match score for an application."""
-    existing_match = get_match_score(db, application_id)
+    """Create or update match score for a job."""
+    existing_match = get_match_score(db, job_id)
 
     if existing_match:
         # Update existing record
@@ -32,7 +30,7 @@ def create_or_update_match_score(
     else:
         # Create new record
         match_score = MatchScore(
-            application_id=application_id,
+            job_id=job_id,
             resume_id=resume_id,
             similarity_score=similarity_score,
         )

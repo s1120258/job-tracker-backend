@@ -10,7 +10,7 @@ import pgvector.sqlalchemy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from app.db.base_class import Base
-from app.models import user, application, resume, match_score  # Add all import
+from app.models import user, job, resume, match_score  # Add all import
 from app.core.config import settings
 
 # Build DB URL from settings

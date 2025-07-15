@@ -7,7 +7,7 @@ from sqlalchemy import func, extract, case
 from app.db.session import get_db
 from app.api.routes_auth import get_current_user
 from app.models.user import User
-from app.models.application import Application, ApplicationStatus
+from app.models.job import Job, JobStatus
 from app.models.match_score import MatchScore
 
 logger = logging.getLogger(__name__)
@@ -20,29 +20,29 @@ def get_status_summary(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Get count of applications by status.
+    Get count of jobs by status.
     """
     try:
-        # Query applications grouped by status
+        # Query jobs grouped by status
         status_counts = (
             db.query(
-                Application.application_status,
-                func.count(Application.id).label("count"),
+                Job.status,
+                func.count(Job.id).label("count"),
             )
-            .filter(Application.user_id == current_user.id)
-            .group_by(Application.application_status)
+            .filter(Job.user_id == current_user.id)
+            .group_by(Job.status)
             .all()
         )
 
         # Convert to dictionary format
         summary = {}
-        for status_enum in ApplicationStatus:
+        for status_enum in JobStatus:
             summary[status_enum.value] = 0
 
         for status_enum, count in status_counts:
             summary[status_enum.value] = count
 
-        return {"status_summary": summary, "total_applications": sum(summary.values())}
+        return {"status_summary": summary, "total_jobs": sum(summary.values())}
 
     except Exception as e:
         logger.error(f"Error getting status summary: {str(e)}")
@@ -52,14 +52,14 @@ def get_status_summary(
         )
 
 
-@router.get("/analytics/applications-over-time")
-def get_applications_over_time(
+@router.get("/analytics/jobs-over-time")
+def get_jobs_over_time(
     period: str = Query("weekly", description="Time period: weekly or monthly"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Get applications count over time (weekly/monthly).
+    Get jobs count over time (weekly/monthly).
     """
     try:
         if period not in ["weekly", "monthly"]:
@@ -72,25 +72,25 @@ def get_applications_over_time(
         if period == "weekly":
             start_date = end_date - timedelta(weeks=12)
             date_format = "%Y-W%U"  # Year-Week format
-            date_extract = extract("year", Application.applied_date)
-            period_extract = extract("week", Application.applied_date)
+            date_extract = extract("year", Job.created_at)
+            period_extract = extract("week", Job.created_at)
         else:  # monthly
             start_date = end_date - timedelta(days=365)
             date_format = "%Y-%m"  # Year-Month format
-            date_extract = extract("year", Application.applied_date)
-            period_extract = extract("month", Application.applied_date)
+            date_extract = extract("year", Job.created_at)
+            period_extract = extract("month", Job.created_at)
 
-        # Query applications over time
-        applications_over_time = (
+        # Query jobs over time
+        jobs_over_time = (
             db.query(
                 date_extract.label("year"),
                 period_extract.label("period"),
-                func.count(Application.id).label("count"),
+                func.count(Job.id).label("count"),
             )
             .filter(
-                Application.user_id == current_user.id,
-                Application.applied_date >= start_date,
-                Application.applied_date <= end_date,
+                Job.user_id == current_user.id,
+                Job.created_at >= start_date,
+                Job.created_at <= end_date,
             )
             .group_by(date_extract, period_extract)
             .order_by(date_extract, period_extract)
@@ -99,7 +99,7 @@ def get_applications_over_time(
 
         # Format results
         results = []
-        for year, period_num, count in applications_over_time:
+        for year, period_num, count in jobs_over_time:
             year_int = int(year)
             period_int = int(period_num)  # ensure integer
 
@@ -110,15 +110,15 @@ def get_applications_over_time(
 
             results.append({"period": period_label, "count": count})
 
-        return {"period": period, "applications_over_time": results}
+        return {"period": period, "jobs_over_time": results}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting applications over time: {str(e)}")
+        logger.error(f"Error getting jobs over time: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Internal server error while retrieving applications over time",
+            detail="Internal server error while retrieving jobs over time",
         )
 
 
@@ -128,7 +128,7 @@ def get_match_score_summary(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Get average match score across applications.
+    Get average match score across jobs.
     """
     try:
         # Query match score statistics
@@ -139,8 +139,8 @@ def get_match_score_summary(
                 func.max(MatchScore.similarity_score).label("max_score"),
                 func.count(MatchScore.id).label("total_scores"),
             )
-            .join(Application, MatchScore.application_id == Application.id)
-            .filter(Application.user_id == current_user.id)
+            .join(Job, MatchScore.job_id == Job.id)
+            .filter(Job.user_id == current_user.id)
             .first()
         )
 
@@ -155,8 +155,8 @@ def get_match_score_summary(
                 ).label("category"),
                 func.count(MatchScore.id).label("count"),
             )
-            .join(Application, MatchScore.application_id == Application.id)
-            .filter(Application.user_id == current_user.id)
+            .join(Job, MatchScore.job_id == Job.id)
+            .filter(Job.user_id == current_user.id)
             .group_by("category")
             .all()
         )

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "postgres"
     DB_HOST: str = "db"
     DB_PORT: str = "5432"
-    DB_NAME: str = "job_tracker"
+    DB_NAME: str = "res_match"
 
     # Security
     SECRET_KEY: str = "dev-secret-key"
