@@ -81,11 +81,11 @@ class TestStatusSummary:
         app.dependency_overrides.clear()
 
 
-class TestApplicationsOverTime:
-    """Test cases for GET /analytics/applications-over-time endpoint."""
+class TestJobsOverTime:
+    """Test cases for GET /analytics/jobs-over-time endpoint."""
 
-    def test_get_applications_over_time_weekly(self, fake_user):
-        """Test successful retrieval of weekly applications over time"""
+    def test_get_jobs_over_time_weekly(self, fake_user):
+        """Test successful retrieval of weekly jobs over time"""
         with patch("app.api.routes_analytics.get_db") as mock_get_db:
             mock_db = MagicMock()
 
@@ -115,17 +115,17 @@ class TestApplicationsOverTime:
             mock_order_by.all.return_value = mock_results
 
             response = client.get(
-                "/api/v1/analytics/applications-over-time?period=weekly",
+                "/api/v1/analytics/jobs-over-time?period=weekly",
                 headers=auth_headers(),
             )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["period"] == "weekly"
-            assert "applications_over_time" in data
+            assert "jobs_over_time" in data
 
-    def test_get_applications_over_time_monthly(self, fake_user):
-        """Test successful retrieval of monthly applications over time"""
+    def test_get_jobs_over_time_monthly(self, fake_user):
+        """Test successful retrieval of monthly jobs over time"""
         with patch("app.api.routes_analytics.get_db") as mock_get_db:
             mock_db = MagicMock()
 
@@ -155,19 +155,19 @@ class TestApplicationsOverTime:
             mock_order_by.all.return_value = mock_results
 
             response = client.get(
-                "/api/v1/analytics/applications-over-time?period=monthly",
+                "/api/v1/analytics/jobs-over-time?period=monthly",
                 headers=auth_headers(),
             )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["period"] == "monthly"
-            assert "applications_over_time" in data
+            assert "jobs_over_time" in data
 
-    def test_get_applications_over_time_invalid_period(self, fake_user):
+    def test_get_jobs_over_time_invalid_period(self, fake_user):
         """Test with invalid period parameter"""
         response = client.get(
-            "/api/v1/analytics/applications-over-time?period=invalid",
+            "/api/v1/analytics/jobs-over-time?period=invalid",
             headers=auth_headers(),
         )
 
@@ -262,12 +262,12 @@ class TestAuthentication:
         response = client.get("/api/v1/analytics/status-summary")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_applications_over_time_no_auth(self):
-        """Test that applications over time endpoint requires authentication"""
+    def test_jobs_over_time_no_auth(self):
+        """Test that jobs over time endpoint requires authentication"""
         # Clear dependency overrides for this test
         app.dependency_overrides.clear()
 
-        response = client.get("/api/v1/analytics/applications-over-time")
+        response = client.get("/api/v1/analytics/jobs-over-time")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_match_score_summary_no_auth(self):
