@@ -98,8 +98,13 @@ def get_job(
 ):
     """Get details of a specific job."""
     job = crud_job.get_job(db, job_id)
-    if not job or job.user_id != current_user.id:
+    if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+    if job.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Job does not belong to current user",
+        )
     return job
 
 
@@ -155,7 +160,7 @@ def calculate_match_score(
     resume = get_resume_by_user(db, current_user.id)
     if not resume:
         raise HTTPException(
-            status_code=404,
+            status_code=400,
             detail="Resume not found. Please upload a resume first.",
         )
 
