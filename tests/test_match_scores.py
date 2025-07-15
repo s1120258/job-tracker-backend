@@ -6,7 +6,7 @@ from uuid import uuid4
 import numpy as np
 from app.main import app
 from app.models.user import User
-from app.models.application import Application, ApplicationStatus
+
 from app.models.job import Job, JobStatus
 from app.models.resume import Resume
 from app.models.match_score import MatchScore
@@ -20,18 +20,7 @@ def fake_user():
     return User(id=uuid4(), email="test@example.com", hashed_password="hashed")
 
 
-@pytest.fixture
-def fake_application(fake_user):
-    return Application(
-        id=uuid4(),
-        user_id=fake_user.id,
-        company_name="Acme Corp",
-        position_title="Software Engineer",
-        job_description_text="Job description",
-        job_embedding=np.array([0.1] * 1536),  # Add embedding
-        application_status=ApplicationStatus.applied,
-        applied_date="2024-06-15",
-    )
+
 
 
 @pytest.fixture
@@ -176,10 +165,10 @@ class TestJobMatchScores:
 class TestDeprecatedApplicationEndpoints:
     """Test that deprecated application-based endpoints return appropriate responses."""
 
-    def test_deprecated_application_match_score(self, fake_user, fake_application):
+    def test_deprecated_application_match_score(self, fake_user):
         """Test that deprecated application match-score endpoint returns 410 Gone"""
         response = client.get(
-            f"/api/v1/applications/{fake_application.id}/match-score",
+            f"/api/v1/applications/{uuid4()}/match-score",
             headers=auth_headers(),
         )
         assert response.status_code == status.HTTP_410_GONE
@@ -187,10 +176,10 @@ class TestDeprecatedApplicationEndpoints:
         assert "deprecated" in data["detail"].lower()
         assert "jobs" in data["detail"].lower()
 
-    def test_deprecated_application_recompute_match(self, fake_user, fake_application):
+    def test_deprecated_application_recompute_match(self, fake_user):
         """Test that deprecated application recompute-match endpoint returns 410 Gone"""
         response = client.post(
-            f"/api/v1/applications/{fake_application.id}/recompute-match",
+            f"/api/v1/applications/{uuid4()}/recompute-match",
             headers=auth_headers(),
         )
         assert response.status_code == status.HTTP_410_GONE

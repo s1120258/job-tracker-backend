@@ -6,7 +6,7 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 from app.main import app
 from app.models.user import User
-from app.models.application import Application, ApplicationStatus
+
 from app.models.job import Job, JobStatus
 from app.models.match_score import MatchScore
 from app.api.routes_auth import get_current_user

@@ -1,5 +1,4 @@
 from .user import UserCreate, UserRead, Token, RefreshToken
-from .application import ApplicationCreate, ApplicationUpdate, ApplicationRead
 from .job import (
     JobCreate,
     JobUpdate,

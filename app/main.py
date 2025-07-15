@@ -7,7 +7,6 @@ from sqlalchemy import text
 from app.db.session import SessionLocal
 from app.api import (
     routes_auth,
-    routes_applications,
     routes_resumes,
     routes_match_scores,
     routes_analytics,
@@ -50,10 +49,7 @@ app.include_router(
 # New Jobs routes (primary workflow)
 app.include_router(routes_jobs.router, prefix=f"{settings.API_V1_STR}", tags=["jobs"])
 
-# Legacy Applications routes (maintained for backward compatibility)
-app.include_router(
-    routes_applications.router, prefix=f"{settings.API_V1_STR}", tags=["applications"]
-)
+
 
 # Resume management routes
 app.include_router(

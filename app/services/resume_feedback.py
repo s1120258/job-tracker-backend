@@ -4,7 +4,7 @@ from typing import List, Tuple
 from uuid import UUID
 import logging
 from app.services.llm_service import llm_service, LLMServiceError
-from app.crud.application import get_application
+
 
 logger = logging.getLogger(__name__)
 
@@ -95,28 +95,11 @@ def get_job_specific_feedback(
         )
 
     try:
-        # Get job description from database
-        from app.db.session import get_db
-
-        db = next(get_db())
-        application = get_application(db, application_id)
-
-        if not application:
-            return (
-                ["Application not found. Please check the application ID."],
-                "No job description available.",
-            )
-
-        job_description = application.job_description_text
-        job_excerpt = f"{application.company_name} - {application.position_title}"
-
-        feedback = llm_service.generate_feedback(
-            resume_text=extracted_text,
-            job_description=job_description,
-            feedback_type="job_specific",
+        # Application-based feedback has been deprecated
+        return (
+            ["Application-based feedback is no longer supported. Please use job-based feedback instead."],
+            "Job-based feedback available.",
         )
-
-        return feedback, job_excerpt
 
     except LLMServiceError as e:
         logger.error(f"Failed to generate job-specific feedback: {str(e)}")

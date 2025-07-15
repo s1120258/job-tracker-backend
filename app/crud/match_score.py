@@ -14,13 +14,7 @@ def get_match_score(db: Session, job_id: UUID) -> Optional[MatchScore]:
     return db.query(MatchScore).filter(MatchScore.job_id == job_id).first()
 
 
-def get_match_score_by_application(
-    db: Session, application_id: UUID
-) -> Optional[MatchScore]:
-    """DEPRECATED: Get match score for a specific application. Use get_match_score instead."""
-    return (
-        db.query(MatchScore).filter(MatchScore.application_id == application_id).first()
-    )
+
 
 
 def create_or_update_match_score(
@@ -49,27 +43,4 @@ def create_or_update_match_score(
         return match_score
 
 
-def create_or_update_match_score_by_application(
-    db: Session, application_id: UUID, resume_id: UUID, similarity_score: float
-) -> MatchScore:
-    """DEPRECATED: Create or update match score for an application. Use create_or_update_match_score instead."""
-    existing_match = get_match_score_by_application(db, application_id)
 
-    if existing_match:
-        # Update existing record
-        existing_match.similarity_score = similarity_score
-        existing_match.resume_id = resume_id
-        db.commit()
-        db.refresh(existing_match)
-        return existing_match
-    else:
-        # Create new record
-        match_score = MatchScore(
-            application_id=application_id,
-            resume_id=resume_id,
-            similarity_score=similarity_score,
-        )
-        db.add(match_score)
-        db.commit()
-        db.refresh(match_score)
-        return match_score
