@@ -76,8 +76,6 @@ class SimilarityService:
             logger.error(f"Error calculating similarity: {str(e)}", exc_info=True)
             raise SimilarityServiceError(f"Failed to calculate similarity: {str(e)}")
 
-
-
     def _store_match_score(
         self,
         db: Session,
@@ -130,10 +128,6 @@ class SimilarityService:
             db.rollback()
             logger.error(f"Error storing match score: {str(e)}")
             raise SimilarityServiceError(f"Failed to store match score: {str(e)}")
-
-
-
-
 
 
 # Global instance

@@ -97,7 +97,9 @@ def get_job_specific_feedback(
     try:
         # Application-based feedback has been deprecated
         return (
-            ["Application-based feedback is no longer supported. Please use job-based feedback instead."],
+            [
+                "Application-based feedback is no longer supported. Please use job-based feedback instead."
+            ],
             "Job-based feedback available.",
         )
 

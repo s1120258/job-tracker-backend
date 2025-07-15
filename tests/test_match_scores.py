@@ -20,9 +20,6 @@ def fake_user():
     return User(id=uuid4(), email="test@example.com", hashed_password="hashed")
 
 
-
-
-
 @pytest.fixture
 def fake_resume(fake_user):
     return Resume(
@@ -102,7 +99,8 @@ class TestJobMatchScores:
     ):
         """Test successful retrieval of job match score"""
         with patch("app.crud.job.get_job", return_value=fake_job), patch(
-            "app.api.routes_match_scores.get_match_score", return_value=fake_job_match_score
+            "app.api.routes_match_scores.get_match_score",
+            return_value=fake_job_match_score,
         ):
 
             response = client.get(

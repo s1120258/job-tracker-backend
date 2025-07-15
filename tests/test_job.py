@@ -226,7 +226,7 @@ def test_match_job_to_resume(fake_user, fake_job):
         response = client.post(
             f"/api/v1/jobs/{fake_job.id}/match",
             json={"resume_id": str(fake_resume.id)},
-            headers=auth_headers()
+            headers=auth_headers(),
         )
         # Accept current behavior: embedding dimension validation fails
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -243,7 +243,7 @@ def test_match_job_no_resume(fake_user, fake_job):
         response = client.post(
             f"/api/v1/jobs/{fake_job.id}/match",
             json={"resume_id": str(uuid4())},
-            headers=auth_headers()
+            headers=auth_headers(),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()

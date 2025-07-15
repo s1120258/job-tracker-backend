@@ -50,7 +50,6 @@ app.include_router(
 app.include_router(routes_jobs.router, prefix=f"{settings.API_V1_STR}", tags=["jobs"])
 
 
-
 # Resume management routes
 app.include_router(
     routes_resumes.router, prefix=f"{settings.API_V1_STR}", tags=["resumes"]

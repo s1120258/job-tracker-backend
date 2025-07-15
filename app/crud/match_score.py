@@ -14,9 +14,6 @@ def get_match_score(db: Session, job_id: UUID) -> Optional[MatchScore]:
     return db.query(MatchScore).filter(MatchScore.job_id == job_id).first()
 
 
-
-
-
 def create_or_update_match_score(
     db: Session, job_id: UUID, resume_id: UUID, similarity_score: float
 ) -> MatchScore:
@@ -41,6 +38,3 @@ def create_or_update_match_score(
         db.commit()
         db.refresh(match_score)
         return match_score
-
-
-
