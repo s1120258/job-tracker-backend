@@ -37,7 +37,6 @@ def get_job_specific_feedback_with_description(
 ) -> Tuple[List[str], str]:
     """
     Return job-specific AI feedback for the given resume text and job description.
-    This is the new function that works with jobs instead of applications.
     """
     if not extracted_text or len(extracted_text.strip()) == 0:
         return (

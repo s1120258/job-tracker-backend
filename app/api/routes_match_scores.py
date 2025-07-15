@@ -15,38 +15,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/applications/{application_id}/match-score", deprecated=True)
-def get_match_score_endpoint_deprecated(
-    application_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    DEPRECATED: Use GET /jobs/{job_id} to get match score.
-    This endpoint will be removed in future versions.
-    """
-    raise HTTPException(
-        status_code=410,
-        detail="This endpoint is deprecated. Use GET /jobs/{job_id} to get match score from the job details.",
-    )
-
-
-@router.post("/applications/{application_id}/recompute-match", deprecated=True)
-def recompute_match_score_deprecated(
-    application_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    DEPRECATED: Use POST /jobs/{job_id}/match to calculate match score.
-    This endpoint will be removed in future versions.
-    """
-    raise HTTPException(
-        status_code=410,
-        detail="This endpoint is deprecated. Use POST /jobs/{job_id}/match to calculate match score.",
-    )
-
-
 # New job-based match score endpoints (these should be in routes_jobs.py)
 @router.get("/jobs/{job_id}/match-score")
 def get_job_match_score(

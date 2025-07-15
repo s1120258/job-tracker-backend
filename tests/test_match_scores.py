@@ -158,29 +158,3 @@ class TestJobMatchScores:
                 headers=auth_headers(),
             )
             assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-class TestDeprecatedApplicationEndpoints:
-    """Test that deprecated application-based endpoints return appropriate responses."""
-
-    def test_deprecated_application_match_score(self, fake_user):
-        """Test that deprecated application match-score endpoint returns 410 Gone"""
-        response = client.get(
-            f"/api/v1/applications/{uuid4()}/match-score",
-            headers=auth_headers(),
-        )
-        assert response.status_code == status.HTTP_410_GONE
-        data = response.json()
-        assert "deprecated" in data["detail"].lower()
-        assert "jobs" in data["detail"].lower()
-
-    def test_deprecated_application_recompute_match(self, fake_user):
-        """Test that deprecated application recompute-match endpoint returns 410 Gone"""
-        response = client.post(
-            f"/api/v1/applications/{uuid4()}/recompute-match",
-            headers=auth_headers(),
-        )
-        assert response.status_code == status.HTTP_410_GONE
-        data = response.json()
-        assert "deprecated" in data["detail"].lower()
-        assert "jobs" in data["detail"].lower()

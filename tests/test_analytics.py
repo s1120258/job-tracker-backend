@@ -63,7 +63,7 @@ class TestStatusSummary:
         # Clear override
         app.dependency_overrides.clear()
 
-    def test_get_status_summary_no_applications(self, fake_user):
+    def test_get_status_summary_no_jobs(self, fake_user):
         mock_db = MagicMock()
 
         def _override_get_db():
