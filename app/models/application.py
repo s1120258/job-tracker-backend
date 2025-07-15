@@ -42,6 +42,3 @@ class Application(Base):
     )
 
     user = relationship("User", back_populates="applications")
-    match_score = relationship(
-        "MatchScore", back_populates="application", uselist=False
-    )

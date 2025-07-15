@@ -90,22 +90,28 @@ def get_resume_feedback_job_specific(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get job-specific resume feedback based on a saved job."""
+    # Fetch the caller's resume first
     resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
 
-    # Get the job to verify it belongs to the user and get job description
+    # Fetch job and ensure ownership
     job = crud_job.get_job(db, job_id)
-    if not job or job.user_id != current_user.id:
+    if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Job does not belong to current user",
+        )
 
     from app.services.resume_feedback import get_job_specific_feedback_with_description
 
-    # Pass job description directly instead of job_id
     feedback, job_excerpt = get_job_specific_feedback_with_description(
         resume.extracted_text, job.description, job.title
     )
+
     return {
         "job_specific_feedback": feedback,
         "job_description_excerpt": job_excerpt,

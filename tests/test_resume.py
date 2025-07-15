@@ -163,29 +163,22 @@ def test_get_resume_feedback_general(fake_user):
 
 
 def test_get_resume_feedback_job_specific(fake_user):
-    feedback = [
-        "Emphasize experience with cloud technologies, as required by the job description.",
-        "Highlight teamwork and communication skills.",
-    ]
-    job_excerpt = "We are looking for a software engineer with experience in AWS and team projects."
+    """Requesting feedback with a non-existent job_id should return 404 now that legacy support is removed."""
     fake_resume = ResumeRead(
         id=uuid4(),
         user_id=fake_user.id,
         file_name="resume.pdf",
         upload_date="2024-06-15T12:00:00Z",
         extracted_text="Some extracted text",
-        embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
+        embedding=[0.1, 0.2, 0.3] * 512,
     )
+
     with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.services.resume_feedback.get_job_specific_feedback",
-        return_value=(feedback, job_excerpt),
+        "app.crud.job.get_job", return_value=None
     ):
         response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
-    assert response.status_code == 200
-    data = response.json()
-    assert "job_specific_feedback" in data
-    assert data["job_specific_feedback"] == feedback
-    assert data["job_description_excerpt"] == job_excerpt
+
+    assert response.status_code == 404
 
 
 def test_get_resume_feedback_with_job_id(fake_user):
@@ -195,7 +188,7 @@ def test_get_resume_feedback_with_job_id(fake_user):
 
     feedback = [
         "Emphasize your Python and FastAPI experience",
-        "Add more details about your remote work experience"
+        "Add more details about your remote work experience",
     ]
     job_excerpt = "Looking for experienced Python developer with FastAPI knowledge"
 
@@ -222,12 +215,16 @@ def test_get_resume_feedback_with_job_id(fake_user):
         job_embedding=np.array([0.2] * 1536),
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
-         patch("app.crud.job.get_job", return_value=fake_job), \
-         patch("app.services.resume_feedback.get_job_specific_feedback_with_description",
-               return_value=(feedback, job_excerpt)):
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
+        "app.crud.job.get_job", return_value=fake_job
+    ), patch(
+        "app.services.resume_feedback.get_job_specific_feedback_with_description",
+        return_value=(feedback, job_excerpt),
+    ):
 
-        response = client.get(f"/api/v1/resume/feedback/{fake_job.id}", headers=auth_headers())
+        response = client.get(
+            f"/api/v1/resume/feedback/{fake_job.id}", headers=auth_headers()
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -247,10 +244,13 @@ def test_get_resume_feedback_job_not_found(fake_user):
         embedding=[0.1, 0.2, 0.3] * 512,
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
-         patch("app.crud.job.get_job", return_value=None):
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
+        "app.crud.job.get_job", return_value=None
+    ):
 
-        response = client.get(f"/api/v1/resume/feedback/{uuid4()}", headers=auth_headers())
+        response = client.get(
+            f"/api/v1/resume/feedback/{uuid4()}", headers=auth_headers()
+        )
 
     assert response.status_code == 404
 
@@ -284,9 +284,12 @@ def test_get_resume_feedback_job_unauthorized(fake_user):
         job_embedding=np.array([0.3] * 1536),
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), \
-         patch("app.crud.job.get_job", return_value=other_job):
+    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
+        "app.crud.job.get_job", return_value=other_job
+    ):
 
-        response = client.get(f"/api/v1/resume/feedback/{other_job.id}", headers=auth_headers())
+        response = client.get(
+            f"/api/v1/resume/feedback/{other_job.id}", headers=auth_headers()
+        )
 
     assert response.status_code == 403
