@@ -6,15 +6,17 @@ A FastAPI-based backend to help users track job applications, upload and analyze
 
 ## 🎯 Overview
 
-This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes resume parsing, vector-based matching, and LLM-generated insights to streamline and enhance job search workflows.
+This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes external job board integration, resume parsing, vector-based matching, and LLM-generated insights to streamline and enhance job search workflows.
 
 ---
 
 ## 🚀 Key Features
 
-### ✅ Job Application Tracking
+### ✅ Job Application Tracking & External Job Search
 
-- Create, update, and manage job applications with status fields, notes, and manually entered job descriptions.
+- Search and import jobs from external job boards (RemoteOK, with more sources coming soon).
+- Create, update, and manage job applications with status fields, notes, and job descriptions.
+- Combine external job board searches with saved job filtering for comprehensive job discovery.
 
 ### 📄 Resume Upload & AI Feedback
 
@@ -48,6 +50,7 @@ This project provides an API-first backend system designed for developers buildi
 - **Database:** PostgreSQL with SQLAlchemy & Alembic
 - **Configuration:** Pydantic Settings + `.env` support
 - **Resume Parsing:** PyPDF2, python-docx
+- **Job Board Integration:** RemoteOK API, BeautifulSoup4, requests
 - **LLM & Embeddings:** OpenAI API, pgvector
 - **Authentication:** JWT
 - **Developer Tools:** Docker Compose, pytest, black, GitHub Actions
