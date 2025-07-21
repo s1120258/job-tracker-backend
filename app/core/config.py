@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     # Optional: OpenAI API Key for future LLM features
     OPENAI_API_KEY: Optional[str] = None
 
+    # Job Scraper Settings
+    JOB_SCRAPER_TIMEOUT: int = 30
+    JOB_SCRAPER_RETRIES: int = 3
+    JOB_SCRAPER_DELAY: float = 1.0  # Delay between requests (seconds)
+    JOB_SCRAPER_USER_AGENT: str = "res-match-api/1.0 (https://res-match.com/bot)"
+    JOB_SCRAPER_MAX_RESULTS: int = 100  # Maximum results per search
+
     model_config = ConfigDict(
         env_file=".env", extra="ignore"  # Ignore extra environment variables
     )

@@ -23,6 +23,7 @@ from app.crud.match_score import create_or_update_match_score
 from app.api.routes_auth import get_current_user
 from app.models.user import User
 from app.services.similarity_service import similarity_service, SimilarityServiceError
+from app.services.job_scraper_service import job_scraper_service
 from datetime import datetime
 import logging
 
@@ -34,40 +35,126 @@ router = APIRouter()
 def search_jobs(
     keyword: Optional[str] = Query(None, description="Search keyword"),
     location: Optional[str] = Query(None, description="Job location"),
-    source: Optional[str] = Query(None, description="Job board source"),
+    source: Optional[str] = Query(
+        None, description="Job board source (e.g., 'remoteok')"
+    ),
+    search_external: bool = Query(
+        True, description="Whether to search external job boards"
+    ),
+    search_saved: bool = Query(False, description="Whether to search saved jobs"),
+    limit: int = Query(
+        20, description="Maximum number of jobs to return", ge=1, le=100
+    ),
+    fetch_full_description: bool = Query(
+        True, description="Whether to fetch full job descriptions (external only)"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Search jobs from external job boards (placeholder for crawler integration).
-    For now, this returns saved jobs matching the criteria.
-    """
-    # TODO: Integrate with actual job crawler (RemoteOK, Indeed, etc.)
-    # For now, search within saved jobs
-    if keyword:
-        jobs = crud_job.search_jobs_by_keyword(db, current_user.id, keyword)
-    else:
-        jobs = crud_job.get_jobs(db, current_user.id)
+    Search jobs from external job boards and/or saved jobs.
 
-    # Convert to search result format
-    search_results = []
-    for job in jobs:
-        if (
-            not location or (job.location and location.lower() in job.location.lower())
-        ) and (not source or (job.source and source.lower() in job.source.lower())):
-            search_results.append(
-                {
-                    "title": job.title,
-                    "description": job.description,
-                    "company": job.company,
-                    "location": job.location,
-                    "url": job.url,
-                    "source": job.source or "Manual",
-                    "date_posted": job.date_posted,
-                }
+    By default, searches external job boards. Use search_saved=True to also include saved jobs.
+    """
+    all_jobs = []
+
+    # Search external job boards if requested
+    if search_external and keyword:
+        try:
+            logger.info("Searching external job boards for keyword: %s", keyword)
+            external_jobs = job_scraper_service.search_jobs(
+                keyword=keyword,
+                location=location or "",
+                source=source,
+                limit=limit,
+                fetch_full_description=fetch_full_description,
             )
 
-    return {"jobs": search_results}
+            # Convert external jobs to the expected format
+            for job in external_jobs:
+                search_result = {
+                    "title": job.get("title", ""),
+                    "description": job.get("description", ""),
+                    "company": job.get("company", ""),
+                    "location": job.get("location", ""),
+                    "url": job.get("url", ""),
+                    "source": job.get("source", "External"),
+                    "date_posted": job.get("posted_at"),
+                    "salary": job.get("salary"),
+                    "board_type": job.get("board_type", "unknown"),
+                }
+                all_jobs.append(search_result)
+
+            logger.info("Found %d external jobs", len(external_jobs))
+
+        except Exception as e:
+            logger.error("Error searching external job boards: %s", e)
+            # Continue to search saved jobs if external search fails
+
+    # Search saved jobs if requested
+    if search_saved:
+        try:
+            if keyword:
+                saved_jobs = crud_job.search_jobs_by_keyword(
+                    db, current_user.id, keyword
+                )
+            else:
+                saved_jobs = crud_job.get_jobs(db, current_user.id)
+
+            # Convert saved jobs to search result format
+            for job in saved_jobs:
+                # Apply location and source filters
+                if (
+                    not location
+                    or (job.location and location.lower() in job.location.lower())
+                ) and (
+                    not source or (job.source and source.lower() in job.source.lower())
+                ):
+                    search_result = {
+                        "title": job.title,
+                        "description": job.description,
+                        "company": job.company,
+                        "location": job.location,
+                        "url": job.url,
+                        "source": job.source or "Saved",
+                        "date_posted": job.date_posted,
+                        "salary": getattr(job, "salary", None),
+                        "board_type": "saved",
+                        "job_id": str(job.id),  # Include job ID for saved jobs
+                    }
+                    all_jobs.append(search_result)
+
+            logger.info("Found %d saved jobs", len([job for job in saved_jobs]))
+
+        except Exception as e:
+            logger.error("Error searching saved jobs: %s", e)
+
+    # If no search type is enabled, return error
+    if not search_external and not search_saved:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one of search_external or search_saved must be True",
+        )
+
+    # Apply overall limit if needed
+    if len(all_jobs) > limit:
+        all_jobs = all_jobs[:limit]
+
+    return {
+        "jobs": all_jobs,
+        "total_found": len(all_jobs),
+        "search_params": {
+            "keyword": keyword,
+            "location": location,
+            "source": source,
+            "search_external": search_external,
+            "search_saved": search_saved,
+            "limit": limit,
+        },
+        "available_sources": (
+            job_scraper_service.get_available_sources() if search_external else []
+        ),
+    }
 
 
 @router.post("/jobs/save", response_model=JobRead, status_code=status.HTTP_201_CREATED)

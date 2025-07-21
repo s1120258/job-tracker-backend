@@ -42,3 +42,8 @@ pgvector==0.2.4
 
 # Added from the code block
 openai==1.12.0
+
+# Web scraping / HTTP requests
+beautifulsoup4==4.12.2
+requests==2.31.0
+urllib3==2.0.7
