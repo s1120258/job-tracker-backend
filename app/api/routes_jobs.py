@@ -38,10 +38,7 @@ def search_jobs(
     source: Optional[str] = Query(
         None, description="Job board source (e.g., 'remoteok')"
     ),
-    search_external: bool = Query(
-        True, description="Whether to search external job boards"
-    ),
-    search_saved: bool = Query(False, description="Whether to search saved jobs"),
+    sort_by: str = Query("date", enum=["date", "match_score"]),
     limit: int = Query(
         20, description="Maximum number of jobs to return", ge=1, le=100
     ),
@@ -52,7 +49,7 @@ def search_jobs(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Search jobs from external job boards and/or saved jobs.
+    Search jobs from external job boards.
 
     By default, searches external job boards. Use search_saved=True to also include saved jobs.
     """
@@ -91,49 +88,11 @@ def search_jobs(
             logger.error("Error searching external job boards: %s", e)
             # Continue to search saved jobs if external search fails
 
-    # Search saved jobs if requested
-    if search_saved:
-        try:
-            if keyword:
-                saved_jobs = crud_job.search_jobs_by_keyword(
-                    db, current_user.id, keyword
-                )
-            else:
-                saved_jobs = crud_job.get_jobs(db, current_user.id)
-
-            # Convert saved jobs to search result format
-            for job in saved_jobs:
-                # Apply location and source filters
-                if (
-                    not location
-                    or (job.location and location.lower() in job.location.lower())
-                ) and (
-                    not source or (job.source and source.lower() in job.source.lower())
-                ):
-                    search_result = {
-                        "title": job.title,
-                        "description": job.description,
-                        "company": job.company,
-                        "location": job.location,
-                        "url": job.url,
-                        "source": job.source or "Saved",
-                        "date_posted": job.date_posted,
-                        "salary": getattr(job, "salary", None),
-                        "board_type": "saved",
-                        "job_id": str(job.id),  # Include job ID for saved jobs
-                    }
-                    all_jobs.append(search_result)
-
-            logger.info("Found %d saved jobs", len([job for job in saved_jobs]))
-
-        except Exception as e:
-            logger.error("Error searching saved jobs: %s", e)
-
-    # If no search type is enabled, return error
-    if not search_external and not search_saved:
+        # If no keyword provided, return error
+    if not keyword:
         raise HTTPException(
             status_code=400,
-            detail="At least one of search_external or search_saved must be True",
+            detail="Search keyword is required for external job board search",
         )
 
     # Apply overall limit if needed
@@ -147,13 +106,9 @@ def search_jobs(
             "keyword": keyword,
             "location": location,
             "source": source,
-            "search_external": search_external,
-            "search_saved": search_saved,
             "limit": limit,
         },
-        "available_sources": (
-            job_scraper_service.get_available_sources() if search_external else []
-        ),
+        "available_sources": job_scraper_service.get_available_sources(),
     }
 
 
