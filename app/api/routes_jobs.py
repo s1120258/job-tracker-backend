@@ -24,11 +24,44 @@ from app.api.routes_auth import get_current_user
 from app.models.user import User
 from app.services.similarity_service import similarity_service, SimilarityServiceError
 from app.services.job_scraper_service import job_scraper_service
+from app.services.embedding_service import embedding_service, EmbeddingServiceError
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def calculate_job_match_score(
+    job_description: str, user_resume_embedding: list[float]
+) -> float:
+    """
+    Calculate match score between job description and user resume.
+
+    Args:
+        job_description: Job description text
+        user_resume_embedding: User's resume embedding vector
+
+    Returns:
+        float: Match score between 0 and 1
+    """
+    try:
+        # Generate embedding for job description
+        job_embedding = embedding_service.generate_embedding(job_description)
+
+        # Calculate similarity score
+        similarity_score = similarity_service.calculate_similarity_score(
+            user_resume_embedding, job_embedding
+        )
+
+        return similarity_score
+
+    except (EmbeddingServiceError, SimilarityServiceError) as e:
+        logger.error("Error calculating match score: %s", e)
+        return 0.0
+    except Exception as e:
+        logger.error("Unexpected error in match score calculation: %s", e)
+        return 0.0
 
 
 @router.get("/jobs/search")
@@ -43,7 +76,7 @@ def search_jobs(
         20, description="Maximum number of jobs to return", ge=1, le=100
     ),
     fetch_full_description: bool = Query(
-        True, description="Whether to fetch full job descriptions (external only)"
+        True, description="Whether to fetch full job descriptions"
     ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -51,19 +84,35 @@ def search_jobs(
     """
     Search jobs from external job boards.
 
-    By default, searches external job boards. Use search_saved=True to also include saved jobs.
+    Can sort by date (newest first) or match_score (highest match first).
+    Match score sorting requires an uploaded resume with embedding.
+
+    For saved jobs management, use GET /jobs endpoint.
     """
     all_jobs = []
 
-    # Search external job boards if requested
-    if search_external and keyword:
+    # Check if user resume is required for match score sorting
+    user_resume = None
+    if sort_by == "match_score":
+        user_resume = get_resume_by_user(db, current_user.id)
+        if not user_resume or not user_resume.embedding:
+            raise HTTPException(
+                status_code=400,
+                detail="Resume with embedding required for match score sorting. Please upload a resume first.",
+            )
+
+    # Search external job boards
+    if keyword:
         try:
             logger.info("Searching external job boards for keyword: %s", keyword)
+            # Adjust limit for match score sorting to get more candidates
+            search_limit = limit if sort_by == "date" else min(limit * 2, 100)
+
             external_jobs = job_scraper_service.search_jobs(
                 keyword=keyword,
                 location=location or "",
                 source=source,
-                limit=limit,
+                limit=search_limit,
                 fetch_full_description=fetch_full_description,
             )
 
@@ -79,7 +128,30 @@ def search_jobs(
                     "date_posted": job.get("posted_at"),
                     "salary": job.get("salary"),
                     "board_type": job.get("board_type", "unknown"),
+                    "match_score": None,  # Will be calculated if needed
                 }
+
+                # Calculate match score if sorting by match_score
+                if sort_by == "match_score" and user_resume:
+                    try:
+                        match_score = calculate_job_match_score(
+                            job_description=job.get("description", ""),
+                            user_resume_embedding=user_resume.embedding,
+                        )
+                        search_result["match_score"] = match_score
+                        logger.info(
+                            "Calculated match score %.2f for job: %s",
+                            match_score,
+                            job.get("title", ""),
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to calculate match score for job '%s': %s",
+                            job.get("title", ""),
+                            e,
+                        )
+                        search_result["match_score"] = 0.0
+
                 all_jobs.append(search_result)
 
             logger.info("Found %d external jobs", len(external_jobs))
@@ -95,18 +167,47 @@ def search_jobs(
             detail="Search keyword is required for external job board search",
         )
 
+    # Sort jobs based on specified criteria
+    if sort_by == "match_score":
+        # Sort by match score descending (highest match first)
+        all_jobs.sort(key=lambda x: x.get("match_score", 0), reverse=True)
+        logger.info("Sorted %d jobs by match score", len(all_jobs))
+    else:
+        # Sort by date posted descending (newest first)
+        all_jobs.sort(key=lambda x: x.get("date_posted") or "", reverse=True)
+        logger.info("Sorted %d jobs by date", len(all_jobs))
+
     # Apply overall limit if needed
     if len(all_jobs) > limit:
         all_jobs = all_jobs[:limit]
 
+    # Calculate match score statistics for match_score sorting
+    match_stats = None
+    if sort_by == "match_score" and all_jobs:
+        match_scores = [
+            job.get("match_score", 0)
+            for job in all_jobs
+            if job.get("match_score") is not None
+        ]
+        if match_scores:
+            match_stats = {
+                "average_score": sum(match_scores) / len(match_scores),
+                "highest_score": max(match_scores),
+                "lowest_score": min(match_scores),
+                "jobs_with_scores": len(match_scores),
+            }
+
     return {
         "jobs": all_jobs,
         "total_found": len(all_jobs),
+        "sort_by": sort_by,
+        "match_statistics": match_stats,
         "search_params": {
             "keyword": keyword,
             "location": location,
             "source": source,
             "limit": limit,
+            "sort_by": sort_by,
         },
         "available_sources": job_scraper_service.get_available_sources(),
     }
