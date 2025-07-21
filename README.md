@@ -15,8 +15,8 @@ This project provides an API-first backend system designed for developers buildi
 ### ✅ Job Application Tracking & External Job Search
 
 - Search and import jobs from external job boards (RemoteOK, with more sources coming soon).
+- AI-powered match score sorting to find jobs best suited to your resume and skills.
 - Create, update, and manage job applications with status fields, notes, and job descriptions.
-- Combine external job board searches with saved job filtering for comprehensive job discovery.
 
 ### 📄 Resume Upload & AI Feedback
 

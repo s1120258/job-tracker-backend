@@ -19,23 +19,34 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ### 1. Jobs
 
-| Method | Path               | Description                     | Auth |
-| ------ | ------------------ | ------------------------------- | ---- |
-| GET    | `/jobs/search`     | Search jobs from job boards     | ✅   |
-| POST   | `/jobs/save`       | Save a job for later            | ✅   |
-| GET    | `/jobs`            | List saved/matched/applied jobs | ✅   |
-| GET    | `/jobs/{id}`       | Get details of a specific job   | ✅   |
-| PUT    | `/jobs/{id}`       | Update job status or notes      | ✅   |
-| DELETE | `/jobs/{id}`       | Delete a saved job              | ✅   |
-| POST   | `/jobs/{id}/match` | Calculate match score for a job | ✅   |
-| POST   | `/jobs/{id}/apply` | Mark job as applied             | ✅   |
+| Method | Path               | Description                                                        | Auth |
+| ------ | ------------------ | ------------------------------------------------------------------ | ---- |
+| GET    | `/jobs/search`     | Search jobs from external job boards with AI-powered match scoring | ✅   |
+| POST   | `/jobs/save`       | Save a job for later                                               | ✅   |
+| GET    | `/jobs`            | List saved/matched/applied jobs                                    | ✅   |
+| GET    | `/jobs/{id}`       | Get details of a specific job                                      | ✅   |
+| PUT    | `/jobs/{id}`       | Update job status or notes                                         | ✅   |
+| DELETE | `/jobs/{id}`       | Delete a saved job                                                 | ✅   |
+| POST   | `/jobs/{id}/match` | Calculate match score for a job                                    | ✅   |
+| POST   | `/jobs/{id}/apply` | Mark job as applied                                                | ✅   |
 
-#### Example: Search Jobs
+**Search Parameters:**
+
+- `keyword` (required): Search keyword for job titles, descriptions, and tags
+- `location` (optional): Filter by job location
+- `source` (optional): Specific job board source (e.g., "remoteok")
+- `sort_by` (optional): Sort order - "date" (newest first) or "match_score" (highest match first)
+- `limit` (optional): Maximum number of results (1-100, default: 20)
+- `fetch_full_description` (optional): Whether to fetch complete job descriptions (default: true)
+
+**Note:** For saved jobs management (filtering, listing), use the `GET /jobs` endpoint instead.
+
+#### Example: Search Jobs (by Date)
 
 **Request:**
 
 ```
-GET /jobs/search?keyword=python&location=remote&source=RemoteOK
+GET /jobs/search?keyword=python&location=remote&source=remoteok&sort_by=match_score
 ```
 
 **Response:**
@@ -50,11 +61,84 @@ GET /jobs/search?keyword=python&location=remote&source=RemoteOK
       "location": "Remote",
       "url": "https://remoteok.io/remote-jobs/123456",
       "source": "RemoteOK",
-      "date_posted": "2024-06-15"
+      "date_posted": "2024-06-15",
+      "salary": null,
+      "board_type": "remoteok",
+      "match_score": null
     }
-  ]
+  ],
+  "total_found": 1,
+  "sort_by": "date",
+  "match_statistics": null,
+  "search_params": {
+    "keyword": "python",
+    "location": "remote",
+    "source": "remoteok",
+    "limit": 20,
+    "sort_by": "date"
+  },
+  "available_sources": ["remoteok"]
 }
 ```
+
+#### Example: Search Jobs (by Match Score)
+
+**Request:**
+
+```
+GET /jobs/search?keyword=python&sort_by=match_score&limit=5
+```
+
+**Response:**
+
+```json
+{
+  "jobs": [
+    {
+      "title": "Senior Python Developer",
+      "description": "Looking for experienced Python developer with ML expertise...",
+      "company": "AI Startup",
+      "location": "Remote",
+      "url": "https://remoteok.io/remote-jobs/789012",
+      "source": "RemoteOK",
+      "date_posted": "2024-06-14",
+      "salary": "$100k-150k",
+      "board_type": "remoteok",
+      "match_score": 0.87
+    },
+    {
+      "title": "Python Backend Engineer",
+      "description": "Join our backend team building scalable APIs...",
+      "company": "Tech Corp",
+      "location": "Remote",
+      "url": "https://remoteok.io/remote-jobs/345678",
+      "source": "RemoteOK",
+      "date_posted": "2024-06-13",
+      "salary": "$80k-120k",
+      "board_type": "remoteok",
+      "match_score": 0.72
+    }
+  ],
+  "total_found": 2,
+  "sort_by": "match_score",
+  "match_statistics": {
+    "average_score": 0.795,
+    "highest_score": 0.87,
+    "lowest_score": 0.72,
+    "jobs_with_scores": 2
+  },
+  "search_params": {
+    "keyword": "python",
+    "location": null,
+    "source": null,
+    "limit": 5,
+    "sort_by": "match_score"
+  },
+  "available_sources": ["remoteok"]
+}
+```
+
+**Note:** Match score sorting requires an uploaded resume with embedding. Jobs are ranked by similarity to your resume (0.0-1.0 scale).
 
 #### Example: Save Job
 
