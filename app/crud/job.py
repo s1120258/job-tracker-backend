@@ -62,10 +62,9 @@ def create_job(db: Session, user_id: UUID, job_in: JobCreate) -> Job:
 def save_job(db: Session, user_id: UUID, job_in: JobCreate) -> Job:
     """Save a job with 'saved' status (convenience method)."""
     # Duplicate check: return existing job if user already saved this url
-    existing = db.query(Job).filter(
-        Job.user_id == user_id,
-        Job.url == job_in.url
-    ).first()
+    existing = (
+        db.query(Job).filter(Job.user_id == user_id, Job.url == job_in.url).first()
+    )
     if existing:
         return existing
 
