@@ -159,7 +159,9 @@ class RemoteOKScraper(JobBoardScraper):
                 posted_at = None
                 if "date" in job and job["date"]:
                     try:
-                        posted_at = datetime.datetime.fromisoformat(job["date"].replace("Z", "+00:00")).date()
+                        posted_at = datetime.datetime.fromisoformat(
+                            job["date"].replace("Z", "+00:00")
+                        ).date()
                     except Exception:
                         posted_at = None
 
