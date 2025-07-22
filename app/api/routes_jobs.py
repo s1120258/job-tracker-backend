@@ -15,6 +15,7 @@ from app.schemas.job import (
     JobApplyResponse,
     JobStatus,
 )
+from app.models.job import JobStatus as ModelJobStatus
 from app.crud import job as crud_job
 from app.crud.resume import get_resume_by_user
 from app.crud.match_score import create_or_update_match_score
@@ -228,7 +229,8 @@ def list_jobs(
     current_user: User = Depends(get_current_user),
 ):
     """List saved/matched/applied jobs, optionally filtered by status."""
-    return crud_job.get_jobs(db, user_id=current_user.id, status=status)
+    model_status = ModelJobStatus(status.value) if status is not None else None
+    return crud_job.get_jobs(db, user_id=current_user.id, status=model_status)
 
 
 @router.get("/jobs/{job_id}", response_model=JobRead)
