@@ -13,6 +13,7 @@ from typing import List
 
 import requests
 from bs4 import BeautifulSoup
+import datetime
 
 from .models import JobPosting
 from .base import JobBoardScraper
@@ -154,6 +155,25 @@ class RemoteOKScraper(JobBoardScraper):
                 if job.get("location"):
                     location_text = f"Remote ({job.get('location')})"
 
+                # Post date
+                posted_at = None
+                if "date" in job and job["date"]:
+                    try:
+                        posted_at = datetime.datetime.fromisoformat(job["date"].replace("Z", "+00:00")).date()
+                    except Exception:
+                        posted_at = None
+
+                # Salary
+                salary = None
+                salary_min = job.get("salary_min")
+                salary_max = job.get("salary_max")
+                if salary_min is not None and salary_max is not None:
+                    salary = f"{salary_min} - {salary_max}"
+                elif salary_min is not None:
+                    salary = f"{salary_min}+"
+                elif salary_max is not None:
+                    salary = f"up to {salary_max}"
+
                 # Fetch full description if requested
                 full_description = description
                 if fetch_full_description and url:
@@ -169,6 +189,8 @@ class RemoteOKScraper(JobBoardScraper):
                         location=location_text,
                         company=company,
                         url=url,
+                        posted_at=posted_at,
+                        salary=salary,
                     )
                 )
 
