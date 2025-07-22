@@ -21,7 +21,7 @@ from app.crud.match_score import create_or_update_match_score
 from app.api.routes_auth import get_current_user
 from app.models.user import User
 from app.services.similarity_service import similarity_service, SimilarityServiceError
-from app.services.job_scraper_service import job_scraper_service
+from app.services.job_scraper_service import job_scraper_service, JobBoardType
 from app.services.embedding_service import embedding_service, EmbeddingServiceError
 from datetime import datetime
 import logging
@@ -66,8 +66,8 @@ def calculate_job_match_score(
 def search_jobs(
     keyword: Optional[str] = Query(None, description="Search keyword"),
     location: Optional[str] = Query(None, description="Job location"),
-    source: Optional[str] = Query(
-        None, description="Job board source (e.g., 'remoteok')"
+    source: JobBoardType = Query(
+        "RemoteOK", enum=["RemoteOK"], description="Job board source (e.g., 'RemoteOK')"
     ),
     sort_by: str = Query("date", enum=["date", "match_score"]),
     limit: int = Query(
@@ -109,7 +109,7 @@ def search_jobs(
             external_jobs = job_scraper_service.search_jobs(
                 keyword=keyword,
                 location=location or "",
-                source=source,
+                source=source.value if source else None,
                 limit=search_limit,
                 fetch_full_description=fetch_full_description,
             )
