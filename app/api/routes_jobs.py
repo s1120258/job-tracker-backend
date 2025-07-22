@@ -93,7 +93,7 @@ def search_jobs(
     user_resume = None
     if sort_by == "match_score":
         user_resume = get_resume_by_user(db, current_user.id)
-        if not user_resume or not user_resume.embedding:
+        if user_resume is None or user_resume.embedding is None or (hasattr(user_resume.embedding, "size") and user_resume.embedding.size == 0) or (hasattr(user_resume.embedding, "__len__") and len(user_resume.embedding) == 0):
             raise HTTPException(
                 status_code=400,
                 detail="Resume with embedding required for match score sorting. Please upload a resume first.",
