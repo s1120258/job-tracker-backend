@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 class JobBoardType(str, Enum):
     """Available job board types."""
 
-    REMOTEOK = "remoteok"
+    REMOTEOK = "RemoteOK"
     # Add more job boards here as they are implemented
-    # INDEED = "indeed"
-    # LINKEDIN = "linkedin"
+    # INDEED = "Indeed"
+    # LINKEDIN = "LinkedIn"
 
 
 class JobScraperService:
