@@ -68,7 +68,7 @@ def search_jobs(
     keyword: Optional[str] = Query(None, description="Search keyword"),
     location: Optional[str] = Query(None, description="Job location"),
     source: JobBoardType = Query(
-        "RemoteOK", enum=["RemoteOK"], description="Job board source (e.g., 'RemoteOK')"
+        "remoteok", enum=["remoteok"], description="Job board source (e.g., 'remoteok')"
     ),
     sort_by: str = Query("date", enum=["date", "match_score"]),
     limit: int = Query(
