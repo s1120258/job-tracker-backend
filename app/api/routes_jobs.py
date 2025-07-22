@@ -15,13 +15,14 @@ from app.schemas.job import (
     JobApplyResponse,
     JobStatus,
 )
+from app.models.job import JobStatus as ModelJobStatus
 from app.crud import job as crud_job
 from app.crud.resume import get_resume_by_user
 from app.crud.match_score import create_or_update_match_score
 from app.api.routes_auth import get_current_user
 from app.models.user import User
 from app.services.similarity_service import similarity_service, SimilarityServiceError
-from app.services.job_scraper_service import job_scraper_service
+from app.services.job_scraper_service import job_scraper_service, JobBoardType
 from app.services.embedding_service import embedding_service, EmbeddingServiceError
 from datetime import datetime
 import logging
@@ -66,8 +67,8 @@ def calculate_job_match_score(
 def search_jobs(
     keyword: Optional[str] = Query(None, description="Search keyword"),
     location: Optional[str] = Query(None, description="Job location"),
-    source: Optional[str] = Query(
-        None, description="Job board source (e.g., 'remoteok')"
+    source: JobBoardType = Query(
+        "remoteok", enum=["remoteok"], description="Job board source (e.g., 'remoteok')"
     ),
     sort_by: str = Query("date", enum=["date", "match_score"]),
     limit: int = Query(
@@ -93,7 +94,18 @@ def search_jobs(
     user_resume = None
     if sort_by == "match_score":
         user_resume = get_resume_by_user(db, current_user.id)
-        if not user_resume or not user_resume.embedding:
+        if (
+            user_resume is None
+            or user_resume.embedding is None
+            or (
+                hasattr(user_resume.embedding, "size")
+                and user_resume.embedding.size == 0
+            )
+            or (
+                hasattr(user_resume.embedding, "__len__")
+                and len(user_resume.embedding) == 0
+            )
+        ):
             raise HTTPException(
                 status_code=400,
                 detail="Resume with embedding required for match score sorting. Please upload a resume first.",
@@ -109,7 +121,7 @@ def search_jobs(
             external_jobs = job_scraper_service.search_jobs(
                 keyword=keyword,
                 location=location or "",
-                source=source,
+                source=source.value if source else None,
                 limit=search_limit,
                 fetch_full_description=fetch_full_description,
             )
@@ -228,7 +240,8 @@ def list_jobs(
     current_user: User = Depends(get_current_user),
 ):
     """List saved/matched/applied jobs, optionally filtered by status."""
-    return crud_job.get_jobs(db, user_id=current_user.id, status=status)
+    model_status = ModelJobStatus(status.value) if status is not None else None
+    return crud_job.get_jobs(db, user_id=current_user.id, status=model_status)
 
 
 @router.get("/jobs/{job_id}", response_model=JobRead)
