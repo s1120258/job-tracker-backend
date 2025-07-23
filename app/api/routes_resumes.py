@@ -10,6 +10,10 @@ from app.crud import resume as crud_resume
 from app.crud import job as crud_job
 from app.api.routes_auth import get_current_user
 from app.models.user import User
+from app.services.skill_extraction_service import skill_extraction_service, SkillExtractionServiceError
+from app.schemas.skill_analysis import ResumeSkillsResponse
+from app.schemas.job import ResumeSkillExtractionResponse
+from datetime import datetime
 
 router = APIRouter()
 
@@ -116,3 +120,59 @@ def get_resume_feedback_job_specific(
         "job_specific_feedback": feedback,
         "job_description_excerpt": job_excerpt,
     }
+
+
+@router.post("/resume/extract-skills", response_model=ResumeSkillExtractionResponse)
+def extract_resume_skills(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Extract skills from the current user's resume.
+
+    This endpoint analyzes the user's uploaded resume to identify:
+    - Technical skills with experience levels
+    - Soft skills
+    - Programming languages, frameworks, and tools
+    - Certifications and education
+    - Total years of experience
+    """
+    # Get user's current resume
+    resume = crud_resume.get_resume_by_user(db, user_id=current_user.id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    # Validate resume has extracted text
+    if not resume.extracted_text or not resume.extracted_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Resume text not available. Please re-upload your resume.",
+        )
+
+    try:
+        # Extract skills from resume text
+        skills_data = skill_extraction_service.extract_skills_from_resume(
+            resume_text=resume.extracted_text
+        )
+
+        # Create ResumeSkillsResponse from extracted data
+        resume_skills_response = ResumeSkillsResponse(**skills_data)
+
+        response = ResumeSkillExtractionResponse(
+            resume_id=resume.id,
+            skills_data=resume_skills_response,
+            extraction_timestamp=datetime.utcnow()
+        )
+
+        return response
+
+    except SkillExtractionServiceError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Skill extraction failed: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during skill extraction"
+        )
