@@ -23,6 +23,7 @@ def client():
     # Override authentication dependency for testing
     def override_get_current_user():
         import uuid
+
         mock_user = User()
         mock_user.id = uuid.UUID("12345678-1234-5678-9012-123456789abc")
         mock_user.email = "test@example.com"
@@ -42,6 +43,7 @@ def client():
 def mock_user():
     """Mock user for testing."""
     import uuid
+
     user = Mock(spec=User)
     user.id = uuid.UUID("12345678-1234-5678-9012-123456789abc")
     user.email = "test@example.com"
@@ -52,6 +54,7 @@ def mock_user():
 def mock_job():
     """Mock job for testing."""
     import uuid
+
     job = Mock(spec=Job)
     job.id = uuid.UUID("87654321-4321-8765-2109-987654321def")
     job.user_id = uuid.UUID("12345678-1234-5678-9012-123456789abc")
@@ -66,6 +69,7 @@ def mock_job():
 def mock_resume():
     """Mock resume for testing."""
     import uuid
+
     resume = Mock(spec=Resume)
     resume.id = uuid.UUID("abcdef12-3456-7890-abcd-ef1234567890")
     resume.user_id = uuid.UUID("12345678-1234-5678-9012-123456789abc")
@@ -82,7 +86,7 @@ def mock_skill_gap_analysis_response():
         "match_summary": "Strong Python background with some cloud gaps",
         "strengths": [
             {"skill": "Python", "reason": "5+ years experience exceeds requirement"},
-            {"skill": "FastAPI", "reason": "Direct experience with required framework"}
+            {"skill": "FastAPI", "reason": "Direct experience with required framework"},
         ],
         "skill_gaps": [
             {
@@ -91,7 +95,7 @@ def mock_skill_gap_analysis_response():
                 "current_level": "Beginner",
                 "priority": "Medium",
                 "impact": "Important for deployment workflows",
-                "gap_severity": "Minor"
+                "gap_severity": "Minor",
             }
         ],
         "learning_recommendations": [
@@ -101,26 +105,29 @@ def mock_skill_gap_analysis_response():
                 "estimated_learning_time": "2-3 months",
                 "suggested_approach": "Hands-on practice with containerization",
                 "resources": ["Docker documentation", "Online tutorials"],
-                "immediate_actions": ["Install Docker Desktop", "Complete beginner tutorial"]
+                "immediate_actions": [
+                    "Install Docker Desktop",
+                    "Complete beginner tutorial",
+                ],
             }
         ],
         "experience_gap": {
             "required_years": 4,
             "candidate_years": 5,
             "gap": -1,
-            "assessment": "Candidate exceeds experience requirements"
+            "assessment": "Candidate exceeds experience requirements",
         },
         "education_match": {
             "required": "Bachelor's degree in Computer Science",
             "candidate": "Bachelor's in Computer Science",
             "matches": True,
-            "assessment": "Education requirements fully met"
+            "assessment": "Education requirements fully met",
         },
         "recommended_next_steps": [
             "Practice Docker containerization",
-            "Apply with confidence highlighting Python expertise"
+            "Apply with confidence highlighting Python expertise",
         ],
-        "application_advice": "Strong candidate with excellent Python skills. Minor Docker gap easily addressable through focused learning."
+        "application_advice": "Strong candidate with excellent Python skills. Minor Docker gap easily addressable through focused learning.",
     }
 
 
@@ -129,8 +136,18 @@ def mock_resume_skills_response():
     """Mock resume skills extraction response."""
     return {
         "technical_skills": [
-            {"name": "Python", "level": "Advanced", "years_experience": 5, "evidence": "5 years Python development"},
-            {"name": "FastAPI", "level": "Intermediate", "years_experience": 2, "evidence": "Built REST APIs with FastAPI"}
+            {
+                "name": "Python",
+                "level": "Advanced",
+                "years_experience": 5,
+                "evidence": "5 years Python development",
+            },
+            {
+                "name": "FastAPI",
+                "level": "Intermediate",
+                "years_experience": 2,
+                "evidence": "Built REST APIs with FastAPI",
+            },
         ],
         "soft_skills": ["Problem Solving", "Communication", "Teamwork"],
         "programming_languages": ["Python", "JavaScript"],
@@ -138,7 +155,7 @@ def mock_resume_skills_response():
         "tools": ["Git", "VS Code"],
         "domains": ["Web Development", "API Development"],
         "education": ["Bachelor's in Computer Science"],
-        "total_experience_years": 5
+        "total_experience_years": 5,
     }
 
 
@@ -147,28 +164,43 @@ def mock_job_skills_response():
     """Mock job skills extraction response."""
     return {
         "required_skills": [
-            {"name": "Python", "level": "Senior", "category": "programming_language", "importance": "critical"},
-            {"name": "FastAPI", "level": "Intermediate", "category": "framework", "importance": "high"}
+            {
+                "name": "Python",
+                "level": "Senior",
+                "category": "programming_language",
+                "importance": "critical",
+            },
+            {
+                "name": "FastAPI",
+                "level": "Intermediate",
+                "category": "framework",
+                "importance": "high",
+            },
         ],
         "preferred_skills": [
-            {"name": "Docker", "level": "Intermediate", "category": "tool", "importance": "medium"}
+            {
+                "name": "Docker",
+                "level": "Intermediate",
+                "category": "tool",
+                "importance": "medium",
+            }
         ],
         "programming_languages": ["Python"],
         "frameworks": ["FastAPI"],
         "tools": ["Docker", "Git"],
         "experience_required": "3-5 years",
         "education_required": "Bachelor's degree in Computer Science",
-        "seniority_level": "Senior"
+        "seniority_level": "Senior",
     }
 
 
 class TestSkillGapAnalysisAPI:
     """Integration tests for skill gap analysis API endpoints."""
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.get_resume_by_user')
-    @patch('app.api.routes_jobs.skill_extraction_service.analyze_skill_gap')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.get_resume_by_user")
+    @patch("app.api.routes_jobs.skill_extraction_service.analyze_skill_gap")
     def test_analyze_skill_gap_success(
         self,
         mock_analyze_skill_gap,
@@ -179,7 +211,7 @@ class TestSkillGapAnalysisAPI:
         mock_user,
         mock_job,
         mock_resume,
-        mock_skill_gap_analysis_response
+        mock_skill_gap_analysis_response,
     ):
         """Test successful skill gap analysis."""
         # Setup mocks
@@ -191,7 +223,7 @@ class TestSkillGapAnalysisAPI:
         # Make request
         response = client.post(f"{API_V1_PREFIX}/jobs/{mock_job.id}/skill-gap-analysis")
 
-                # Assertions
+        # Assertions
         assert response.status_code == 200
         data = response.json()
 
@@ -207,30 +239,28 @@ class TestSkillGapAnalysisAPI:
         mock_analyze_skill_gap.assert_called_once_with(
             resume_text=mock_resume.extracted_text,
             job_description=mock_job.description,
-            job_title=mock_job.title
+            job_title=mock_job.title,
         )
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
     def test_analyze_skill_gap_job_not_found(
-        self,
-        mock_get_job,
-        mock_get_current_user,
-        client,
-        mock_user
+        self, mock_get_job, mock_get_current_user, client, mock_user
     ):
         """Test skill gap analysis with non-existent job."""
         mock_get_current_user.return_value = mock_user
         mock_get_job.return_value = None
 
-        response = client.post(f"{API_V1_PREFIX}/jobs/00000000-0000-0000-0000-000000000000/skill-gap-analysis")
+        response = client.post(
+            f"{API_V1_PREFIX}/jobs/00000000-0000-0000-0000-000000000000/skill-gap-analysis"
+        )
 
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.get_resume_by_user')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.get_resume_by_user")
     def test_analyze_skill_gap_no_resume(
         self,
         mock_get_resume,
@@ -238,7 +268,7 @@ class TestSkillGapAnalysisAPI:
         mock_get_current_user,
         client,
         mock_user,
-        mock_job
+        mock_job,
     ):
         """Test skill gap analysis without user resume."""
         mock_get_current_user.return_value = mock_user
@@ -250,9 +280,9 @@ class TestSkillGapAnalysisAPI:
         assert response.status_code == 404
         assert "Resume not found" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.get_resume_by_user')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.get_resume_by_user")
     def test_analyze_skill_gap_empty_resume_text(
         self,
         mock_get_resume,
@@ -261,7 +291,7 @@ class TestSkillGapAnalysisAPI:
         client,
         mock_user,
         mock_job,
-        mock_resume
+        mock_resume,
     ):
         """Test skill gap analysis with empty resume text."""
         mock_get_current_user.return_value = mock_user
@@ -274,10 +304,10 @@ class TestSkillGapAnalysisAPI:
         assert response.status_code == 400
         assert "Resume text not available" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.get_resume_by_user')
-    @patch('app.api.routes_jobs.skill_extraction_service.analyze_skill_gap')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.get_resume_by_user")
+    @patch("app.api.routes_jobs.skill_extraction_service.analyze_skill_gap")
     def test_analyze_skill_gap_service_error(
         self,
         mock_analyze_skill_gap,
@@ -287,23 +317,25 @@ class TestSkillGapAnalysisAPI:
         client,
         mock_user,
         mock_job,
-        mock_resume
+        mock_resume,
     ):
         """Test skill gap analysis with service error."""
         mock_get_current_user.return_value = mock_user
         mock_get_job.return_value = mock_job
         mock_get_resume.return_value = mock_resume
-        mock_analyze_skill_gap.side_effect = SkillExtractionServiceError("Service unavailable")
+        mock_analyze_skill_gap.side_effect = SkillExtractionServiceError(
+            "Service unavailable"
+        )
 
         response = client.post(f"{API_V1_PREFIX}/jobs/{mock_job.id}/skill-gap-analysis")
 
         assert response.status_code == 500
         assert "Skill analysis failed" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.get_resume_by_user')
-    @patch('app.api.routes_jobs.skill_extraction_service.analyze_skill_gap')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.get_resume_by_user")
+    @patch("app.api.routes_jobs.skill_extraction_service.analyze_skill_gap")
     def test_analyze_skill_gap_with_request_body(
         self,
         mock_analyze_skill_gap,
@@ -314,7 +346,7 @@ class TestSkillGapAnalysisAPI:
         mock_user,
         mock_job,
         mock_resume,
-        mock_skill_gap_analysis_response
+        mock_skill_gap_analysis_response,
     ):
         """Test skill gap analysis with custom request parameters."""
         mock_get_current_user.return_value = mock_user
@@ -325,12 +357,11 @@ class TestSkillGapAnalysisAPI:
         request_body = {
             "include_learning_recommendations": True,
             "include_experience_analysis": True,
-            "include_education_analysis": False
+            "include_education_analysis": False,
         }
 
         response = client.post(
-            f"{API_V1_PREFIX}/jobs/{mock_job.id}/skill-gap-analysis",
-            json=request_body
+            f"{API_V1_PREFIX}/jobs/{mock_job.id}/skill-gap-analysis", json=request_body
         )
 
         assert response.status_code == 200
@@ -341,9 +372,9 @@ class TestSkillGapAnalysisAPI:
 class TestJobSkillExtractionAPI:
     """Integration tests for job skill extraction API endpoints."""
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.skill_extraction_service.extract_skills_from_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_job")
     def test_extract_job_skills_success(
         self,
         mock_extract_skills,
@@ -352,7 +383,7 @@ class TestJobSkillExtractionAPI:
         client,
         mock_user,
         mock_job,
-        mock_job_skills_response
+        mock_job_skills_response,
     ):
         """Test successful job skills extraction."""
         mock_get_current_user.return_value = mock_user
@@ -374,31 +405,28 @@ class TestJobSkillExtractionAPI:
         assert skills_data["seniority_level"] == "Senior"
 
         mock_extract_skills.assert_called_once_with(
-            job_description=mock_job.description,
-            job_title=mock_job.title
+            job_description=mock_job.description, job_title=mock_job.title
         )
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
     def test_extract_job_skills_job_not_found(
-        self,
-        mock_get_job,
-        mock_get_current_user,
-        client,
-        mock_user
+        self, mock_get_job, mock_get_current_user, client, mock_user
     ):
         """Test job skills extraction with non-existent job."""
         mock_get_current_user.return_value = mock_user
         mock_get_job.return_value = None
 
-        response = client.post(f"{API_V1_PREFIX}/jobs/00000000-0000-0000-0000-000000000000/extract-skills")
+        response = client.post(
+            f"{API_V1_PREFIX}/jobs/00000000-0000-0000-0000-000000000000/extract-skills"
+        )
 
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
-    @patch('app.api.routes_jobs.skill_extraction_service.extract_skills_from_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_job")
     def test_extract_job_skills_service_error(
         self,
         mock_extract_skills,
@@ -406,7 +434,7 @@ class TestJobSkillExtractionAPI:
         mock_get_current_user,
         client,
         mock_user,
-        mock_job
+        mock_job,
     ):
         """Test job skills extraction with service error."""
         mock_get_current_user.return_value = mock_user
@@ -422,9 +450,9 @@ class TestJobSkillExtractionAPI:
 class TestResumeSkillExtractionAPI:
     """Integration tests for resume skill extraction API endpoints."""
 
-    @patch('app.api.routes_resumes.get_current_user')
-    @patch('app.api.routes_resumes.crud_resume.get_resume_by_user')
-    @patch('app.api.routes_resumes.skill_extraction_service.extract_skills_from_resume')
+    @patch("app.api.routes_resumes.get_current_user")
+    @patch("app.api.routes_resumes.crud_resume.get_resume_by_user")
+    @patch("app.api.routes_resumes.skill_extraction_service.extract_skills_from_resume")
     def test_extract_resume_skills_success(
         self,
         mock_extract_skills,
@@ -433,7 +461,7 @@ class TestResumeSkillExtractionAPI:
         client,
         mock_user,
         mock_resume,
-        mock_resume_skills_response
+        mock_resume_skills_response,
     ):
         """Test successful resume skills extraction."""
         mock_get_current_user.return_value = mock_user
@@ -458,14 +486,10 @@ class TestResumeSkillExtractionAPI:
             resume_text=mock_resume.extracted_text
         )
 
-    @patch('app.api.routes_resumes.get_current_user')
-    @patch('app.api.routes_resumes.crud_resume.get_resume_by_user')
+    @patch("app.api.routes_resumes.get_current_user")
+    @patch("app.api.routes_resumes.crud_resume.get_resume_by_user")
     def test_extract_resume_skills_no_resume(
-        self,
-        mock_get_resume,
-        mock_get_current_user,
-        client,
-        mock_user
+        self, mock_get_resume, mock_get_current_user, client, mock_user
     ):
         """Test resume skills extraction without user resume."""
         mock_get_current_user.return_value = mock_user
@@ -476,15 +500,10 @@ class TestResumeSkillExtractionAPI:
         assert response.status_code == 404
         assert "Resume not found" in response.json()["detail"]
 
-    @patch('app.api.routes_resumes.get_current_user')
-    @patch('app.api.routes_resumes.crud_resume.get_resume_by_user')
+    @patch("app.api.routes_resumes.get_current_user")
+    @patch("app.api.routes_resumes.crud_resume.get_resume_by_user")
     def test_extract_resume_skills_empty_text(
-        self,
-        mock_get_resume,
-        mock_get_current_user,
-        client,
-        mock_user,
-        mock_resume
+        self, mock_get_resume, mock_get_current_user, client, mock_user, mock_resume
     ):
         """Test resume skills extraction with empty resume text."""
         mock_get_current_user.return_value = mock_user
@@ -496,9 +515,9 @@ class TestResumeSkillExtractionAPI:
         assert response.status_code == 400
         assert "Resume text not available" in response.json()["detail"]
 
-    @patch('app.api.routes_resumes.get_current_user')
-    @patch('app.api.routes_resumes.crud_resume.get_resume_by_user')
-    @patch('app.api.routes_resumes.skill_extraction_service.extract_skills_from_resume')
+    @patch("app.api.routes_resumes.get_current_user")
+    @patch("app.api.routes_resumes.crud_resume.get_resume_by_user")
+    @patch("app.api.routes_resumes.skill_extraction_service.extract_skills_from_resume")
     def test_extract_resume_skills_service_error(
         self,
         mock_extract_skills,
@@ -506,7 +525,7 @@ class TestResumeSkillExtractionAPI:
         mock_get_current_user,
         client,
         mock_user,
-        mock_resume
+        mock_resume,
     ):
         """Test resume skills extraction with service error."""
         mock_get_current_user.return_value = mock_user
@@ -522,15 +541,10 @@ class TestResumeSkillExtractionAPI:
 class TestSkillGapAnalysisPermissions:
     """Test permission and ownership checks for skill gap analysis."""
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
     def test_analyze_skill_gap_wrong_user(
-        self,
-        mock_get_job,
-        mock_get_current_user,
-        client,
-        mock_user,
-        mock_job
+        self, mock_get_job, mock_get_current_user, client, mock_user, mock_job
     ):
         """Test skill gap analysis with job belonging to different user."""
         mock_get_current_user.return_value = mock_user
@@ -542,15 +556,10 @@ class TestSkillGapAnalysisPermissions:
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
-    @patch('app.api.routes_jobs.get_current_user')
-    @patch('app.api.routes_jobs.crud_job.get_job')
+    @patch("app.api.routes_jobs.get_current_user")
+    @patch("app.api.routes_jobs.crud_job.get_job")
     def test_extract_job_skills_wrong_user(
-        self,
-        mock_get_job,
-        mock_get_current_user,
-        client,
-        mock_user,
-        mock_job
+        self, mock_get_job, mock_get_current_user, client, mock_user, mock_job
     ):
         """Test job skills extraction with job belonging to different user."""
         mock_get_current_user.return_value = mock_user
