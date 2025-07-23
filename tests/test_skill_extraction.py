@@ -299,10 +299,11 @@ class TestSkillExtractionService:
         mock_openai_client.return_value = mock_client
 
         service = SkillExtractionService()
+        dummy_response = Mock(request=Mock())
 
         # Test authentication error
         mock_client.chat.completions.create.side_effect = openai.AuthenticationError(
-            "Invalid API key"
+            "Invalid API key", response=dummy_response, body=None
         )
         with pytest.raises(
             SkillExtractionServiceError, match="OpenAI authentication failed"
@@ -311,15 +312,17 @@ class TestSkillExtractionService:
 
         # Test rate limit error
         mock_client.chat.completions.create.side_effect = openai.RateLimitError(
-            "Rate limit exceeded"
+            "Rate limit exceeded", response=dummy_response, body=None
         )
         with pytest.raises(
             SkillExtractionServiceError, match="OpenAI rate limit exceeded"
         ):
             service.extract_skills_from_resume("test text")
 
-        # Test general API error
-        mock_client.chat.completions.create.side_effect = openai.APIError("API error")
+        # Test general API error (request, not response)
+        mock_client.chat.completions.create.side_effect = openai.APIError(
+            "API error", request=Mock(), body=None
+        )
         with pytest.raises(SkillExtractionServiceError, match="OpenAI API error"):
             service.extract_skills_from_resume("test text")
 
