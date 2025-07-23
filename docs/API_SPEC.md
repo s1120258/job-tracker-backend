@@ -19,16 +19,18 @@ For project overview, setup, and data model details, see the [README](../README.
 
 ### 1. Jobs
 
-| Method | Path               | Description                                                        | Auth |
-| ------ | ------------------ | ------------------------------------------------------------------ | ---- |
-| GET    | `/jobs/search`     | Search jobs from external job boards with AI-powered match scoring | ✅   |
-| POST   | `/jobs/save`       | Save a job for later                                               | ✅   |
-| GET    | `/jobs`            | List saved/matched/applied jobs                                    | ✅   |
-| GET    | `/jobs/{id}`       | Get details of a specific job                                      | ✅   |
-| PUT    | `/jobs/{id}`       | Update job status or notes                                         | ✅   |
-| DELETE | `/jobs/{id}`       | Delete a saved job                                                 | ✅   |
-| POST   | `/jobs/{id}/match` | Calculate match score for a job                                    | ✅   |
-| POST   | `/jobs/{id}/apply` | Mark job as applied                                                | ✅   |
+| Method | Path                            | Description                                                        | Auth |
+| ------ | ------------------------------- | ------------------------------------------------------------------ | ---- |
+| GET    | `/jobs/search`                  | Search jobs from external job boards with AI-powered match scoring | ✅   |
+| POST   | `/jobs/save`                    | Save a job for later                                               | ✅   |
+| GET    | `/jobs`                         | List saved/matched/applied jobs                                    | ✅   |
+| GET    | `/jobs/{id}`                    | Get details of a specific job                                      | ✅   |
+| PUT    | `/jobs/{id}`                    | Update job status or notes                                         | ✅   |
+| DELETE | `/jobs/{id}`                    | Delete a saved job                                                 | ✅   |
+| POST   | `/jobs/{id}/match`              | Calculate match score for a job                                    | ✅   |
+| POST   | `/jobs/{id}/apply`              | Mark job as applied                                                | ✅   |
+| POST   | `/jobs/{id}/skill-gap-analysis` | Analyze skill gaps between resume and job requirements             | ✅   |
+| POST   | `/jobs/{id}/extract-skills`     | Extract skills and requirements from job description               | ✅   |
 
 **Search Parameters:**
 
@@ -212,6 +214,7 @@ GET /jobs/search?keyword=python&sort_by=match_score&limit=5
 | ------ | --------------------------- | ------------------------------------------------ | ---- |
 | GET    | `/resume/feedback`          | Get general LLM feedback for current resume      | ✅   |
 | GET    | `/resume/feedback/{job_id}` | Get job-specific LLM feedback for current resume | ✅   |
+| POST   | `/resume/extract-skills`    | Extract skills from current user's resume        | ✅   |
 
 #### Example: Get General Feedback
 
@@ -242,7 +245,181 @@ GET /jobs/search?keyword=python&sort_by=match_score&limit=5
 
 ---
 
-### 4. AI Resume-to-Job Matching
+### 4. Skill Gap Analysis & Skill Extraction
+
+| Method | Path                            | Description                                            | Auth |
+| ------ | ------------------------------- | ------------------------------------------------------ | ---- |
+| POST   | `/jobs/{id}/skill-gap-analysis` | Analyze skill gaps between resume and job requirements | ✅   |
+| POST   | `/jobs/{id}/extract-skills`     | Extract skills and requirements from job description   | ✅   |
+| POST   | `/resume/extract-skills`        | Extract skills from current user's resume              | ✅   |
+
+#### Example: Skill Gap Analysis
+
+**Request:**
+
+```
+POST /jobs/{job_id}/skill-gap-analysis
+Content-Type: application/json
+
+{
+  "include_learning_recommendations": true,
+  "include_experience_analysis": true,
+  "include_education_analysis": true
+}
+```
+
+**Response:**
+
+```json
+{
+  "job_id": "uuid",
+  "resume_id": "uuid",
+  "overall_match_percentage": 78,
+  "match_summary": "Strong Python background with some cloud gaps",
+  "strengths": [
+    {
+      "skill": "Python",
+      "reason": "5+ years experience exceeds requirement"
+    },
+    {
+      "skill": "FastAPI",
+      "reason": "Direct experience with required framework"
+    }
+  ],
+  "skill_gaps": [
+    {
+      "skill": "Docker",
+      "required_level": "Intermediate",
+      "current_level": "Beginner",
+      "priority": "Medium",
+      "impact": "Important for deployment workflows",
+      "gap_severity": "Minor"
+    }
+  ],
+  "learning_recommendations": [
+    {
+      "skill": "Docker",
+      "priority": "Medium",
+      "estimated_learning_time": "2-3 months",
+      "suggested_approach": "Hands-on practice with containerization",
+      "resources": ["Docker documentation", "Online tutorials"],
+      "immediate_actions": [
+        "Install Docker Desktop",
+        "Complete beginner tutorial"
+      ]
+    }
+  ],
+  "experience_gap": {
+    "required_years": 4,
+    "candidate_years": 5,
+    "gap": -1,
+    "assessment": "Candidate exceeds experience requirements"
+  },
+  "education_match": {
+    "required": "Bachelor's degree in Computer Science",
+    "candidate": "Bachelor's in Computer Science",
+    "matches": true,
+    "assessment": "Education requirements fully met"
+  },
+  "recommended_next_steps": [
+    "Practice Docker containerization",
+    "Apply with confidence highlighting Python expertise"
+  ],
+  "application_advice": "Strong candidate with excellent Python skills. Minor Docker gap easily addressable through focused learning.",
+  "analysis_timestamp": "2024-01-15T12:00:00Z"
+}
+```
+
+#### Example: Extract Job Skills
+
+**Request:**
+
+```
+POST /jobs/{job_id}/extract-skills
+```
+
+**Response:**
+
+```json
+{
+  "job_id": "uuid",
+  "skills_data": {
+    "required_skills": [
+      {
+        "name": "Python",
+        "level": "Senior",
+        "category": "programming_language",
+        "importance": "critical"
+      },
+      {
+        "name": "FastAPI",
+        "level": "Intermediate",
+        "category": "framework",
+        "importance": "high"
+      }
+    ],
+    "preferred_skills": [
+      {
+        "name": "Docker",
+        "level": "Intermediate",
+        "category": "tool",
+        "importance": "medium"
+      }
+    ],
+    "programming_languages": ["Python"],
+    "frameworks": ["FastAPI"],
+    "tools": ["Docker", "Git"],
+    "experience_required": "3-5 years",
+    "education_required": "Bachelor's degree in Computer Science",
+    "seniority_level": "Senior"
+  },
+  "extraction_timestamp": "2024-01-15T12:00:00Z"
+}
+```
+
+#### Example: Extract Resume Skills
+
+**Request:**
+
+```
+POST /resume/extract-skills
+```
+
+**Response:**
+
+```json
+{
+  "resume_id": "uuid",
+  "skills_data": {
+    "technical_skills": [
+      {
+        "name": "Python",
+        "level": "Advanced",
+        "years_experience": 5,
+        "evidence": "5 years Python development experience"
+      },
+      {
+        "name": "FastAPI",
+        "level": "Intermediate",
+        "years_experience": 2,
+        "evidence": "Built REST APIs with FastAPI"
+      }
+    ],
+    "soft_skills": ["Problem Solving", "Communication", "Teamwork"],
+    "programming_languages": ["Python", "JavaScript"],
+    "frameworks": ["FastAPI", "Django"],
+    "tools": ["Git", "VS Code"],
+    "domains": ["Web Development", "API Development"],
+    "education": ["Bachelor's in Computer Science"],
+    "total_experience_years": 5
+  },
+  "extraction_timestamp": "2024-01-15T12:00:00Z"
+}
+```
+
+---
+
+### 5. AI Resume-to-Job Matching
 
 _Note: Matching endpoints are now integrated into the Jobs section above as `/jobs/{id}/match`_
 
