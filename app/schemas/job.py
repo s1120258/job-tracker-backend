@@ -7,6 +7,15 @@ from datetime import date, datetime
 import enum
 import json
 
+# Import skill analysis schemas
+from app.schemas.skill_analysis import (
+    SkillGapAnalysisResponse,
+    SkillGapAnalysisRequest,
+    ResumeSkillsResponse,
+    JobSkillsResponse,
+    SkillMatchSummary
+)
+
 
 class JobStatus(str, enum.Enum):
     new = "new"
@@ -147,3 +156,20 @@ class JobApplyResponse(BaseModel):
     resume_id: UUID
     status: JobStatus
     applied_at: datetime
+
+
+# Skill Gap Analysis related schemas
+class JobSkillExtractionResponse(BaseModel):
+    """Schema for job skill extraction response"""
+
+    job_id: UUID
+    skills_data: JobSkillsResponse
+    extraction_timestamp: datetime
+
+
+class ResumeSkillExtractionResponse(BaseModel):
+    """Schema for resume skill extraction response"""
+
+    resume_id: UUID
+    skills_data: ResumeSkillsResponse
+    extraction_timestamp: datetime
