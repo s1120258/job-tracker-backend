@@ -6,7 +6,7 @@ A FastAPI-based backend to help users track job applications, upload and analyze
 
 ## 🎯 Overview
 
-This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes external job board integration, resume parsing, vector-based matching, and LLM-generated insights to streamline and enhance job search workflows.
+This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes external job board integration, resume parsing, vector-based matching, skill gap analysis, and LLM-generated insights to streamline and enhance job search workflows.
 
 ---
 
@@ -25,6 +25,13 @@ This project provides an API-first backend system designed for developers buildi
 ### 🤖 AI Resume-to-Job Matching
 
 - Leverage vector embeddings (OpenAI with pgvector) to compare resumes with job descriptions and score compatibility.
+
+### 🎯 Skill Gap Analysis & Learning Recommendations
+
+- Advanced LLM-powered skill extraction from both resumes and job descriptions.
+- Comprehensive skill gap analysis comparing candidate abilities with job requirements.
+- Personalized learning recommendations with estimated timelines and actionable steps.
+- Experience and education requirement matching with detailed assessments.
 
 ### 📊 Analytics-Ready API
 
