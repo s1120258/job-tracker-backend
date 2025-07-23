@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SkillExtractionServiceError(Exception):
     """Exception raised when skill extraction operations fail."""
+
     pass
 
 
@@ -51,13 +52,13 @@ class SkillExtractionService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a professional skill extraction expert. Extract skills from text and return structured JSON."
+                        "content": "You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=1000,
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             skills_data = json.loads(response.choices[0].message.content)
@@ -66,7 +67,9 @@ class SkillExtractionService:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(f"Invalid JSON response from LLM: {str(e)}")
+            raise SkillExtractionServiceError(
+                f"Invalid JSON response from LLM: {str(e)}"
+            )
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {str(e)}")
             raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
@@ -80,7 +83,9 @@ class SkillExtractionService:
             logger.error(f"Unexpected error extracting resume skills: {str(e)}")
             raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
-    def extract_skills_from_job(self, job_description: str, job_title: str = "") -> Dict[str, Any]:
+    def extract_skills_from_job(
+        self, job_description: str, job_title: str = ""
+    ) -> Dict[str, Any]:
         """
         Extract required and preferred skills from job description.
 
@@ -95,7 +100,9 @@ class SkillExtractionService:
             raise SkillExtractionServiceError("Job description cannot be empty")
 
         try:
-            prompt = self._create_job_skill_extraction_prompt(job_description, job_title)
+            prompt = self._create_job_skill_extraction_prompt(
+                job_description, job_title
+            )
 
             logger.info("Extracting skills from job description")
             response = self.client.chat.completions.create(
@@ -103,13 +110,13 @@ class SkillExtractionService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a professional skill extraction expert. Extract skills from job descriptions and return structured JSON."
+                        "content": "You are a professional skill extraction expert. Extract skills from job descriptions and return structured JSON.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=1000,
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             skills_data = json.loads(response.choices[0].message.content)
@@ -118,7 +125,9 @@ class SkillExtractionService:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(f"Invalid JSON response from LLM: {str(e)}")
+            raise SkillExtractionServiceError(
+                f"Invalid JSON response from LLM: {str(e)}"
+            )
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {str(e)}")
             raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
@@ -132,7 +141,9 @@ class SkillExtractionService:
             logger.error(f"Unexpected error extracting job skills: {str(e)}")
             raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
-    def analyze_skill_gap(self, resume_text: str, job_description: str, job_title: str = "") -> Dict[str, Any]:
+    def analyze_skill_gap(
+        self, resume_text: str, job_description: str, job_title: str = ""
+    ) -> Dict[str, Any]:
         """
         Perform comprehensive skill gap analysis between resume and job requirements.
 
@@ -150,7 +161,9 @@ class SkillExtractionService:
             raise SkillExtractionServiceError("Job description cannot be empty")
 
         try:
-            prompt = self._create_skill_gap_analysis_prompt(resume_text, job_description, job_title)
+            prompt = self._create_skill_gap_analysis_prompt(
+                resume_text, job_description, job_title
+            )
 
             logger.info("Performing skill gap analysis")
             response = self.client.chat.completions.create(
@@ -158,13 +171,13 @@ class SkillExtractionService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a professional career advisor and skill analysis expert. Analyze skill gaps between resumes and job requirements, providing actionable insights."
+                        "content": "You are a professional career advisor and skill analysis expert. Analyze skill gaps between resumes and job requirements, providing actionable insights.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=1500,
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             analysis_data = json.loads(response.choices[0].message.content)
@@ -173,7 +186,9 @@ class SkillExtractionService:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(f"Invalid JSON response from LLM: {str(e)}")
+            raise SkillExtractionServiceError(
+                f"Invalid JSON response from LLM: {str(e)}"
+            )
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {str(e)}")
             raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
@@ -218,7 +233,9 @@ Instructions:
 - Be conservative with experience estimates
 """
 
-    def _create_job_skill_extraction_prompt(self, job_description: str, job_title: str) -> str:
+    def _create_job_skill_extraction_prompt(
+        self, job_description: str, job_title: str
+    ) -> str:
         """Create prompt for extracting skills from job description."""
         context = f"Job Title: {job_title}\n\n" if job_title else ""
 
@@ -258,7 +275,9 @@ Instructions:
 - Be precise about experience and education requirements
 """
 
-    def _create_skill_gap_analysis_prompt(self, resume_text: str, job_description: str, job_title: str) -> str:
+    def _create_skill_gap_analysis_prompt(
+        self, resume_text: str, job_description: str, job_title: str
+    ) -> str:
         """Create prompt for skill gap analysis."""
         context = f"Job Title: {job_title}\n\n" if job_title else ""
 

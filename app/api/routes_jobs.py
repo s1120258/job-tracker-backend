@@ -24,8 +24,16 @@ from app.models.user import User
 from app.services.similarity_service import similarity_service, SimilarityServiceError
 from app.services.job_scraper_service import job_scraper_service, JobBoardType
 from app.services.embedding_service import embedding_service, EmbeddingServiceError
-from app.services.skill_extraction_service import skill_extraction_service, SkillExtractionServiceError
-from app.schemas.skill_analysis import SkillGapAnalysisResponse, SkillGapAnalysisRequest, ResumeSkillsResponse, JobSkillsResponse
+from app.services.skill_extraction_service import (
+    skill_extraction_service,
+    SkillExtractionServiceError,
+)
+from app.schemas.skill_analysis import (
+    SkillGapAnalysisResponse,
+    SkillGapAnalysisRequest,
+    ResumeSkillsResponse,
+    JobSkillsResponse,
+)
 from app.schemas.job import JobSkillExtractionResponse, ResumeSkillExtractionResponse
 from datetime import datetime
 import logging
@@ -409,7 +417,9 @@ def apply_to_job(
     )
 
 
-@router.post("/jobs/{job_id}/skill-gap-analysis", response_model=SkillGapAnalysisResponse)
+@router.post(
+    "/jobs/{job_id}/skill-gap-analysis", response_model=SkillGapAnalysisResponse
+)
 def analyze_skill_gap(
     job_id: UUID,
     request: SkillGapAnalysisRequest = SkillGapAnalysisRequest(),
@@ -456,7 +466,7 @@ def analyze_skill_gap(
         analysis_data = skill_extraction_service.analyze_skill_gap(
             resume_text=resume.extracted_text,
             job_description=job.description,
-            job_title=job.title
+            job_title=job.title,
         )
 
         # Create response with additional metadata
@@ -464,7 +474,7 @@ def analyze_skill_gap(
             job_id=job_id,
             resume_id=resume.id,
             analysis_timestamp=datetime.utcnow().isoformat(),
-            **analysis_data
+            **analysis_data,
         )
 
         logger.info(
@@ -475,15 +485,11 @@ def analyze_skill_gap(
 
     except SkillExtractionServiceError as e:
         logger.error(f"Skill extraction service error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Skill analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Skill analysis failed: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error in skill gap analysis: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during skill gap analysis"
+            status_code=500, detail="Internal server error during skill gap analysis"
         )
 
 
@@ -509,8 +515,7 @@ def extract_job_skills(
     try:
         # Extract skills from job description
         skills_data = skill_extraction_service.extract_skills_from_job(
-            job_description=job.description,
-            job_title=job.title
+            job_description=job.description, job_title=job.title
         )
 
         # Create JobSkillsResponse from extracted data
@@ -519,7 +524,7 @@ def extract_job_skills(
         response = JobSkillExtractionResponse(
             job_id=job_id,
             skills_data=job_skills_response,
-            extraction_timestamp=datetime.utcnow()
+            extraction_timestamp=datetime.utcnow(),
         )
 
         logger.info(f"Successfully extracted skills from job {job_id}")
@@ -528,12 +533,10 @@ def extract_job_skills(
     except SkillExtractionServiceError as e:
         logger.error(f"Skill extraction service error: {str(e)}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Skill extraction failed: {str(e)}"
+            status_code=500, detail=f"Skill extraction failed: {str(e)}"
         )
     except Exception as e:
         logger.error(f"Unexpected error extracting job skills: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during skill extraction"
+            status_code=500, detail="Internal server error during skill extraction"
         )

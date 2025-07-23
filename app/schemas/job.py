@@ -13,7 +13,7 @@ from app.schemas.skill_analysis import (
     SkillGapAnalysisRequest,
     ResumeSkillsResponse,
     JobSkillsResponse,
-    SkillMatchSummary
+    SkillMatchSummary,
 )
 
 

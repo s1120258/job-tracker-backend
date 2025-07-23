@@ -10,7 +10,10 @@ from app.crud import resume as crud_resume
 from app.crud import job as crud_job
 from app.api.routes_auth import get_current_user
 from app.models.user import User
-from app.services.skill_extraction_service import skill_extraction_service, SkillExtractionServiceError
+from app.services.skill_extraction_service import (
+    skill_extraction_service,
+    SkillExtractionServiceError,
+)
 from app.schemas.skill_analysis import ResumeSkillsResponse
 from app.schemas.job import ResumeSkillExtractionResponse
 from datetime import datetime
@@ -161,18 +164,16 @@ def extract_resume_skills(
         response = ResumeSkillExtractionResponse(
             resume_id=resume.id,
             skills_data=resume_skills_response,
-            extraction_timestamp=datetime.utcnow()
+            extraction_timestamp=datetime.utcnow(),
         )
 
         return response
 
     except SkillExtractionServiceError as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Skill extraction failed: {str(e)}"
+            status_code=500, detail=f"Skill extraction failed: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during skill extraction"
+            status_code=500, detail="Internal server error during skill extraction"
         )
