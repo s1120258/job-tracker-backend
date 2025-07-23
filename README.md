@@ -1,17 +1,17 @@
 # 📂 ResMatch
 
-**ResMatch** is an intelligent, AI-driven backend service for managing job applications, analyzing resumes, and maximizing job-fit insights — built with FastAPI, PostgreSQL, and OpenAI.
+**ResMatch** is an AI-powered career support platform that identifies high-fit job opportunities and provides actionable insights through resume and skill gap analysis — built with FastAPI, PostgreSQL, and OpenAI embeddings.
 
 ---
 
 ## 🎯 Project Overview
 
-ResMatch offers an API-first backend tailored for developers building smarter job search and resume matching platforms. It integrates:
+ResMatch provides an API-first backend tailored for developers building intelligent job search and career support platforms. It integrates:
 
-- External job board scraping
+- External job board integration and scraping
 - Resume parsing and skill extraction
-- AI-powered job-resume compatibility scoring
-- Skill gap analysis with personalized learning recommendations
+- Matching resumes to jobs using semantic similarity
+- Skill gap analysis with learning recommendations
 
 Whether you’re building a job tracking dashboard, career advisor, or candidate profiling tool, ResMatch provides the intelligence layer.
 
@@ -21,20 +21,18 @@ Whether you’re building a job tracking dashboard, career advisor, or candidate
 
 ### ✅ Job Search & Tracking
 
-- Search remote jobs from boards like RemoteOK (more integrations coming).
-- Save, apply, and update application status with notes.
-- Sort results by AI-calculated match score or posting date.
+- Search jobs from external job boards and sort by AI-calculated match score or date.
+- Save, apply to, and manage job applications with status tracking.
 
 ### 📄 Resume Management & Feedback
 
 - Upload resumes (PDF/DOCX) and auto-extract content.
 - Receive general and job-specific LLM feedback.
 
-### 🤖 AI Matching & Gap Analysis
+### 🤖 Matching & Gap Analysis
 
-- Use vector embeddings (OpenAI + pgvector) to compare resumes to jobs.
-- Analyze experience and education gaps.
-- Identify missing skills with actionable learning plans.
+- Leverage OpenAI embeddings and pgvector to compute resume-to-job similarity scores.
+- Detect missing skills and provide targeted learning plans by analyzing experience and education gaps.
 
 ### 📊 Job Application Analytics
 
@@ -42,11 +40,11 @@ Whether you’re building a job tracking dashboard, career advisor, or candidate
 
 ### 🔐 User Authentication
 
-- JWT-secured endpoints for resume, job, and profile operations.
+- JWT-secured endpoints via OAuth2 Password Flow.
 
 ### 🧪 Dev & CI Tools
 
-- Dockerized setup, `pytest` testing, `black` formatting, GitHub Actions CI/CD.
+- Dockerized setup, automated testing (`pytest`), code formatting (`black`), and CI/CD via GitHub Actions.
 
 ---
 
@@ -56,9 +54,9 @@ Whether you’re building a job tracking dashboard, career advisor, or candidate
 | ---------------- | ----------------------------------------- |
 | **Backend**      | FastAPI (async, API-first)                |
 | **Database**     | PostgreSQL, SQLAlchemy, Alembic, pgvector |
-| **AI/Embedding** | OpenAI API, vector search                 |
+| **AI/Embedding** | OpenAI (embedding), vector search         |
 | **Parsing**      | PyPDF2, python-docx, BeautifulSoup4       |
-| **Auth**         | JWT via FastAPI                           |
+| **Auth**         | JWT, OAuth2                               |
 | **DevOps**       | Docker Compose, GitHub Actions            |
 | **Testing**      | pytest, black                             |
 
