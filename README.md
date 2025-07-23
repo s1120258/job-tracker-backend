@@ -1,77 +1,75 @@
 # 📂 ResMatch
 
-A FastAPI-based backend to help users track job applications, upload and analyze resumes, and receive AI-powered feedback and matching scores against job descriptions.
+**ResMatch** is an AI-powered career support platform that identifies high-fit job opportunities and provides actionable insights through resume and skill gap analysis — built with FastAPI, PostgreSQL, and OpenAI embeddings.
 
 ---
 
-## 🎯 Overview
+## 🎯 Project Overview
 
-This project provides an API-first backend system designed for developers building intelligent job-tracking platforms. It includes external job board integration, resume parsing, vector-based matching, skill gap analysis, and LLM-generated insights to streamline and enhance job search workflows.
+ResMatch provides an API-first backend tailored for developers building intelligent job search and career support platforms. It integrates:
+
+- External job board integration and scraping
+- Resume parsing and skill extraction
+- Matching resumes to jobs using semantic similarity
+- Skill gap analysis with learning recommendations
+
+Whether you’re building a job tracking dashboard, career advisor, or candidate profiling tool, ResMatch provides the intelligence layer.
 
 ---
 
 ## 🚀 Key Features
 
-### ✅ Job Application Tracking & External Job Search
+### ✅ Job Search & Tracking
 
-- Search and import jobs from external job boards (RemoteOK, with more sources coming soon).
-- AI-powered match score sorting to find jobs best suited to your resume and skills.
-- Create, update, and manage job applications with status fields, notes, and job descriptions.
+- Search jobs from external job boards and sort by AI-calculated match score or date.
+- Save, apply to, and manage job applications with status tracking.
 
-### 📄 Resume Upload & AI Feedback
+### 📄 Resume Management & Feedback
 
-- Upload a resume (PDF/DOCX), auto-extract content, and get AI-powered general or job-specific feedback.
+- Upload resumes (PDF/DOCX) and auto-extract content.
+- Receive general and job-specific LLM feedback.
 
-### 🤖 AI Resume-to-Job Matching
+### 🤖 Matching & Gap Analysis
 
-- Leverage vector embeddings (OpenAI with pgvector) to compare resumes with job descriptions and score compatibility.
+- Leverage OpenAI embeddings and pgvector to compute resume-to-job similarity scores.
+- Detect missing skills and provide targeted learning plans by analyzing experience and education gaps.
 
-### 🎯 Skill Gap Analysis & Learning Recommendations
+### 📊 Job Application Analytics
 
-- Advanced LLM-powered skill extraction from both resumes and job descriptions.
-- Comprehensive skill gap analysis comparing candidate abilities with job requirements.
-- Personalized learning recommendations with estimated timelines and actionable steps.
-- Experience and education requirement matching with detailed assessments.
+- Visualize stats: applications by status, match scores, and historical trends.
 
-### 📊 Analytics-Ready API
+### 🔐 User Authentication
 
-- Built-in backend analytics endpoints to support dashboards — includes application status breakdowns, match score summaries, and trend analysis.
+- JWT-secured endpoints via OAuth2 Password Flow.
 
-### 🔐 Secure Authentication
+### 🧪 Dev & CI Tools
 
-- JWT-based user authentication system secures all protected API routes.
-
-### ⚙️ Modular & Configurable
-
-- Environment-driven configuration using Pydantic, with easy customization for different environments.
-
-### 🧪 Developer-First Workflow
-
-- Docker Compose for environment setup, unit and integration tests via `pytest`, code formatting with `black`, and CI/CD powered by GitHub Actions.
+- Dockerized setup, automated testing (`pytest`), code formatting (`black`), and CI/CD via GitHub Actions.
 
 ---
 
 ## 🧰 Tech Stack
 
-- **Backend:** FastAPI (async, API-first)
-- **Database:** PostgreSQL with SQLAlchemy & Alembic
-- **Configuration:** Pydantic Settings + `.env` support
-- **Resume Parsing:** PyPDF2, python-docx
-- **Job Board Integration:** RemoteOK API, BeautifulSoup4, requests
-- **LLM & Embeddings:** OpenAI API, pgvector
-- **Authentication:** JWT
-- **Developer Tools:** Docker Compose, pytest, black, GitHub Actions
+| Layer            | Tools                                     |
+| ---------------- | ----------------------------------------- |
+| **Backend**      | FastAPI (async, API-first)                |
+| **Database**     | PostgreSQL, SQLAlchemy, Alembic, pgvector |
+| **AI/Embedding** | OpenAI (embedding), vector search         |
+| **Parsing**      | PyPDF2, python-docx, BeautifulSoup4       |
+| **Auth**         | JWT, OAuth2                               |
+| **DevOps**       | Docker Compose, GitHub Actions            |
+| **Testing**      | pytest, black                             |
 
 ---
 
-## 📄 Documentation
+## 🗂️ Documentation
 
-- 📑 [API Specification](docs/API_SPEC.md)
-- 🗂️ [Data Model](docs/DATA_MODEL.md)
-- ➕ [Full Setup Guide](docs/SETUP.md)
-- ⚙️ [Project Structure](docs/PROJECT_STRUCTURE.md)
-- 🧪 [Testing & CI](docs/TESTING.md)
+- 📑 [API Spec](docs/API_SPEC.md): Endpoints and example requests/responses
+- 🧬 [Data Model](docs/DATA_MODEL.md): Entity-relationship diagram and table schema
+- ⚙️ [Setup Guide](docs/SETUP.md): Local dev and deployment
+- 🧪 [Testing](docs/TESTING.md): Test strategy and CI
+- 🧭 [Project Structure](docs/PROJECT_STRUCTURE.md)
 
 ---
 
-For API usage, environment setup, and contribution guidelines, please refer to the linked documentation above.
+_ResMatch — Empower your job search with data-driven decisions._
