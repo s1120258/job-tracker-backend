@@ -125,7 +125,7 @@ def get_resume_feedback_job_specific(
     }
 
 
-@router.post("/resume/extract-skills", response_model=ResumeSkillExtractionResponse)
+@router.get("/resume/skills", response_model=ResumeSkillExtractionResponse)
 def extract_resume_skills(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

@@ -29,7 +29,6 @@ from app.services.skill_extraction_service import (
 )
 from app.schemas.skill_analysis import (
     SkillGapAnalysisResponse,
-    SkillGapAnalysisRequest,
     ResumeSkillsResponse,
     JobSkillsResponse,
 )
@@ -434,12 +433,23 @@ def apply_to_job(
     )
 
 
-@router.post(
+@router.get(
     "/jobs/{job_id}/skill-gap-analysis", response_model=SkillGapAnalysisResponse
 )
 def analyze_skill_gap(
     job_id: UUID,
-    request: SkillGapAnalysisRequest = SkillGapAnalysisRequest(),
+    resume_id: Optional[UUID] = Query(
+        None, description="Specific resume ID to use (optional)"
+    ),
+    include_learning_recommendations: bool = Query(
+        True, description="Whether to include learning recommendations"
+    ),
+    include_experience_analysis: bool = Query(
+        True, description="Whether to include experience gap analysis"
+    ),
+    include_education_analysis: bool = Query(
+        True, description="Whether to include education matching"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -459,9 +469,9 @@ def analyze_skill_gap(
         raise HTTPException(status_code=404, detail="Job not found")
 
     # Get user's resume (use specific resume_id if provided, otherwise get user's current resume)
-    if request.resume_id:
+    if resume_id:
         resume = get_resume_by_user(db, current_user.id)
-        if not resume or resume.id != request.resume_id:
+        if not resume or resume.id != resume_id:
             raise HTTPException(status_code=404, detail="Resume not found")
     else:
         resume = get_resume_by_user(db, current_user.id)
@@ -510,7 +520,7 @@ def analyze_skill_gap(
         )
 
 
-@router.post("/jobs/{job_id}/extract-skills", response_model=JobSkillExtractionResponse)
+@router.get("/jobs/{job_id}/skills", response_model=JobSkillExtractionResponse)
 def extract_job_skills(
     job_id: UUID,
     db: Session = Depends(get_db),
@@ -557,177 +567,3 @@ def extract_job_skills(
         raise HTTPException(
             status_code=500, detail="Internal server error during skill extraction"
         )
-
-
-@router.post("/skills/normalize", response_model=Dict[str, Any])
-def normalize_skills(
-    skills_request: Dict[str, Any], current_user: User = Depends(get_current_user)
-):
-    """
-    Normalize skill names using LLM intelligence.
-
-    Request body should contain:
-    - skills: List[str] - skill names to normalize
-    - context: str (optional) - context for better normalization
-    """
-    try:
-        skills = skills_request.get("skills", [])
-        context = skills_request.get("context", "")
-
-        if not skills:
-            raise HTTPException(status_code=400, detail="Skills list cannot be empty")
-
-        if len(skills) > 50:
-            raise HTTPException(
-                status_code=400, detail="Maximum 50 skills allowed per request"
-            )
-
-        normalized_data = skill_extraction_service.normalize_skill_list(skills, context)
-
-        return {
-            "status": "success",
-            "normalized_skills": normalized_data.get("normalized_skills", []),
-            "skill_groupings": normalized_data.get("suggested_groupings", []),
-            "total_processed": len(skills),
-        }
-
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill normalization failed: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Skill normalization failed: {str(e)}"
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error in skill normalization: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@router.post("/skills/compare", response_model=Dict[str, Any])
-def compare_skills(
-    comparison_request: Dict[str, Any], current_user: User = Depends(get_current_user)
-):
-    """
-    Compare similarity between two skills using LLM intelligence.
-
-    Request body should contain:
-    - skill1: str - first skill name
-    - skill2: str - second skill name
-    - context: str (optional) - context for analysis
-    """
-    try:
-        skill1 = comparison_request.get("skill1", "").strip()
-        skill2 = comparison_request.get("skill2", "").strip()
-        context = comparison_request.get("context", "")
-
-        if not skill1 or not skill2:
-            raise HTTPException(
-                status_code=400, detail="Both skill1 and skill2 must be provided"
-            )
-
-        similarity_data = skill_extraction_service.compare_skills(
-            skill1, skill2, context
-        )
-
-        return {
-            "status": "success",
-            "skill1": skill1,
-            "skill2": skill2,
-            "similarity_analysis": similarity_data,
-        }
-
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill comparison failed: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Skill comparison failed: {str(e)}"
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error in skill comparison: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@router.post("/skills/batch-normalize", response_model=Dict[str, Any])
-def batch_normalize_skills(
-    batch_request: Dict[str, Any], current_user: User = Depends(get_current_user)
-):
-    """
-    Normalize multiple skill lists with different contexts.
-
-    Request body should contain:
-    - skill_batches: List[Dict] where each dict has:
-      - skills: List[str] - skill names
-      - context: str - context for this batch
-      - batch_id: str (optional) - identifier for this batch
-    """
-    try:
-        skill_batches = batch_request.get("skill_batches", [])
-
-        if not skill_batches:
-            raise HTTPException(status_code=400, detail="skill_batches cannot be empty")
-
-        if len(skill_batches) > 10:
-            raise HTTPException(
-                status_code=400, detail="Maximum 10 batches allowed per request"
-            )
-
-        results = []
-
-        for i, batch in enumerate(skill_batches):
-            skills = batch.get("skills", [])
-            context = batch.get("context", "")
-            batch_id = batch.get("batch_id", f"batch_{i}")
-
-            if not skills:
-                results.append(
-                    {
-                        "batch_id": batch_id,
-                        "status": "error",
-                        "error": "Skills list cannot be empty",
-                    }
-                )
-                continue
-
-            if len(skills) > 20:
-                results.append(
-                    {
-                        "batch_id": batch_id,
-                        "status": "error",
-                        "error": "Maximum 20 skills per batch",
-                    }
-                )
-                continue
-
-            try:
-                normalized_data = skill_extraction_service.normalize_skill_list(
-                    skills, context
-                )
-                results.append(
-                    {
-                        "batch_id": batch_id,
-                        "status": "success",
-                        "normalized_skills": normalized_data.get(
-                            "normalized_skills", []
-                        ),
-                        "skill_groupings": normalized_data.get(
-                            "suggested_groupings", []
-                        ),
-                        "total_processed": len(skills),
-                    }
-                )
-            except Exception as e:
-                logger.warning(f"Batch {batch_id} normalization failed: {str(e)}")
-                results.append(
-                    {"batch_id": batch_id, "status": "error", "error": str(e)}
-                )
-
-        successful_batches = sum(1 for r in results if r["status"] == "success")
-
-        return {
-            "status": "completed",
-            "total_batches": len(skill_batches),
-            "successful_batches": successful_batches,
-            "failed_batches": len(skill_batches) - successful_batches,
-            "results": results,
-        }
-
-    except Exception as e:
-        logger.error(f"Unexpected error in batch skill normalization: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
