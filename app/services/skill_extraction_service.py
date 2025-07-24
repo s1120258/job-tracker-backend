@@ -44,33 +44,13 @@ class SkillExtractionService:
         Returns:
             Dict containing categorized skills extracted from resume
         """
-        if not resume_text or not resume_text.strip():
-            raise SkillExtractionServiceError("Resume text cannot be empty")
-
-        try:
-            prompt = self._create_resume_skill_extraction_prompt(resume_text)
-
-            logger.info("Extracting skills from resume text")
-            response = self._make_llm_request(
-                prompt=prompt,
-                system_content="You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
-                max_tokens=1000,
-            )
-
-            skills_data = self._parse_json_response(response, "resume skill extraction")
-
-            # Apply normalization if requested
-            if normalize and skills_data.get("technical_skills"):
-                skills_data = self._apply_skill_normalization(skills_data, "resume")
-
-            logger.info("Successfully extracted skills from resume")
-            return skills_data
-
-        except SkillExtractionServiceError:
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error extracting resume skills: {str(e)}")
-            raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
+        return self._extract_skills_common(
+            text=resume_text,
+            context="resume",
+            prompt_generator=self._create_resume_skill_extraction_prompt,
+            system_content="You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
+            normalize=normalize
+        )
 
     def extract_skills_from_job(
         self, job_description: str, job_title: str = "", normalize: bool = True
@@ -86,37 +66,67 @@ class SkillExtractionService:
         Returns:
             Dict containing required and preferred skills from job posting
         """
-        if not job_description or not job_description.strip():
-            raise SkillExtractionServiceError("Job description cannot be empty")
+        def job_prompt_generator(text):
+            return self._create_job_skill_extraction_prompt(text, job_title)
+
+        context = f"job {job_title}" if job_title else "job"
+
+        return self._extract_skills_common(
+            text=job_description,
+            context=context,
+            prompt_generator=job_prompt_generator,
+            system_content="You are a job requirements analysis expert. Extract required and preferred skills from job descriptions.",
+            normalize=normalize
+        )
+
+    def _extract_skills_common(
+        self,
+        text: str,
+        context: str,
+        prompt_generator: callable,
+        system_content: str,
+        normalize: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Common skill extraction logic for both resume and job descriptions.
+
+        Args:
+            text: The text to extract skills from
+            context: Context description for logging and error messages
+            prompt_generator: Function to generate the appropriate prompt
+            system_content: System message content for the LLM
+            normalize: Whether to apply LLM-based skill normalization
+
+        Returns:
+            Dict containing categorized skills extracted from text
+        """
+        if not text or not text.strip():
+            raise SkillExtractionServiceError(f"{context.capitalize()} text cannot be empty")
 
         try:
-            prompt = self._create_job_skill_extraction_prompt(
-                job_description, job_title
-            )
+            prompt = prompt_generator(text)
 
-            logger.info("Extracting skills from job description")
+            logger.info(f"Extracting skills from {context}")
             response = self._make_llm_request(
                 prompt=prompt,
-                system_content="You are a job requirements analysis expert. Extract required and preferred skills from job descriptions.",
+                system_content=system_content,
                 max_tokens=1000,
             )
 
-            skills_data = self._parse_json_response(response, "job skill extraction")
+            skills_data = self._parse_json_response(response, f"{context} skill extraction")
 
             # Apply normalization if requested
-            if normalize:
-                skills_data = self._apply_skill_normalization(
-                    skills_data, f"job {job_title}"
-                )
+            if normalize and (skills_data.get("technical_skills") or skills_data.get("required_skills")):
+                skills_data = self._apply_skill_normalization(skills_data, context)
 
-            logger.info("Successfully extracted skills from job description")
+            logger.info(f"Successfully extracted skills from {context}")
             return skills_data
 
         except SkillExtractionServiceError:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error extracting job skills: {str(e)}")
-            raise SkillExtractionServiceError(f"Failed to extract job skills: {str(e)}")
+            logger.error(f"Unexpected error extracting {context} skills: {str(e)}")
+            raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
     def analyze_skill_gap(
         self, resume_text: str, job_description: str, job_title: str = ""

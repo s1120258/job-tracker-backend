@@ -394,43 +394,53 @@ def get_or_calculate_match_score(
         )
 
 
-@router.post("/jobs/{job_id}/apply", response_model=JobApplyResponse)
-def apply_to_job(
+@router.get("/jobs/{job_id}/skills", response_model=JobSkillExtractionResponse)
+def extract_job_skills(
     job_id: UUID,
-    apply_request: JobApplyRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Mark job as applied."""
+    """
+    Extract skills and requirements from a specific job description.
+
+    This endpoint analyzes a job posting to identify:
+    - Required vs preferred skills
+    - Skill categories and importance levels
+    - Experience and education requirements
+    """
     # Verify the job belongs to the user
     job = crud_job.get_job(db, job_id)
     if not job or job.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    # Verify resume exists
-    resume = get_resume_by_user(db, current_user.id)
-    if not resume:
-        raise HTTPException(
-            status_code=404,
-            detail="Resume not found. Please upload a resume first.",
+    try:
+        # Extract skills from job description
+        skills_data = skill_extraction_service.extract_skills_from_job(
+            job_description=job.description, job_title=job.title
         )
 
-    # Mark job as applied
-    updated_job = crud_job.mark_job_applied(db, job_id)
-    if not updated_job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        # Create JobSkillsResponse from extracted data
+        job_skills_response = JobSkillsResponse(**skills_data)
 
-    # TODO: Integrate with actual application system
-    # - Generate cover letter using apply_request.cover_letter_template
-    # - Submit application via API or email
-    # - Store application details
+        response = JobSkillExtractionResponse(
+            job_id=job_id,
+            skills_data=job_skills_response,
+            extraction_timestamp=datetime.utcnow(),
+        )
 
-    return JobApplyResponse(
-        job_id=job_id,
-        resume_id=resume.id,
-        status=JobStatus.applied,
-        applied_at=datetime.utcnow(),
-    )
+        logger.info(f"Successfully extracted skills from job {job_id}")
+        return response
+
+    except SkillExtractionServiceError as e:
+        logger.error(f"Skill extraction service error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Skill extraction failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error extracting job skills: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="Internal server error during skill extraction"
+        )
 
 
 @router.get(
@@ -520,50 +530,40 @@ def analyze_skill_gap(
         )
 
 
-@router.get("/jobs/{job_id}/skills", response_model=JobSkillExtractionResponse)
-def extract_job_skills(
+@router.post("/jobs/{job_id}/apply", response_model=JobApplyResponse)
+def apply_to_job(
     job_id: UUID,
+    apply_request: JobApplyRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Extract skills and requirements from a specific job description.
-
-    This endpoint analyzes a job posting to identify:
-    - Required vs preferred skills
-    - Skill categories and importance levels
-    - Experience and education requirements
-    """
+    """Mark job as applied."""
     # Verify the job belongs to the user
     job = crud_job.get_job(db, job_id)
     if not job or job.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    try:
-        # Extract skills from job description
-        skills_data = skill_extraction_service.extract_skills_from_job(
-            job_description=job.description, job_title=job.title
-        )
-
-        # Create JobSkillsResponse from extracted data
-        job_skills_response = JobSkillsResponse(**skills_data)
-
-        response = JobSkillExtractionResponse(
-            job_id=job_id,
-            skills_data=job_skills_response,
-            extraction_timestamp=datetime.utcnow(),
-        )
-
-        logger.info(f"Successfully extracted skills from job {job_id}")
-        return response
-
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill extraction service error: {str(e)}")
+    # Verify resume exists
+    resume = get_resume_by_user(db, current_user.id)
+    if not resume:
         raise HTTPException(
-            status_code=500, detail=f"Skill extraction failed: {str(e)}"
+            status_code=404,
+            detail="Resume not found. Please upload a resume first.",
         )
-    except Exception as e:
-        logger.error(f"Unexpected error extracting job skills: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="Internal server error during skill extraction"
-        )
+
+    # Mark job as applied
+    updated_job = crud_job.mark_job_applied(db, job_id)
+    if not updated_job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # TODO: Integrate with actual application system
+    # - Generate cover letter using apply_request.cover_letter_template
+    # - Submit application via API or email
+    # - Store application details
+
+    return JobApplyResponse(
+        job_id=job_id,
+        resume_id=resume.id,
+        status=JobStatus.applied,
+        applied_at=datetime.utcnow(),
+    )
