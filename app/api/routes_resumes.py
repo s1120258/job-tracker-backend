@@ -153,9 +153,9 @@ def extract_resume_skills(
         )
 
     try:
-        # Extract skills from resume text
+        # Extract skills from resume text with normalization
         skills_data = skill_extraction_service.extract_skills_from_resume(
-            resume_text=resume.extracted_text
+            resume_text=resume.extracted_text, normalize=True
         )
 
         # Create ResumeSkillsResponse from extracted data

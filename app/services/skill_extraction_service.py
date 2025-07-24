@@ -137,7 +137,7 @@ class SkillExtractionService:
             raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
     def analyze_skill_gap(
-        self, resume_text: str, job_description: str, job_title: str = ""
+        self, resume_text: str, job_description: str, job_title: str = "", normalize: bool = True
     ) -> Dict[str, Any]:
         """
         Perform comprehensive skill gap analysis between resume and job requirements.
@@ -146,6 +146,7 @@ class SkillExtractionService:
             resume_text: The extracted text from user's resume
             job_description: The job description text
             job_title: Optional job title for context
+            normalize: Whether to apply LLM-based skill normalization
 
         Returns:
             Dict containing comprehensive skill gap analysis
@@ -177,7 +178,7 @@ class SkillExtractionService:
                 )
                 # Fallback to basic analysis
                 return self._basic_skill_gap_analysis(
-                    resume_text, job_description, job_title
+                    resume_text, job_description, job_title, normalize
                 )
 
         except SkillExtractionServiceError:
@@ -404,6 +405,86 @@ class SkillExtractionService:
             )
             return skills_data
 
+    def _apply_skill_normalization_to_analysis(
+        self, analysis_data: Dict[str, Any], context: str
+    ) -> Dict[str, Any]:
+        """
+        Apply skill normalization to skill gap analysis results.
+
+        Args:
+            analysis_data: Skill gap analysis results
+            context: Context for normalization
+
+        Returns:
+            Analysis data with normalized skill names
+        """
+        try:
+            # Extract all skill names from the analysis
+            all_skills = []
+
+            # From strengths
+            if "strengths" in analysis_data:
+                for strength in analysis_data["strengths"]:
+                    if isinstance(strength, dict) and "skill" in strength:
+                        all_skills.append(strength["skill"])
+
+            # From skill gaps
+            if "skill_gaps" in analysis_data:
+                for gap in analysis_data["skill_gaps"]:
+                    if isinstance(gap, dict) and "skill" in gap:
+                        all_skills.append(gap["skill"])
+
+            # From learning recommendations
+            if "learning_recommendations" in analysis_data:
+                for rec in analysis_data["learning_recommendations"]:
+                    if isinstance(rec, dict) and "skill" in rec:
+                        all_skills.append(rec["skill"])
+
+            if all_skills:
+                # Normalize the skills
+                normalized = self.normalize_skill_list(all_skills, context)
+                normalized_skills = normalized.get("normalized_skills", [])
+
+                # Create a mapping from original to canonical names
+                skill_mapping = {}
+                for norm_skill in normalized_skills:
+                    if isinstance(norm_skill, dict):
+                        original = norm_skill.get("original", "")
+                        canonical = norm_skill.get("canonical", original)
+                        if original:
+                            skill_mapping[original] = canonical
+
+                # Apply the mapping to the analysis data
+                if "strengths" in analysis_data:
+                    for strength in analysis_data["strengths"]:
+                        if isinstance(strength, dict) and "skill" in strength:
+                            original_skill = strength["skill"]
+                            strength["skill"] = skill_mapping.get(original_skill, original_skill)
+
+                if "skill_gaps" in analysis_data:
+                    for gap in analysis_data["skill_gaps"]:
+                        if isinstance(gap, dict) and "skill" in gap:
+                            original_skill = gap["skill"]
+                            gap["skill"] = skill_mapping.get(original_skill, original_skill)
+
+                if "learning_recommendations" in analysis_data:
+                    for rec in analysis_data["learning_recommendations"]:
+                        if isinstance(rec, dict) and "skill" in rec:
+                            original_skill = rec["skill"]
+                            rec["skill"] = skill_mapping.get(original_skill, original_skill)
+
+                # Add normalization metadata
+                analysis_data["skill_normalization_applied"] = True
+                analysis_data["normalized_skill_mappings"] = skill_mapping
+
+            return analysis_data
+
+        except Exception as e:
+            logger.warning(
+                f"Skill normalization in analysis failed, returning original data: {str(e)}"
+            )
+            return analysis_data
+
     def _extract_skill_list(self, text: str) -> List[str]:
         """
         Extract a simple list of skills from text for enhanced analysis.
@@ -450,7 +531,7 @@ Example: Python, JavaScript, React, Docker, AWS
             return []
 
     def _basic_skill_gap_analysis(
-        self, resume_text: str, job_description: str, job_title: str
+        self, resume_text: str, job_description: str, job_title: str, normalize: bool = True
     ) -> Dict[str, Any]:
         """
         Fallback basic skill gap analysis when enhanced analysis fails.
@@ -459,6 +540,7 @@ Example: Python, JavaScript, React, Docker, AWS
             resume_text: Resume text
             job_description: Job description text
             job_title: Job title
+            normalize: Whether to apply normalization to extracted skills
 
         Returns:
             Basic skill gap analysis results
@@ -474,7 +556,13 @@ Example: Python, JavaScript, React, Docker, AWS
                 max_tokens=1200,
             )
 
-            return self._parse_json_response(response, "basic skill gap analysis")
+            analysis_data = self._parse_json_response(response, "basic skill gap analysis")
+
+            # Apply normalization if requested
+            if normalize:
+                analysis_data = self._apply_skill_normalization_to_analysis(analysis_data, f"job {job_title}")
+
+            return analysis_data
 
         except Exception as e:
             logger.error(f"Basic skill gap analysis failed: {str(e)}")

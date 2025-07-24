@@ -414,9 +414,9 @@ def extract_job_skills(
         raise HTTPException(status_code=404, detail="Job not found")
 
     try:
-        # Extract skills from job description
+        # Extract skills from job description with normalization
         skills_data = skill_extraction_service.extract_skills_from_job(
-            job_description=job.description, job_title=job.title
+            job_description=job.description, job_title=job.title, normalize=True
         )
 
         # Create JobSkillsResponse from extracted data
@@ -499,11 +499,12 @@ def analyze_skill_gap(
         )
 
     try:
-        # Perform skill gap analysis using the skill extraction service
+        # Perform skill gap analysis using the skill extraction service with normalization
         analysis_data = skill_extraction_service.analyze_skill_gap(
             resume_text=resume.extracted_text,
             job_description=job.description,
             job_title=job.title,
+            normalize=True,
         )
 
         # Create response with additional metadata

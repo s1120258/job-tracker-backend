@@ -198,9 +198,9 @@ class TestJobSkillsExtraction:
         assert "extraction_timestamp" in data
         assert data["skills_data"]["required_skills"][0]["name"] == "Python"
 
-        # Verify service was called correctly
+        # Verify service was called correctly with normalization enabled
         mock_extract_skills.assert_called_once_with(
-            job_description=mock_job.description, job_title=mock_job.title
+            job_description=mock_job.description, job_title=mock_job.title, normalize=True
         )
 
     @patch("app.api.routes_jobs.crud_job.get_job")
@@ -259,9 +259,9 @@ class TestResumeSkillsExtraction:
         assert data["skills_data"]["technical_skills"][0]["name"] == "Python"
         assert data["skills_data"]["total_experience_years"] == 5
 
-        # Verify service was called correctly
+        # Verify service was called correctly with normalization enabled
         mock_extract_skills.assert_called_once_with(
-            resume_text=mock_resume.extracted_text
+            resume_text=mock_resume.extracted_text, normalize=True
         )
 
     @patch("app.api.routes_resumes.crud_resume.get_resume_by_user")
@@ -323,11 +323,12 @@ class TestSkillGapAnalysis:
         assert len(data["strengths"]) == 1
         assert len(data["skill_gaps"]) == 1
 
-        # Verify service was called correctly
+        # Verify service was called correctly with normalization enabled
         mock_analyze_gap.assert_called_once_with(
             resume_text=mock_resume.extracted_text,
             job_description=mock_job.description,
             job_title=mock_job.title,
+            normalize=True,
         )
 
     @patch("app.api.routes_jobs.crud_job.get_job")
