@@ -311,7 +311,9 @@ def delete_job(
 @router.get("/jobs/{job_id}/match-score", response_model=JobMatchResponse)
 def get_or_calculate_match_score(
     job_id: UUID,
-    force_recalculate: bool = Query(False, description="Force recalculation even if match score already exists"),
+    force_recalculate: bool = Query(
+        False, description="Force recalculation even if match score already exists"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
