@@ -544,4 +544,272 @@ POST /jobs/{job_id}/match
 
 ---
 
+### Skill Normalization & Intelligence
+
+#### LLM-Based Skill Normalization
+
+##### Normalize Skills
+
+`POST /api/v1/jobs/skills/normalize`
+
+Normalize skill names using LLM intelligence to standardize variations and abbreviations.
+
+**Request Body:**
+
+```json
+{
+  "skills": ["JS", "React.js", "nodejs", "AWS Lambda"],
+  "context": "Frontend development" // optional
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "success",
+  "total_processed": 4,
+  "normalized_skills": [
+    {
+      "original": "JS",
+      "canonical": "JavaScript",
+      "category": "programming_language",
+      "confidence": 0.95,
+      "aliases": ["JS", "Javascript", "ECMAScript"],
+      "related_skills": ["TypeScript", "Node.js"]
+    },
+    {
+      "original": "React.js",
+      "canonical": "React",
+      "category": "frontend_framework",
+      "confidence": 0.99,
+      "aliases": ["React.js", "ReactJS"],
+      "related_skills": ["Redux", "JSX", "Next.js"]
+    },
+    {
+      "original": "nodejs",
+      "canonical": "Node.js",
+      "category": "runtime_environment",
+      "confidence": 0.97,
+      "aliases": ["nodejs", "NodeJS", "Node"],
+      "related_skills": ["Express.js", "npm"]
+    },
+    {
+      "original": "AWS Lambda",
+      "canonical": "AWS Lambda",
+      "category": "serverless_platform",
+      "confidence": 1.0,
+      "aliases": ["Lambda", "AWS Lambda Functions"],
+      "related_skills": ["API Gateway", "CloudWatch"]
+    }
+  ],
+  "skill_groupings": [
+    {
+      "group_name": "JavaScript Ecosystem",
+      "skills": ["JavaScript", "React", "Node.js"]
+    },
+    {
+      "group_name": "AWS Services",
+      "skills": ["AWS Lambda"]
+    }
+  ]
+}
+```
+
+**Features:**
+
+- Dynamic skill normalization without static dictionaries
+- Confidence scoring for normalization quality
+- Skill categorization and grouping suggestions
+- Context-aware processing for domain-specific skills
+- Support for up to 50 skills per request
+
+##### Compare Skills
+
+`POST /api/v1/jobs/skills/compare`
+
+Analyze semantic similarity between two skills using LLM intelligence.
+
+**Request Body:**
+
+```json
+{
+  "skill1": "React",
+  "skill2": "Vue.js",
+  "context": "Frontend frameworks" // optional
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "success",
+  "skill1": "React",
+  "skill2": "Vue.js",
+  "similarity_analysis": {
+    "similarity_score": 0.85,
+    "confidence": 0.92,
+    "relationship_type": "closely_related",
+    "explanation": "Both are JavaScript frameworks with similar component-based architecture",
+    "transferable_concepts": [
+      "Component lifecycle",
+      "State management",
+      "Virtual DOM"
+    ],
+    "key_differences": [
+      "Template syntax vs JSX",
+      "Ecosystem size",
+      "Performance characteristics"
+    ],
+    "learning_effort": "low",
+    "substitutable_in_jobs": true
+  }
+}
+```
+
+**Relationship Types:**
+
+- `identical` - Same skill with different names
+- `closely_related` - Similar skills with high transferability
+- `somewhat_related` - Some overlap but different domains
+- `different_domains` - Different areas but may complement
+- `unrelated` - No meaningful relationship
+
+**Learning Effort Levels:**
+
+- `minimal` - Almost no additional learning needed
+- `low` - Few days to weeks of learning
+- `moderate` - Few weeks to months
+- `high` - Several months of dedicated learning
+- `extensive` - Year+ of learning and experience
+
+##### Batch Normalize Skills
+
+`POST /api/v1/jobs/skills/batch-normalize`
+
+Normalize multiple skill lists with different contexts in a single request.
+
+**Request Body:**
+
+```json
+{
+  "skill_batches": [
+    {
+      "skills": ["python", "flask", "django"],
+      "context": "Backend development",
+      "batch_id": "backend"
+    },
+    {
+      "skills": ["react", "vue", "angular"],
+      "context": "Frontend frameworks",
+      "batch_id": "frontend"
+    },
+    {
+      "skills": ["aws", "azure", "gcp"],
+      "context": "Cloud platforms",
+      "batch_id": "cloud"
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "completed",
+  "total_batches": 3,
+  "successful_batches": 3,
+  "failed_batches": 0,
+  "results": [
+    {
+      "batch_id": "backend",
+      "status": "success",
+      "total_processed": 3,
+      "normalized_skills": [
+        {
+          "original": "python",
+          "canonical": "Python",
+          "category": "programming_language",
+          "confidence": 0.99
+        }
+        // ... more normalized skills
+      ],
+      "skill_groupings": [
+        {
+          "group_name": "Python Web Frameworks",
+          "skills": ["Flask", "Django"]
+        }
+      ]
+    }
+    // ... more batch results
+  ]
+}
+```
+
+**Batch Limits:**
+
+- Maximum 10 batches per request
+- Maximum 20 skills per batch
+- Each batch processed independently
+
+##### Enhanced Gap Analysis Integration
+
+The existing skill gap analysis endpoints now use these intelligent normalization features:
+
+- **Automatic skill normalization** during extraction
+- **Smart skill matching** that recognizes similar technologies
+- **Transferability analysis** for related skills
+- **Learning path optimization** based on existing skills
+
+**Example Enhanced Gap Analysis Response:**
+
+```json
+{
+  "intelligent_matches": [
+    {
+      "candidate_skill": "React",
+      "required_skill": "Vue.js",
+      "match_strength": 0.8,
+      "reasoning": "Both are component-based frontend frameworks with transferable concepts"
+    }
+  ],
+  "skill_gaps": [
+    {
+      "missing_skill": "Docker",
+      "priority": "high",
+      "learning_difficulty": "moderate",
+      "estimated_time": "2-4 weeks",
+      "prerequisites": ["Basic Linux commands"],
+      "learning_path": ["Container concepts", "Docker basics", "Docker Compose"]
+    }
+  ],
+  "normalized_analysis": {
+    "total_required": 8,
+    "direct_matches": 5,
+    "transferable_matches": 2,
+    "complete_gaps": 1,
+    "match_percentage": 87.5
+  },
+  "learning_strategy": {
+    "immediate_focus": ["Docker", "Kubernetes"],
+    "medium_term": ["AWS certification"],
+    "leverage_existing": "Use Python knowledge to learn DevOps automation",
+    "estimated_ready_time": "6-8 weeks"
+  }
+}
+```
+
+**Key Advantages:**
+
+1. **No Static Dictionaries**: Uses LLM intelligence for dynamic skill understanding
+2. **Context-Aware**: Processes skills differently based on job domain and industry
+3. **Confidence Scoring**: Provides reliability metrics for normalization decisions
+4. **Transferability Analysis**: Recognizes when skills are similar enough to be substitutable
+5. **Learning Path Optimization**: Suggests efficient learning strategies based on existing skills
+6. **Comprehensive Fallbacks**: Graceful degradation when AI services are unavailable
+
+---
+
 For error responses and more details, see the OpenAPI schema or API docs at `/docs` when running the backend.
