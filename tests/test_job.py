@@ -213,9 +213,7 @@ def test_get_existing_match_score(fake_user, fake_job):
 
     with patch("app.crud.job.get_job", return_value=fake_job), patch(
         "app.crud.resume.get_resume_by_user", return_value=fake_resume
-    ), patch(
-        "app.crud.job.get_match_score", return_value=fake_match_score
-    ):
+    ), patch("app.crud.job.get_match_score", return_value=fake_match_score):
 
         response = client.get(
             f"/api/v1/jobs/{fake_job.id}/match-score",
@@ -233,9 +231,7 @@ def test_get_match_score_no_resume(fake_user, fake_job):
     """Test getting match score when user has no resume uploaded."""
     with patch("app.crud.job.get_job", return_value=fake_job), patch(
         "app.crud.resume.get_resume_by_user", return_value=None
-    ), patch(
-        "app.crud.job.get_match_score", return_value=None
-    ):
+    ), patch("app.crud.job.get_match_score", return_value=None):
 
         response = client.get(
             f"/api/v1/jobs/{fake_job.id}/match-score",
