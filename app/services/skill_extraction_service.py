@@ -49,7 +49,7 @@ class SkillExtractionService:
             context="resume",
             prompt_generator=self._create_resume_skill_extraction_prompt,
             system_content="You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
-            normalize=normalize
+            normalize=normalize,
         )
 
     def extract_skills_from_job(
@@ -66,6 +66,7 @@ class SkillExtractionService:
         Returns:
             Dict containing required and preferred skills from job posting
         """
+
         def job_prompt_generator(text):
             return self._create_job_skill_extraction_prompt(text, job_title)
 
@@ -76,7 +77,7 @@ class SkillExtractionService:
             context=context,
             prompt_generator=job_prompt_generator,
             system_content="You are a job requirements analysis expert. Extract required and preferred skills from job descriptions.",
-            normalize=normalize
+            normalize=normalize,
         )
 
     def _extract_skills_common(
@@ -85,7 +86,7 @@ class SkillExtractionService:
         context: str,
         prompt_generator: callable,
         system_content: str,
-        normalize: bool = True
+        normalize: bool = True,
     ) -> Dict[str, Any]:
         """
         Common skill extraction logic for both resume and job descriptions.
@@ -101,7 +102,9 @@ class SkillExtractionService:
             Dict containing categorized skills extracted from text
         """
         if not text or not text.strip():
-            raise SkillExtractionServiceError(f"{context.capitalize()} text cannot be empty")
+            raise SkillExtractionServiceError(
+                f"{context.capitalize()} text cannot be empty"
+            )
 
         try:
             prompt = prompt_generator(text)
@@ -113,10 +116,15 @@ class SkillExtractionService:
                 max_tokens=1000,
             )
 
-            skills_data = self._parse_json_response(response, f"{context} skill extraction")
+            skills_data = self._parse_json_response(
+                response, f"{context} skill extraction"
+            )
 
             # Apply normalization if requested
-            if normalize and (skills_data.get("technical_skills") or skills_data.get("required_skills")):
+            if normalize and (
+                skills_data.get("technical_skills")
+                or skills_data.get("required_skills")
+            ):
                 skills_data = self._apply_skill_normalization(skills_data, context)
 
             logger.info(f"Successfully extracted skills from {context}")
