@@ -8,7 +8,6 @@ from app.db.session import SessionLocal
 from app.api import (
     routes_auth,
     routes_resumes,
-    routes_match_scores,
     routes_analytics,
     routes_jobs,
 )
@@ -21,7 +20,7 @@ logging.basicConfig(
 
 # Set specific loggers to DEBUG level
 logging.getLogger("app").setLevel(logging.DEBUG)
-logging.getLogger("app.api.routes_match_scores").setLevel(logging.DEBUG)
+# Match scores logging is now part of routes_jobs
 logging.getLogger("app.services.similarity_service").setLevel(logging.DEBUG)
 logging.getLogger("app.crud").setLevel(logging.DEBUG)
 
@@ -55,10 +54,7 @@ app.include_router(
     routes_resumes.router, prefix=f"{settings.API_V1_STR}", tags=["resumes"]
 )
 
-# Match scores routes (updated to support both jobs and legacy applications)
-app.include_router(
-    routes_match_scores.router, prefix=f"{settings.API_V1_STR}", tags=["match-scores"]
-)
+# Match scores functionality is now integrated into jobs routes
 
 # Analytics routes (updated to work with jobs)
 app.include_router(
