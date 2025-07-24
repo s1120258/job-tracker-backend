@@ -538,6 +538,394 @@ class TestResumeSkillExtractionAPI:
         assert "Skill extraction failed" in response.json()["detail"]
 
 
+class TestSkillNormalizationAPI:
+    """Test cases for skill normalization API endpoints."""
+
+    def test_normalize_skills_success(self, client, auth_headers, monkeypatch):
+        """Test successful skill normalization endpoint."""
+        def mock_normalize_skill_list(skills, context):
+            return {
+                "normalized_skills": [
+                    {
+                        "original": "JS",
+                        "canonical": "JavaScript",
+                        "category": "programming_language",
+                        "confidence": 0.95,
+                        "aliases": ["JS", "Javascript"],
+                        "related_skills": ["TypeScript", "Node.js"]
+                    },
+                    {
+                        "original": "React.js",
+                        "canonical": "React",
+                        "category": "frontend_framework",
+                        "confidence": 0.99,
+                        "aliases": ["React.js", "ReactJS"],
+                        "related_skills": ["Redux", "JSX"]
+                    }
+                ],
+                "suggested_groupings": [
+                    {
+                        "group_name": "JavaScript Ecosystem",
+                        "skills": ["JavaScript", "React"]
+                    }
+                ]
+            }
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.normalize_skill_list",
+            mock_normalize_skill_list
+        )
+
+        request_data = {
+            "skills": ["JS", "React.js"],
+            "context": "Frontend development"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["total_processed"] == 2
+        assert len(data["normalized_skills"]) == 2
+        assert data["normalized_skills"][0]["canonical"] == "JavaScript"
+        assert len(data["skill_groupings"]) == 1
+
+    def test_normalize_skills_empty_list(self, client, auth_headers):
+        """Test normalization with empty skills list."""
+        request_data = {
+            "skills": [],
+            "context": "Test context"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "Skills list cannot be empty" in response.json()["detail"]
+
+    def test_normalize_skills_too_many(self, client, auth_headers):
+        """Test normalization with too many skills."""
+        request_data = {
+            "skills": [f"skill_{i}" for i in range(51)],  # 51 skills
+            "context": "Test context"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "Maximum 50 skills allowed" in response.json()["detail"]
+
+    def test_normalize_skills_service_error(self, client, auth_headers, monkeypatch):
+        """Test normalization with service error."""
+        def mock_normalize_error(*args, **kwargs):
+            raise SkillExtractionServiceError("Service error")
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.normalize_skill_list",
+            mock_normalize_error
+        )
+
+        request_data = {
+            "skills": ["Python", "Java"],
+            "context": "Backend"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 500
+        assert "Skill normalization failed" in response.json()["detail"]
+
+    def test_compare_skills_success(self, client, auth_headers, monkeypatch):
+        """Test successful skill comparison endpoint."""
+        def mock_compare_skills(skill1, skill2, context):
+            return {
+                "similarity_score": 0.85,
+                "confidence": 0.92,
+                "relationship_type": "closely_related",
+                "explanation": "Both are JavaScript frameworks with similar component-based architecture",
+                "transferable_concepts": ["Component lifecycle", "State management"],
+                "key_differences": ["Syntax", "Ecosystem"],
+                "learning_effort": "low",
+                "substitutable_in_jobs": True
+            }
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.compare_skills",
+            mock_compare_skills
+        )
+
+        request_data = {
+            "skill1": "React",
+            "skill2": "Vue.js",
+            "context": "Frontend frameworks"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/compare",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["skill1"] == "React"
+        assert data["skill2"] == "Vue.js"
+        assert data["similarity_analysis"]["similarity_score"] == 0.85
+        assert data["similarity_analysis"]["relationship_type"] == "closely_related"
+
+    def test_compare_skills_missing_skill(self, client, auth_headers):
+        """Test skill comparison with missing skill."""
+        request_data = {
+            "skill1": "React",
+            "skill2": "",  # Empty skill2
+            "context": "Frontend"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/compare",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "Both skill1 and skill2 must be provided" in response.json()["detail"]
+
+    def test_compare_skills_service_error(self, client, auth_headers, monkeypatch):
+        """Test skill comparison with service error."""
+        def mock_compare_error(*args, **kwargs):
+            raise SkillExtractionServiceError("Comparison failed")
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.compare_skills",
+            mock_compare_error
+        )
+
+        request_data = {
+            "skill1": "Python",
+            "skill2": "Java",
+            "context": "Programming languages"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/compare",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 500
+        assert "Skill comparison failed" in response.json()["detail"]
+
+    def test_batch_normalize_skills_success(self, client, auth_headers, monkeypatch):
+        """Test successful batch skill normalization."""
+        def mock_normalize_skill_list(skills, context):
+            return {
+                "normalized_skills": [
+                    {"original": skill, "canonical": skill.title(), "confidence": 0.9}
+                    for skill in skills
+                ],
+                "suggested_groupings": []
+            }
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.normalize_skill_list",
+            mock_normalize_skill_list
+        )
+
+        request_data = {
+            "skill_batches": [
+                {
+                    "skills": ["python", "java"],
+                    "context": "Backend languages",
+                    "batch_id": "backend"
+                },
+                {
+                    "skills": ["react", "vue"],
+                    "context": "Frontend frameworks",
+                    "batch_id": "frontend"
+                }
+            ]
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/batch-normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "completed"
+        assert data["total_batches"] == 2
+        assert data["successful_batches"] == 2
+        assert data["failed_batches"] == 0
+        assert len(data["results"]) == 2
+
+        # Check individual batch results
+        backend_result = next(r for r in data["results"] if r["batch_id"] == "backend")
+        assert backend_result["status"] == "success"
+        assert backend_result["total_processed"] == 2
+
+    def test_batch_normalize_empty_batches(self, client, auth_headers):
+        """Test batch normalization with empty batch list."""
+        request_data = {
+            "skill_batches": []
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/batch-normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "skill_batches cannot be empty" in response.json()["detail"]
+
+    def test_batch_normalize_too_many_batches(self, client, auth_headers):
+        """Test batch normalization with too many batches."""
+        request_data = {
+            "skill_batches": [
+                {"skills": ["test"], "context": "test", "batch_id": f"batch_{i}"}
+                for i in range(11)  # 11 batches
+            ]
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/batch-normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "Maximum 10 batches allowed" in response.json()["detail"]
+
+    def test_batch_normalize_mixed_results(self, client, auth_headers, monkeypatch):
+        """Test batch normalization with mixed success/failure results."""
+        def mock_normalize_skill_list(skills, context):
+            if "error" in skills:
+                raise Exception("Normalization failed")
+            return {
+                "normalized_skills": [
+                    {"original": skill, "canonical": skill.title(), "confidence": 0.9}
+                    for skill in skills
+                ],
+                "suggested_groupings": []
+            }
+
+        monkeypatch.setattr(
+            "app.services.skill_extraction_service.skill_extraction_service.normalize_skill_list",
+            mock_normalize_skill_list
+        )
+
+        request_data = {
+            "skill_batches": [
+                {
+                    "skills": ["python", "java"],
+                    "context": "Success batch",
+                    "batch_id": "success"
+                },
+                {
+                    "skills": ["error"],
+                    "context": "Error batch",
+                    "batch_id": "error"
+                },
+                {
+                    "skills": [],  # Empty skills
+                    "context": "Empty batch",
+                    "batch_id": "empty"
+                },
+                {
+                    "skills": [f"skill_{i}" for i in range(25)],  # Too many skills
+                    "context": "Large batch",
+                    "batch_id": "large"
+                }
+            ]
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/batch-normalize",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "completed"
+        assert data["total_batches"] == 4
+        assert data["successful_batches"] == 1  # Only the success batch
+        assert data["failed_batches"] == 3
+
+        # Check individual results
+        results_by_id = {r["batch_id"]: r for r in data["results"]}
+
+        assert results_by_id["success"]["status"] == "success"
+        assert results_by_id["error"]["status"] == "error"
+        assert results_by_id["empty"]["status"] == "error"
+        assert "empty" in results_by_id["empty"]["error"]
+        assert results_by_id["large"]["status"] == "error"
+        assert "Maximum 20 skills" in results_by_id["large"]["error"]
+
+    def test_normalize_skills_unauthorized(self, client):
+        """Test skill normalization without authentication."""
+        request_data = {
+            "skills": ["Python", "Java"],
+            "context": "Programming"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/normalize",
+            json=request_data
+        )
+
+        assert response.status_code == 401
+
+    def test_compare_skills_unauthorized(self, client):
+        """Test skill comparison without authentication."""
+        request_data = {
+            "skill1": "React",
+            "skill2": "Vue.js",
+            "context": "Frontend"
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/compare",
+            json=request_data
+        )
+
+        assert response.status_code == 401
+
+    def test_batch_normalize_unauthorized(self, client):
+        """Test batch normalization without authentication."""
+        request_data = {
+            "skill_batches": [
+                {"skills": ["test"], "context": "test"}
+            ]
+        }
+
+        response = client.post(
+            "/api/v1/jobs/skills/batch-normalize",
+            json=request_data
+        )
+
+        assert response.status_code == 401
+
+
 class TestSkillGapAnalysisPermissions:
     """Test permission and ownership checks for skill gap analysis."""
 
