@@ -308,14 +308,14 @@ def delete_job(
     return None
 
 
-@router.post("/jobs/{job_id}/match", response_model=JobMatchResponse)
-def calculate_match_score(
+@router.get("/jobs/{job_id}/match-score", response_model=JobMatchResponse)
+def get_or_calculate_match_score(
     job_id: UUID,
-    match_request: JobMatchRequest,
+    force_recalculate: bool = Query(False, description="Force recalculation even if match score already exists"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Calculate match score between job and resume."""
+    """Get or calculate match score between job and resume."""
     # Verify the job belongs to the user
     job = crud_job.get_job(db, job_id)
     if not job or job.user_id != current_user.id:
@@ -327,6 +327,19 @@ def calculate_match_score(
         raise HTTPException(
             status_code=400,
             detail="Resume not found. Please upload a resume first.",
+        )
+
+    # Check if we already have a match score for this job
+    existing_match = crud_job.get_match_score(db, job_id)
+
+    # If force_recalculate is not requested and we have existing score, return it
+    if existing_match and not force_recalculate:
+        logger.info(f"Returning existing match score for job {job_id}")
+        return JobMatchResponse(
+            job_id=job_id,
+            resume_id=existing_match.resume_id,
+            similarity_score=existing_match.similarity_score,
+            status=JobStatus.matched,
         )
 
     # Check if embeddings exist
@@ -358,6 +371,9 @@ def calculate_match_score(
         match_score = create_or_update_match_score(
             db, job_id, resume.id, similarity_score
         )
+
+        action = "Recalculated" if existing_match else "Calculated new"
+        logger.info(f"{action} match score {similarity_score:.3f} for job {job_id}")
 
         return JobMatchResponse(
             job_id=job_id,
