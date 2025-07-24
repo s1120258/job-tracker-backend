@@ -59,7 +59,7 @@ GET /jobs/1234
 **Request:**
 
 ```
-POST /jobs
+POST /jobs/save
 ```
 
 ```json

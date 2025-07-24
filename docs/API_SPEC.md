@@ -20,7 +20,7 @@ For examples and request/response payloads, see [`API_EXAMPLES.md`](API_EXAMPLES
 | Method | Path                            | Description                                                        | Auth |
 | ------ | ------------------------------- | ------------------------------------------------------------------ | ---- |
 | GET    | `/jobs/search`                  | Search jobs from external job boards with AI-powered match scoring | ✅   |
-| POST   | `/jobs`                         | Save a job manually                                                | ✅   |
+| POST   | `/jobs/save`                    | Save a job manually                                                | ✅   |
 | GET    | `/jobs`                         | List saved/matched/applied jobs                                    | ✅   |
 | GET    | `/jobs/{id}`                    | Get details of a specific job                                      | ✅   |
 | PUT    | `/jobs/{id}`                    | Update job status or notes                                         | ✅   |
