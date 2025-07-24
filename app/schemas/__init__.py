@@ -5,7 +5,6 @@ from .job import (
     JobRead,
     JobSearch,
     JobSearchResult,
-    JobMatchRequest,
     JobMatchResponse,
     JobApplyRequest,
     JobApplyResponse,

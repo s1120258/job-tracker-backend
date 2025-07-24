@@ -9,7 +9,6 @@ from app.schemas.job import (
     JobCreate,
     JobUpdate,
     JobRead,
-    JobMatchRequest,
     JobMatchResponse,
     JobApplyRequest,
     JobApplyResponse,
