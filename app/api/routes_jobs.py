@@ -558,15 +558,11 @@ def normalize_skills(
         context = skills_request.get("context", "")
 
         if not skills:
-            raise HTTPException(
-                status_code=400,
-                detail="Skills list cannot be empty"
-            )
+            raise HTTPException(status_code=400, detail="Skills list cannot be empty")
 
         if len(skills) > 50:
             raise HTTPException(
-                status_code=400,
-                detail="Maximum 50 skills allowed per request"
+                status_code=400, detail="Maximum 50 skills allowed per request"
             )
 
         normalized_data = skill_extraction_service.normalize_skill_list(skills, context)
@@ -575,12 +571,14 @@ def normalize_skills(
             "status": "success",
             "normalized_skills": normalized_data.get("normalized_skills", []),
             "skill_groupings": normalized_data.get("suggested_groupings", []),
-            "total_processed": len(skills)
+            "total_processed": len(skills),
         }
 
     except SkillExtractionServiceError as e:
         logger.error(f"Skill normalization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Skill normalization failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Skill normalization failed: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Unexpected error in skill normalization: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -605,22 +603,25 @@ def compare_skills(
 
         if not skill1 or not skill2:
             raise HTTPException(
-                status_code=400,
-                detail="Both skill1 and skill2 must be provided"
+                status_code=400, detail="Both skill1 and skill2 must be provided"
             )
 
-        similarity_data = skill_extraction_service.compare_skills(skill1, skill2, context)
+        similarity_data = skill_extraction_service.compare_skills(
+            skill1, skill2, context
+        )
 
         return {
             "status": "success",
             "skill1": skill1,
             "skill2": skill2,
-            "similarity_analysis": similarity_data
+            "similarity_analysis": similarity_data,
         }
 
     except SkillExtractionServiceError as e:
         logger.error(f"Skill comparison failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Skill comparison failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Skill comparison failed: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Unexpected error in skill comparison: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -643,15 +644,11 @@ def batch_normalize_skills(
         skill_batches = batch_request.get("skill_batches", [])
 
         if not skill_batches:
-            raise HTTPException(
-                status_code=400,
-                detail="skill_batches cannot be empty"
-            )
+            raise HTTPException(status_code=400, detail="skill_batches cannot be empty")
 
         if len(skill_batches) > 10:
             raise HTTPException(
-                status_code=400,
-                detail="Maximum 10 batches allowed per request"
+                status_code=400, detail="Maximum 10 batches allowed per request"
             )
 
         results = []
@@ -662,37 +659,47 @@ def batch_normalize_skills(
             batch_id = batch.get("batch_id", f"batch_{i}")
 
             if not skills:
-                results.append({
-                    "batch_id": batch_id,
-                    "status": "error",
-                    "error": "Skills list cannot be empty"
-                })
+                results.append(
+                    {
+                        "batch_id": batch_id,
+                        "status": "error",
+                        "error": "Skills list cannot be empty",
+                    }
+                )
                 continue
 
             if len(skills) > 20:
-                results.append({
-                    "batch_id": batch_id,
-                    "status": "error",
-                    "error": "Maximum 20 skills per batch"
-                })
+                results.append(
+                    {
+                        "batch_id": batch_id,
+                        "status": "error",
+                        "error": "Maximum 20 skills per batch",
+                    }
+                )
                 continue
 
             try:
-                normalized_data = skill_extraction_service.normalize_skill_list(skills, context)
-                results.append({
-                    "batch_id": batch_id,
-                    "status": "success",
-                    "normalized_skills": normalized_data.get("normalized_skills", []),
-                    "skill_groupings": normalized_data.get("suggested_groupings", []),
-                    "total_processed": len(skills)
-                })
+                normalized_data = skill_extraction_service.normalize_skill_list(
+                    skills, context
+                )
+                results.append(
+                    {
+                        "batch_id": batch_id,
+                        "status": "success",
+                        "normalized_skills": normalized_data.get(
+                            "normalized_skills", []
+                        ),
+                        "skill_groupings": normalized_data.get(
+                            "suggested_groupings", []
+                        ),
+                        "total_processed": len(skills),
+                    }
+                )
             except Exception as e:
                 logger.warning(f"Batch {batch_id} normalization failed: {str(e)}")
-                results.append({
-                    "batch_id": batch_id,
-                    "status": "error",
-                    "error": str(e)
-                })
+                results.append(
+                    {"batch_id": batch_id, "status": "error", "error": str(e)}
+                )
 
         successful_batches = sum(1 for r in results if r["status"] == "success")
 
@@ -701,7 +708,7 @@ def batch_normalize_skills(
             "total_batches": len(skill_batches),
             "successful_batches": successful_batches,
             "failed_batches": len(skill_batches) - successful_batches,
-            "results": results
+            "results": results,
         }
 
     except Exception as e:

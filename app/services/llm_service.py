@@ -146,7 +146,9 @@ class LLMService:
             logger.error(f"Error normalizing skills: {str(e)}")
             raise LLMServiceError(f"Failed to normalize skills: {str(e)}")
 
-    def analyze_skill_similarity(self, skill1: str, skill2: str, context: str = "") -> Dict[str, Any]:
+    def analyze_skill_similarity(
+        self, skill1: str, skill2: str, context: str = ""
+    ) -> Dict[str, Any]:
         """
         Analyze semantic similarity between two skills using LLM understanding.
 
@@ -159,7 +161,9 @@ class LLMService:
             Dict containing similarity analysis and confidence
         """
         if not skill1 or not skill2:
-            raise LLMServiceError("Both skills must be provided for similarity analysis")
+            raise LLMServiceError(
+                "Both skills must be provided for similarity analysis"
+            )
 
         try:
             prompt = self._create_skill_similarity_prompt(skill1, skill2, context)
@@ -189,7 +193,7 @@ class LLMService:
             return {
                 "similarity_score": 0.5,
                 "confidence": 0.3,
-                "explanation": "Unable to analyze similarity due to parsing error"
+                "explanation": "Unable to analyze similarity due to parsing error",
             }
         except Exception as e:
             logger.error(f"Error analyzing skill similarity: {str(e)}")
@@ -213,7 +217,9 @@ class LLMService:
             raise LLMServiceError("At least one skill list must be provided")
 
         try:
-            prompt = self._create_enhanced_gap_analysis_prompt(resume_skills, job_skills, context)
+            prompt = self._create_enhanced_gap_analysis_prompt(
+                resume_skills, job_skills, context
+            )
 
             logger.info("Performing enhanced skill gap analysis")
             response = self.client.chat.completions.create(
@@ -236,7 +242,9 @@ class LLMService:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse enhanced gap analysis response: {str(e)}")
-            raise LLMServiceError(f"Invalid JSON response from enhanced analysis: {str(e)}")
+            raise LLMServiceError(
+                f"Invalid JSON response from enhanced analysis: {str(e)}"
+            )
         except Exception as e:
             logger.error(f"Error in enhanced skill gap analysis: {str(e)}")
             raise LLMServiceError(f"Failed to perform enhanced analysis: {str(e)}")
@@ -282,7 +290,9 @@ Please provide 3-5 specific, actionable feedback points that address the job req
 Format your response as a numbered list. Each point should be concise but helpful.
 """
 
-    def _create_skill_normalization_prompt(self, skills: List[str], context: str) -> str:
+    def _create_skill_normalization_prompt(
+        self, skills: List[str], context: str
+    ) -> str:
         """Create prompt for skill normalization."""
         skills_text = ", ".join(skills)
         context_text = f"\nContext: {context}" if context else ""
@@ -330,7 +340,9 @@ Instructions:
 - Group complementary skills together
 """
 
-    def _create_skill_similarity_prompt(self, skill1: str, skill2: str, context: str) -> str:
+    def _create_skill_similarity_prompt(
+        self, skill1: str, skill2: str, context: str
+    ) -> str:
         """Create prompt for skill similarity analysis."""
         context_text = f"\nContext: {context}" if context else ""
 

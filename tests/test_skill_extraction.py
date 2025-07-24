@@ -418,10 +418,14 @@ class TestSkillNormalization:
 
     def test_normalize_skill_list_fallback(self, skill_extraction_service, monkeypatch):
         """Test normalization fallback when LLM service fails."""
+
         def mock_normalize_skills(*args, **kwargs):
             raise LLMServiceError("Service unavailable")
 
-        monkeypatch.setattr("app.services.llm_service.llm_service.normalize_skills", mock_normalize_skills)
+        monkeypatch.setattr(
+            "app.services.llm_service.llm_service.normalize_skills",
+            mock_normalize_skills,
+        )
 
         skills = ["Python", "Java"]
         result = skill_extraction_service.normalize_skill_list(skills)
@@ -433,7 +437,9 @@ class TestSkillNormalization:
 
     def test_compare_skills_success(self, skill_extraction_service):
         """Test successful skill comparison."""
-        result = skill_extraction_service.compare_skills("React", "Vue.js", "Frontend frameworks")
+        result = skill_extraction_service.compare_skills(
+            "React", "Vue.js", "Frontend frameworks"
+        )
 
         assert "similarity_score" in result
         assert "confidence" in result
@@ -442,10 +448,14 @@ class TestSkillNormalization:
 
     def test_compare_skills_fallback(self, skill_extraction_service, monkeypatch):
         """Test skill comparison fallback when LLM service fails."""
+
         def mock_analyze_similarity(*args, **kwargs):
             raise LLMServiceError("Service unavailable")
 
-        monkeypatch.setattr("app.services.llm_service.llm_service.analyze_skill_similarity", mock_analyze_similarity)
+        monkeypatch.setattr(
+            "app.services.llm_service.llm_service.analyze_skill_similarity",
+            mock_analyze_similarity,
+        )
 
         result = skill_extraction_service.compare_skills("Python", "Java")
 
@@ -458,24 +468,34 @@ class TestSkillNormalization:
         resume_text = "Python developer with 3 years experience. Worked with Django, Flask, PostgreSQL."
         job_description = "Looking for Senior Python developer. Required: Python, FastAPI, Docker, AWS."
 
-        result = skill_extraction_service.analyze_skill_gap(resume_text, job_description, "Senior Python Developer")
+        result = skill_extraction_service.analyze_skill_gap(
+            resume_text, job_description, "Senior Python Developer"
+        )
 
         # Should have enhanced analysis structure
         assert isinstance(result, dict)
         # Could have either enhanced or basic analysis structure
         assert "match_summary" in result or "intelligent_matches" in result
 
-    def test_enhanced_analysis_fallback_to_basic(self, skill_extraction_service, monkeypatch):
+    def test_enhanced_analysis_fallback_to_basic(
+        self, skill_extraction_service, monkeypatch
+    ):
         """Test fallback to basic analysis when enhanced analysis fails."""
+
         def mock_enhance_analysis(*args, **kwargs):
             raise LLMServiceError("Enhanced analysis failed")
 
-        monkeypatch.setattr("app.services.llm_service.llm_service.enhance_skill_gap_analysis", mock_enhance_analysis)
+        monkeypatch.setattr(
+            "app.services.llm_service.llm_service.enhance_skill_gap_analysis",
+            mock_enhance_analysis,
+        )
 
         resume_text = "Python developer"
         job_description = "Python required"
 
-        result = skill_extraction_service.analyze_skill_gap(resume_text, job_description)
+        result = skill_extraction_service.analyze_skill_gap(
+            resume_text, job_description
+        )
 
         # Should fall back to basic analysis structure
         assert "overall_match_percentage" in result
@@ -484,6 +504,7 @@ class TestSkillNormalization:
 
     def test_apply_skill_normalization(self, skill_extraction_service, monkeypatch):
         """Test skill normalization application to extracted data."""
+
         # Mock the normalize_skill_list method
         def mock_normalize(skills, context):
             return {
@@ -491,24 +512,30 @@ class TestSkillNormalization:
                     {"original": skill, "canonical": skill.upper(), "confidence": 0.9}
                     for skill in skills
                 ],
-                "suggested_groupings": []
+                "suggested_groupings": [],
             }
 
-        monkeypatch.setattr(skill_extraction_service, "normalize_skill_list", mock_normalize)
+        monkeypatch.setattr(
+            skill_extraction_service, "normalize_skill_list", mock_normalize
+        )
 
         skills_data = {
             "technical_skills": [
                 {"name": "python", "level": "Senior"},
-                {"name": "javascript", "level": "Intermediate"}
+                {"name": "javascript", "level": "Intermediate"},
             ],
-            "programming_languages": ["python", "javascript"]
+            "programming_languages": ["python", "javascript"],
         }
 
-        result = skill_extraction_service._apply_skill_normalization(skills_data, "test context")
+        result = skill_extraction_service._apply_skill_normalization(
+            skills_data, "test context"
+        )
 
         assert "normalized_skills" in result
         assert "skill_groupings" in result
-        assert len(result["normalized_skills"]) == 4  # 2 from technical_skills + 2 from programming_languages
+        assert (
+            len(result["normalized_skills"]) == 4
+        )  # 2 from technical_skills + 2 from programming_languages
 
     def test_extract_skill_list_success(self, skill_extraction_service):
         """Test simple skill list extraction."""
@@ -519,23 +546,35 @@ class TestSkillNormalization:
         assert isinstance(result, list)
         assert len(result) <= 20  # Should be limited to 20 skills
 
-    def test_extract_skill_list_failure_fallback(self, skill_extraction_service, monkeypatch):
+    def test_extract_skill_list_failure_fallback(
+        self, skill_extraction_service, monkeypatch
+    ):
         """Test skill list extraction failure fallback."""
+
         def mock_openai_create(*args, **kwargs):
             raise Exception("API Error")
 
-        monkeypatch.setattr(skill_extraction_service.client.chat.completions, "create", mock_openai_create)
+        monkeypatch.setattr(
+            skill_extraction_service.client.chat.completions,
+            "create",
+            mock_openai_create,
+        )
 
         result = skill_extraction_service._extract_skill_list("test text")
 
         assert result == []
 
-    def test_basic_skill_gap_analysis_fallback(self, skill_extraction_service, monkeypatch):
+    def test_basic_skill_gap_analysis_fallback(
+        self, skill_extraction_service, monkeypatch
+    ):
         """Test basic skill gap analysis as final fallback."""
+
         def mock_make_llm_request(*args, **kwargs):
             raise Exception("Complete failure")
 
-        monkeypatch.setattr(skill_extraction_service, "_make_llm_request", mock_make_llm_request)
+        monkeypatch.setattr(
+            skill_extraction_service, "_make_llm_request", mock_make_llm_request
+        )
 
         result = skill_extraction_service._basic_skill_gap_analysis(
             "resume text", "job description", "job title"
@@ -545,6 +584,7 @@ class TestSkillNormalization:
         assert result["overall_match_percentage"] == 50
         assert "Unable to complete detailed analysis" in result["match_summary"]
         assert isinstance(result["recommended_next_steps"], list)
+
 
 class TestLLMServiceIntegration:
     """Test cases for LLM service integration."""
@@ -582,7 +622,9 @@ class TestLLMServiceIntegration:
         job_skills = ["Python", "FastAPI", "Docker"]
 
         try:
-            result = llm_service.enhance_skill_gap_analysis(resume_skills, job_skills, "Backend development")
+            result = llm_service.enhance_skill_gap_analysis(
+                resume_skills, job_skills, "Backend development"
+            )
             assert "intelligent_matches" in result or "normalized_analysis" in result
         except Exception:
             # Expected to fail without actual OpenAI API key
