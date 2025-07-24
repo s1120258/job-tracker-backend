@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Any
 import json
 import openai
 from app.core.config import settings
+from app.services.llm_service import llm_service, LLMServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +31,13 @@ class SkillExtractionService:
             self._client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
         return self._client
 
-    def extract_skills_from_resume(self, resume_text: str) -> Dict[str, Any]:
+    def extract_skills_from_resume(self, resume_text: str, normalize: bool = True) -> Dict[str, Any]:
         """
-        Extract skills from resume text.
+        Extract skills from resume text with optional normalization.
 
         Args:
             resume_text: The extracted text from user's resume
+            normalize: Whether to apply LLM-based skill normalization
 
         Returns:
             Dict containing categorized skills extracted from resume
@@ -47,51 +49,37 @@ class SkillExtractionService:
             prompt = self._create_resume_skill_extraction_prompt(resume_text)
 
             logger.info("Extracting skills from resume text")
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=1000,
-                temperature=0.3,
-                response_format={"type": "json_object"},
+            response = self._make_llm_request(
+                prompt=prompt,
+                system_content="You are a professional skill extraction expert. Extract skills from text and return structured JSON.",
+                max_tokens=1000
             )
 
-            skills_data = json.loads(response.choices[0].message.content)
+            skills_data = self._parse_json_response(response, "resume skill extraction")
+
+            # Apply normalization if requested
+            if normalize and skills_data.get("technical_skills"):
+                skills_data = self._apply_skill_normalization(skills_data, "resume")
+
             logger.info("Successfully extracted skills from resume")
             return skills_data
 
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(
-                f"Invalid JSON response from LLM: {str(e)}"
-            )
-        except openai.AuthenticationError as e:
-            logger.error(f"OpenAI authentication error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
-        except openai.RateLimitError as e:
-            logger.error(f"OpenAI rate limit error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI rate limit exceeded: {str(e)}")
-        except openai.APIError as e:
-            logger.error(f"OpenAI API error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI API error: {str(e)}")
+        except SkillExtractionServiceError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error extracting resume skills: {str(e)}")
             raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
     def extract_skills_from_job(
-        self, job_description: str, job_title: str = ""
+        self, job_description: str, job_title: str = "", normalize: bool = True
     ) -> Dict[str, Any]:
         """
-        Extract required and preferred skills from job description.
+        Extract required and preferred skills from job description with normalization.
 
         Args:
             job_description: The job description text
             job_title: Optional job title for context
+            normalize: Whether to apply LLM-based skill normalization
 
         Returns:
             Dict containing required and preferred skills from job posting
@@ -100,46 +88,29 @@ class SkillExtractionService:
             raise SkillExtractionServiceError("Job description cannot be empty")
 
         try:
-            prompt = self._create_job_skill_extraction_prompt(
-                job_description, job_title
-            )
+            prompt = self._create_job_skill_extraction_prompt(job_description, job_title)
 
             logger.info("Extracting skills from job description")
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional skill extraction expert. Extract skills from job descriptions and return structured JSON.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=1000,
-                temperature=0.3,
-                response_format={"type": "json_object"},
+            response = self._make_llm_request(
+                prompt=prompt,
+                system_content="You are a job requirements analysis expert. Extract required and preferred skills from job descriptions.",
+                max_tokens=1000
             )
 
-            skills_data = json.loads(response.choices[0].message.content)
+            skills_data = self._parse_json_response(response, "job skill extraction")
+
+            # Apply normalization if requested
+            if normalize:
+                skills_data = self._apply_skill_normalization(skills_data, f"job {job_title}")
+
             logger.info("Successfully extracted skills from job description")
             return skills_data
 
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(
-                f"Invalid JSON response from LLM: {str(e)}"
-            )
-        except openai.AuthenticationError as e:
-            logger.error(f"OpenAI authentication error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
-        except openai.RateLimitError as e:
-            logger.error(f"OpenAI rate limit error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI rate limit exceeded: {str(e)}")
-        except openai.APIError as e:
-            logger.error(f"OpenAI API error: {str(e)}")
-            raise SkillExtractionServiceError(f"OpenAI API error: {str(e)}")
+        except SkillExtractionServiceError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error extracting job skills: {str(e)}")
-            raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
+            raise SkillExtractionServiceError(f"Failed to extract job skills: {str(e)}")
 
     def analyze_skill_gap(
         self, resume_text: str, job_description: str, job_title: str = ""
@@ -153,42 +124,118 @@ class SkillExtractionService:
             job_title: Optional job title for context
 
         Returns:
-            Dict containing detailed skill gap analysis
+            Dict containing comprehensive skill gap analysis
         """
         if not resume_text or not resume_text.strip():
             raise SkillExtractionServiceError("Resume text cannot be empty")
+
         if not job_description or not job_description.strip():
             raise SkillExtractionServiceError("Job description cannot be empty")
 
         try:
-            prompt = self._create_skill_gap_analysis_prompt(
-                resume_text, job_description, job_title
-            )
+            # First try enhanced analysis using LLM service
+            try:
+                resume_skills = self._extract_skill_list(resume_text)
+                job_skills = self._extract_skill_list(job_description)
 
-            logger.info("Performing skill gap analysis")
+                enhanced_analysis = llm_service.enhance_skill_gap_analysis(
+                    resume_skills=resume_skills,
+                    job_skills=job_skills,
+                    context=f"{job_title} - {job_description[:500]}"
+                )
+
+                logger.info("Successfully completed enhanced skill gap analysis")
+                return enhanced_analysis
+
+            except LLMServiceError as e:
+                logger.warning(f"Enhanced analysis failed, falling back to basic analysis: {str(e)}")
+                # Fallback to basic analysis
+                return self._basic_skill_gap_analysis(resume_text, job_description, job_title)
+
+        except SkillExtractionServiceError:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in skill gap analysis: {str(e)}")
+            raise SkillExtractionServiceError(f"Failed to analyze skill gap: {str(e)}")
+
+    def normalize_skill_list(self, skills: List[str], context: str = "") -> Dict[str, Any]:
+        """
+        Normalize a list of skills using LLM intelligence.
+
+        Args:
+            skills: List of skill names to normalize
+            context: Optional context for better normalization
+
+        Returns:
+            Dict containing normalized skills with metadata
+        """
+        if not skills:
+            return {"normalized_skills": []}
+
+        try:
+            return llm_service.normalize_skills(skills, context)
+        except LLMServiceError as e:
+            logger.error(f"Skill normalization failed: {str(e)}")
+            # Return original skills as fallback
+            return {
+                "normalized_skills": [
+                    {"original": skill, "canonical": skill, "confidence": 0.5}
+                    for skill in skills
+                ]
+            }
+
+    def compare_skills(self, skill1: str, skill2: str, context: str = "") -> Dict[str, Any]:
+        """
+        Compare similarity between two skills.
+
+        Args:
+            skill1: First skill name
+            skill2: Second skill name
+            context: Optional context for analysis
+
+        Returns:
+            Dict containing similarity analysis
+        """
+        try:
+            return llm_service.analyze_skill_similarity(skill1, skill2, context)
+        except LLMServiceError as e:
+            logger.error(f"Skill comparison failed: {str(e)}")
+            # Return basic comparison as fallback
+            return {
+                "similarity_score": 0.5,
+                "confidence": 0.3,
+                "explanation": "Basic comparison: skills may be related"
+            }
+
+    def _make_llm_request(self, prompt: str, system_content: str, max_tokens: int = 1000) -> str:
+        """
+        Make LLM request with comprehensive error handling.
+
+        Args:
+            prompt: The user prompt
+            system_content: System message content
+            max_tokens: Maximum tokens for response
+
+        Returns:
+            Response content string
+
+        Raises:
+            SkillExtractionServiceError: For various API failures
+        """
+        try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional career advisor and skill analysis expert. Analyze skill gaps between resumes and job requirements, providing actionable insights.",
-                    },
+                    {"role": "system", "content": system_content},
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=1500,
+                max_tokens=max_tokens,
                 temperature=0.3,
                 response_format={"type": "json_object"},
             )
 
-            analysis_data = json.loads(response.choices[0].message.content)
-            logger.info("Successfully completed skill gap analysis")
-            return analysis_data
+            return response.choices[0].message.content.strip()
 
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response as JSON: {str(e)}")
-            raise SkillExtractionServiceError(
-                f"Invalid JSON response from LLM: {str(e)}"
-            )
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {str(e)}")
             raise SkillExtractionServiceError(f"OpenAI authentication failed: {str(e)}")
@@ -199,8 +246,187 @@ class SkillExtractionService:
             logger.error(f"OpenAI API error: {str(e)}")
             raise SkillExtractionServiceError(f"OpenAI API error: {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error in skill gap analysis: {str(e)}")
-            raise SkillExtractionServiceError(f"Failed to analyze skill gap: {str(e)}")
+            logger.error(f"Unexpected error in LLM request: {str(e)}")
+            raise SkillExtractionServiceError(f"LLM request failed: {str(e)}")
+
+    def _parse_json_response(self, response_content: str, operation: str) -> Dict[str, Any]:
+        """
+        Parse JSON response with error handling and fallbacks.
+
+        Args:
+            response_content: The LLM response content
+            operation: Description of the operation for error messages
+
+        Returns:
+            Parsed JSON data
+
+        Raises:
+            SkillExtractionServiceError: If JSON parsing fails critically
+        """
+        if not response_content:
+            raise SkillExtractionServiceError(f"Empty response from LLM for {operation}")
+
+        try:
+            return json.loads(response_content)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON for {operation}: {str(e)}")
+            logger.debug(f"Response content: {response_content}")
+
+            # Try to extract partial JSON or provide meaningful fallback
+            try:
+                # Attempt to find JSON-like content
+                start_idx = response_content.find('{')
+                end_idx = response_content.rfind('}')
+
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    partial_json = response_content[start_idx:end_idx + 1]
+                    return json.loads(partial_json)
+
+            except json.JSONDecodeError:
+                pass
+
+            # Return structured fallback based on operation type
+            if "resume" in operation:
+                return {
+                    "technical_skills": [],
+                    "soft_skills": [],
+                    "experience_level": "Unknown",
+                    "domains": []
+                }
+            elif "job" in operation:
+                return {
+                    "required_skills": [],
+                    "preferred_skills": [],
+                    "experience_required": "Not specified"
+                }
+            else:
+                return {"error": f"Failed to parse response for {operation}"}
+
+    def _apply_skill_normalization(self, skills_data: Dict[str, Any], context: str) -> Dict[str, Any]:
+        """
+        Apply skill normalization to extracted skills data.
+
+        Args:
+            skills_data: Original skills data
+            context: Context for normalization
+
+        Returns:
+            Skills data with normalized skill names
+        """
+        try:
+            # Extract skill names from various fields
+            all_skills = []
+
+            # From technical skills
+            if "technical_skills" in skills_data:
+                for skill in skills_data["technical_skills"]:
+                    if isinstance(skill, dict):
+                        all_skills.append(skill.get("name", ""))
+                    else:
+                        all_skills.append(str(skill))
+
+            # From other skill lists
+            for field in ["programming_languages", "frameworks", "tools", "cloud_platforms", "databases"]:
+                if field in skills_data:
+                    all_skills.extend([str(s) for s in skills_data[field]])
+
+            # From required/preferred skills (for job data)
+            for field in ["required_skills", "preferred_skills"]:
+                if field in skills_data:
+                    for skill in skills_data[field]:
+                        if isinstance(skill, dict):
+                            all_skills.append(skill.get("name", ""))
+                        else:
+                            all_skills.append(str(skill))
+
+            if all_skills:
+                normalized = self.normalize_skill_list(all_skills, context)
+                skills_data["normalized_skills"] = normalized.get("normalized_skills", [])
+                skills_data["skill_groupings"] = normalized.get("suggested_groupings", [])
+
+            return skills_data
+
+        except Exception as e:
+            logger.warning(f"Skill normalization failed, returning original data: {str(e)}")
+            return skills_data
+
+    def _extract_skill_list(self, text: str) -> List[str]:
+        """
+        Extract a simple list of skills from text for enhanced analysis.
+
+        Args:
+            text: Text to extract skills from
+
+        Returns:
+            List of skill names
+        """
+        try:
+            # Use a simple extraction for the enhanced analysis
+            prompt = f"""
+Extract just the skill names from this text as a simple comma-separated list.
+Focus on technical skills, programming languages, frameworks, tools, and technologies.
+
+Text: {text[:1000]}
+
+Return only the skill names separated by commas, no explanations.
+Example: Python, JavaScript, React, Docker, AWS
+"""
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "Extract skill names from text. Return only comma-separated skill names."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=200,
+                temperature=0.1,
+            )
+
+            skills_text = response.choices[0].message.content.strip()
+            skills = [skill.strip() for skill in skills_text.split(',') if skill.strip()]
+            return skills[:20]  # Limit to top 20 skills
+
+        except Exception as e:
+            logger.warning(f"Simple skill extraction failed: {str(e)}")
+            return []
+
+    def _basic_skill_gap_analysis(
+        self, resume_text: str, job_description: str, job_title: str
+    ) -> Dict[str, Any]:
+        """
+        Fallback basic skill gap analysis when enhanced analysis fails.
+
+        Args:
+            resume_text: Resume text
+            job_description: Job description text
+            job_title: Job title
+
+        Returns:
+            Basic skill gap analysis results
+        """
+        try:
+            prompt = self._create_skill_gap_analysis_prompt(resume_text, job_description, job_title)
+
+            response = self._make_llm_request(
+                prompt=prompt,
+                system_content="You are a career advisor. Analyze skill gaps and provide recommendations.",
+                max_tokens=1200
+            )
+
+            return self._parse_json_response(response, "basic skill gap analysis")
+
+        except Exception as e:
+            logger.error(f"Basic skill gap analysis failed: {str(e)}")
+            # Return minimal fallback structure
+            return {
+                "overall_match_percentage": 50,
+                "match_summary": "Unable to complete detailed analysis due to technical issues",
+                "strengths": [],
+                "skill_gaps": [],
+                "learning_recommendations": [],
+                "recommended_next_steps": ["Review job requirements manually", "Consider skill development in key areas"],
+                "application_advice": "Focus on highlighting relevant experience and skills"
+            }
 
     def _create_resume_skill_extraction_prompt(self, resume_text: str) -> str:
         """Create prompt for extracting skills from resume."""
