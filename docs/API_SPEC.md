@@ -72,4 +72,6 @@ This document describes the API endpoints for the ResMatch backend. All endpoint
 
 ---
 
+🔗 **Live interactive API docs**: visit [`/docs`](http://localhost:8000/docs) (Swagger UI)
+
 For project setup and database schema, refer to the [README](../README.md) and related documentation.
