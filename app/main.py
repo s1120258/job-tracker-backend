@@ -82,3 +82,16 @@ def ping_db():
 @app.get("/healthz")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/init-vector")
+def init_pgvector_extension():
+    try:
+        db = SessionLocal()
+        db.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        db.commit()
+        return {"message": "pgvector extension created"}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        db.close()
