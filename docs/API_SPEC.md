@@ -2,8 +2,6 @@
 
 This document describes the API endpoints for the ResMatch backend. All endpoints are prefixed from the root (`/`).
 
-For examples and request/response payloads, see [`API_EXAMPLES.md`](API_EXAMPLES.md).
-
 ---
 
 ## 🔐 Authentication
@@ -56,9 +54,3 @@ For examples and request/response payloads, see [`API_EXAMPLES.md`](API_EXAMPLES
 | POST   | `/auth/register` | Register new user     |
 | POST   | `/auth/token`    | Login (JWT)           |
 | GET    | `/auth/me`       | Get current user info |
-
----
-
-For examples and full request/response formats, refer to [`USAGE_EXAMPLES.md`](USAGE_EXAMPLES.md).
-
-Updated: 2025-07
