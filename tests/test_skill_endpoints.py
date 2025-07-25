@@ -200,7 +200,9 @@ class TestJobSkillsExtraction:
 
         # Verify service was called correctly with normalization enabled
         mock_extract_skills.assert_called_once_with(
-            job_description=mock_job.description, job_title=mock_job.title, normalize=True
+            job_description=mock_job.description,
+            job_title=mock_job.title,
+            normalize=True,
         )
 
     @patch("app.api.routes_jobs.crud_job.get_job")

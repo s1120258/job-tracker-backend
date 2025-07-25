@@ -137,7 +137,11 @@ class SkillExtractionService:
             raise SkillExtractionServiceError(f"Failed to extract skills: {str(e)}")
 
     def analyze_skill_gap(
-        self, resume_text: str, job_description: str, job_title: str = "", normalize: bool = True
+        self,
+        resume_text: str,
+        job_description: str,
+        job_title: str = "",
+        normalize: bool = True,
     ) -> Dict[str, Any]:
         """
         Perform comprehensive skill gap analysis between resume and job requirements.
@@ -161,8 +165,12 @@ class SkillExtractionService:
             # First try enhanced analysis using structured skill data
             try:
                 # Extract structured skills data with levels and experience
-                resume_skills_data = self.extract_skills_from_resume(resume_text, normalize=normalize)
-                job_skills_data = self.extract_skills_from_job(job_description, job_title, normalize=normalize)
+                resume_skills_data = self.extract_skills_from_resume(
+                    resume_text, normalize=normalize
+                )
+                job_skills_data = self.extract_skills_from_job(
+                    job_description, job_title, normalize=normalize
+                )
 
                 # Perform intelligent skill matching using structured data
                 converted_analysis = self._perform_intelligent_skill_matching(
@@ -187,7 +195,7 @@ class SkillExtractionService:
             logger.error(f"Unexpected error in skill gap analysis: {str(e)}")
             raise SkillExtractionServiceError(f"Failed to analyze skill gap: {str(e)}")
 
-    def normalize_skill_list(
+    def _normalize_skill_list(
         self, skills: List[str], context: str = ""
     ) -> Dict[str, Any]:
         """
@@ -213,31 +221,6 @@ class SkillExtractionService:
                     {"original": skill, "canonical": skill, "confidence": 0.5}
                     for skill in skills
                 ]
-            }
-
-    def compare_skills(
-        self, skill1: str, skill2: str, context: str = ""
-    ) -> Dict[str, Any]:
-        """
-        Compare similarity between two skills.
-
-        Args:
-            skill1: First skill name
-            skill2: Second skill name
-            context: Optional context for analysis
-
-        Returns:
-            Dict containing similarity analysis
-        """
-        try:
-            return llm_service.analyze_skill_similarity(skill1, skill2, context)
-        except LLMServiceError as e:
-            logger.error(f"Skill comparison failed: {str(e)}")
-            # Return basic comparison as fallback
-            return {
-                "similarity_score": 0.5,
-                "confidence": 0.3,
-                "explanation": "Basic comparison: skills may be related",
             }
 
     def _make_llm_request(
@@ -389,7 +372,7 @@ class SkillExtractionService:
                             all_skills.append(str(skill))
 
             if all_skills:
-                normalized = self.normalize_skill_list(all_skills, context)
+                normalized = self._normalize_skill_list(all_skills, context)
                 skills_data["normalized_skills"] = normalized.get(
                     "normalized_skills", []
                 )
@@ -442,7 +425,7 @@ class SkillExtractionService:
 
             if all_skills:
                 # Normalize the skills
-                normalized = self.normalize_skill_list(all_skills, context)
+                normalized = self._normalize_skill_list(all_skills, context)
                 normalized_skills = normalized.get("normalized_skills", [])
 
                 # Create a mapping from original to canonical names
@@ -459,19 +442,25 @@ class SkillExtractionService:
                     for strength in analysis_data["strengths"]:
                         if isinstance(strength, dict) and "skill" in strength:
                             original_skill = strength["skill"]
-                            strength["skill"] = skill_mapping.get(original_skill, original_skill)
+                            strength["skill"] = skill_mapping.get(
+                                original_skill, original_skill
+                            )
 
                 if "skill_gaps" in analysis_data:
                     for gap in analysis_data["skill_gaps"]:
                         if isinstance(gap, dict) and "skill" in gap:
                             original_skill = gap["skill"]
-                            gap["skill"] = skill_mapping.get(original_skill, original_skill)
+                            gap["skill"] = skill_mapping.get(
+                                original_skill, original_skill
+                            )
 
                 if "learning_recommendations" in analysis_data:
                     for rec in analysis_data["learning_recommendations"]:
                         if isinstance(rec, dict) and "skill" in rec:
                             original_skill = rec["skill"]
-                            rec["skill"] = skill_mapping.get(original_skill, original_skill)
+                            rec["skill"] = skill_mapping.get(
+                                original_skill, original_skill
+                            )
 
                 # Add normalization metadata
                 analysis_data["skill_normalization_applied"] = True
@@ -486,7 +475,10 @@ class SkillExtractionService:
             return analysis_data
 
     def _perform_intelligent_skill_matching(
-        self, resume_skills_data: Dict[str, Any], job_skills_data: Dict[str, Any], job_title: str
+        self,
+        resume_skills_data: Dict[str, Any],
+        job_skills_data: Dict[str, Any],
+        job_title: str,
     ) -> Dict[str, Any]:
         """
         Perform intelligent skill matching using structured skill data.
@@ -505,20 +497,26 @@ class SkillExtractionService:
             job_requirement_map = self._create_job_requirement_map(job_skills_data)
 
             # Perform core skill matching analysis
-            analysis_results = self._analyze_skill_matches(resume_skill_map, job_requirement_map, job_title)
+            analysis_results = self._analyze_skill_matches(
+                resume_skill_map, job_requirement_map, job_title
+            )
 
             # Generate learning recommendations from gaps
-            learning_recommendations = self._generate_learning_recommendations(analysis_results["skill_gaps"])
+            learning_recommendations = self._generate_learning_recommendations(
+                analysis_results["skill_gaps"]
+            )
 
             # Generate application advice and next steps
             advice_data = self._generate_application_advice(
                 analysis_results["overall_match_percentage"],
                 analysis_results["skill_gaps"],
-                job_title
+                job_title,
             )
 
             # Assemble final result
-            return self._assemble_analysis_result(analysis_results, learning_recommendations, advice_data)
+            return self._assemble_analysis_result(
+                analysis_results, learning_recommendations, advice_data
+            )
 
         except Exception as e:
             logger.error(f"Error in intelligent skill matching: {str(e)}")
@@ -529,11 +527,15 @@ class SkillExtractionService:
                 "strengths": [],
                 "skill_gaps": [],
                 "learning_recommendations": [],
-                "recommended_next_steps": ["Review job requirements manually and identify skills to develop"],
-                "application_advice": "Consider your experience and skills against the job requirements"
+                "recommended_next_steps": [
+                    "Review job requirements manually and identify skills to develop"
+                ],
+                "application_advice": "Consider your experience and skills against the job requirements",
             }
 
-    def _create_resume_skill_map(self, resume_skills_data: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    def _create_resume_skill_map(
+        self, resume_skills_data: Dict[str, Any]
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Create a comprehensive map of resume skills with levels and experience.
 
@@ -557,13 +559,11 @@ class SkillExtractionService:
                 resume_skill_map[name] = {
                     "level": level,
                     "years_experience": years,
-                    "evidence": skill.get("evidence", "")
+                    "evidence": skill.get("evidence", ""),
                 }
 
         # Add other skill categories as lists
-        skill_categories = [
-            "programming_languages", "frameworks", "tools", "domains"
-        ]
+        skill_categories = ["programming_languages", "frameworks", "tools", "domains"]
 
         for category in skill_categories:
             skills_list = resume_skills_data.get(category, [])
@@ -573,12 +573,14 @@ class SkillExtractionService:
                     resume_skill_map[skill_name] = {
                         "level": "Intermediate",  # Default level for non-detailed skills
                         "years_experience": 1,
-                        "evidence": f"Listed in resume"
+                        "evidence": f"Listed in resume",
                     }
 
         return resume_skill_map
 
-    def _create_job_requirement_map(self, job_skills_data: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    def _create_job_requirement_map(
+        self, job_skills_data: Dict[str, Any]
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Create a comprehensive map of job requirements with importance and levels.
 
@@ -600,7 +602,7 @@ class SkillExtractionService:
                 job_requirement_map[name] = {
                     "level": level,
                     "importance": importance,
-                    "required": True
+                    "required": True,
                 }
 
         # Add preferred skills
@@ -614,13 +616,16 @@ class SkillExtractionService:
                     job_requirement_map[name] = {
                         "level": level,
                         "importance": importance,
-                        "required": False
+                        "required": False,
                     }
 
         # Add other job skill categories
         skill_categories = [
-            "programming_languages", "frameworks", "tools",
-            "cloud_platforms", "databases"
+            "programming_languages",
+            "frameworks",
+            "tools",
+            "cloud_platforms",
+            "databases",
         ]
 
         for category in skill_categories:
@@ -635,15 +640,18 @@ class SkillExtractionService:
                     job_requirement_map[skill_name] = {
                         "level": "Intermediate",
                         "importance": "medium",
-                        "required": True
+                        "required": True,
                     }
 
                     # Also add base skill if different (for matching purposes)
-                    if base_skill != skill_name and base_skill not in job_requirement_map:
+                    if (
+                        base_skill != skill_name
+                        and base_skill not in job_requirement_map
+                    ):
                         job_requirement_map[base_skill] = {
                             "level": "Intermediate",
                             "importance": "medium",
-                            "required": True
+                            "required": True,
                         }
 
         return job_requirement_map
@@ -652,7 +660,7 @@ class SkillExtractionService:
         self,
         resume_skill_map: Dict[str, Dict[str, Any]],
         job_requirement_map: Dict[str, Dict[str, Any]],
-        job_title: str
+        job_title: str,
     ) -> Dict[str, Any]:
         """
         Perform core skill matching analysis between resume and job requirements.
@@ -668,12 +676,20 @@ class SkillExtractionService:
         strengths = []
         skill_gaps = []
         matched_skills = 0
-        total_required_skills = sum(1 for req in job_requirement_map.values() if req["required"])
+        total_required_skills = sum(
+            1 for req in job_requirement_map.values() if req["required"]
+        )
 
         for job_skill, job_req in job_requirement_map.items():
             # Use improved matching to find resume skill
-            matching_resume_skill_key = self._find_matching_resume_skill(job_skill, resume_skill_map)
-            resume_skill = resume_skill_map.get(matching_resume_skill_key) if matching_resume_skill_key else None
+            matching_resume_skill_key = self._find_matching_resume_skill(
+                job_skill, resume_skill_map
+            )
+            resume_skill = (
+                resume_skill_map.get(matching_resume_skill_key)
+                if matching_resume_skill_key
+                else None
+            )
 
             if resume_skill:
                 # Skill is present in resume
@@ -684,39 +700,47 @@ class SkillExtractionService:
                 # Check if skill level meets requirements
                 if self._compare_skill_levels(resume_level, required_level):
                     # Skill meets requirements - add to strengths
-                    strengths.append({
-                        "skill": job_skill.title(),
-                        "reason": f"{resume_level} level with {years_exp} years experience meets {required_level} requirement"
-                    })
+                    strengths.append(
+                        {
+                            "skill": job_skill.title(),
+                            "reason": f"{resume_level} level with {years_exp} years experience meets {required_level} requirement",
+                        }
+                    )
                     if job_req["required"]:
                         matched_skills += 1
                 else:
                     # Skill present but insufficient level
                     priority = self._map_importance_to_priority(job_req["importance"])
-                    skill_gaps.append({
-                        "skill": job_skill.title(),
-                        "required_level": required_level,
-                        "current_level": resume_level,
-                        "priority": priority,
-                        "impact": f"Current {resume_level} level needs improvement to {required_level} for {job_title}",
-                        "gap_severity": "Minor"  # Has skill but needs improvement
-                    })
+                    skill_gaps.append(
+                        {
+                            "skill": job_skill.title(),
+                            "required_level": required_level,
+                            "current_level": resume_level,
+                            "priority": priority,
+                            "impact": f"Current {resume_level} level needs improvement to {required_level} for {job_title}",
+                            "gap_severity": "Minor",  # Has skill but needs improvement
+                        }
+                    )
 
             else:
                 # Skill is completely missing
                 if job_req["required"]:
                     priority = self._map_importance_to_priority(job_req["importance"])
-                    skill_gaps.append({
-                        "skill": job_skill.title(),
-                        "required_level": job_req["level"],
-                        "current_level": "None",
-                        "priority": priority,
-                        "impact": f"Required skill for {job_title} position",
-                        "gap_severity": "Major"
-                    })
+                    skill_gaps.append(
+                        {
+                            "skill": job_skill.title(),
+                            "required_level": job_req["level"],
+                            "current_level": "None",
+                            "priority": priority,
+                            "impact": f"Required skill for {job_title} position",
+                            "gap_severity": "Major",
+                        }
+                    )
 
         # Calculate match percentage
-        overall_match_percentage = (matched_skills / max(total_required_skills, 1)) * 100
+        overall_match_percentage = (
+            matched_skills / max(total_required_skills, 1)
+        ) * 100
 
         # Generate match summary
         match_summary = f"Matched {matched_skills} of {total_required_skills} required skills. Overall compatibility: {overall_match_percentage:.1f}%"
@@ -727,10 +751,12 @@ class SkillExtractionService:
             "matched_skills": matched_skills,
             "total_required_skills": total_required_skills,
             "overall_match_percentage": overall_match_percentage,
-            "match_summary": match_summary
+            "match_summary": match_summary,
         }
 
-    def _generate_learning_recommendations(self, skill_gaps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_learning_recommendations(
+        self, skill_gaps: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Generate learning recommendations from skill gaps.
 
@@ -749,18 +775,33 @@ class SkillExtractionService:
 
             # Estimate learning time based on gap severity and skill type
             if gap_severity == "Major":
-                estimated_time = "6-12 weeks" if any(term in skill_name.lower() for term in ["aws", "cloud", "ai", "machine learning"]) else "4-8 weeks"
+                estimated_time = (
+                    "6-12 weeks"
+                    if any(
+                        term in skill_name.lower()
+                        for term in ["aws", "cloud", "ai", "machine learning"]
+                    )
+                    else "4-8 weeks"
+                )
             else:
                 estimated_time = "2-4 weeks"
 
-            learning_recommendations.append({
-                "skill": skill_name,
-                "priority": priority,
-                "estimated_learning_time": estimated_time,
-                "suggested_approach": f"Focus on {skill_name} fundamentals and practical application",
-                "resources": ["Online courses", "Official documentation", "Hands-on projects"],
-                "immediate_actions": [f"Start with {skill_name} basics and practice"]
-            })
+            learning_recommendations.append(
+                {
+                    "skill": skill_name,
+                    "priority": priority,
+                    "estimated_learning_time": estimated_time,
+                    "suggested_approach": f"Focus on {skill_name} fundamentals and practical application",
+                    "resources": [
+                        "Online courses",
+                        "Official documentation",
+                        "Hands-on projects",
+                    ],
+                    "immediate_actions": [
+                        f"Start with {skill_name} basics and practice"
+                    ],
+                }
+            )
 
         return learning_recommendations
 
@@ -768,7 +809,7 @@ class SkillExtractionService:
         self,
         overall_match_percentage: float,
         skill_gaps: List[Dict[str, Any]],
-        job_title: str
+        job_title: str,
     ) -> Dict[str, Any]:
         """
         Generate application advice and recommended next steps.
@@ -783,13 +824,21 @@ class SkillExtractionService:
         """
         # Generate recommendations and advice
         recommended_next_steps = []
-        high_priority_gaps = [gap["skill"] for gap in skill_gaps if gap["priority"] == "High"]
+        high_priority_gaps = [
+            gap["skill"] for gap in skill_gaps if gap["priority"] == "High"
+        ]
         if high_priority_gaps:
-            recommended_next_steps.append(f"Priority learning: {', '.join(high_priority_gaps)}")
+            recommended_next_steps.append(
+                f"Priority learning: {', '.join(high_priority_gaps)}"
+            )
 
-        medium_priority_gaps = [gap["skill"] for gap in skill_gaps if gap["priority"] == "Medium"]
+        medium_priority_gaps = [
+            gap["skill"] for gap in skill_gaps if gap["priority"] == "Medium"
+        ]
         if medium_priority_gaps:
-            recommended_next_steps.append(f"Secondary focus: {', '.join(medium_priority_gaps)}")
+            recommended_next_steps.append(
+                f"Secondary focus: {', '.join(medium_priority_gaps)}"
+            )
 
         # Generate application advice
         if overall_match_percentage >= 80:
@@ -803,14 +852,14 @@ class SkillExtractionService:
 
         return {
             "recommended_next_steps": recommended_next_steps,
-            "application_advice": application_advice
+            "application_advice": application_advice,
         }
 
     def _assemble_analysis_result(
         self,
         analysis_results: Dict[str, Any],
         learning_recommendations: List[Dict[str, Any]],
-        advice_data: Dict[str, Any]
+        advice_data: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
         Assemble the final skill gap analysis result.
@@ -824,13 +873,15 @@ class SkillExtractionService:
             Complete skill gap analysis response
         """
         return {
-            "overall_match_percentage": float(analysis_results["overall_match_percentage"]),
+            "overall_match_percentage": float(
+                analysis_results["overall_match_percentage"]
+            ),
             "match_summary": analysis_results["match_summary"],
             "strengths": analysis_results["strengths"],
             "skill_gaps": analysis_results["skill_gaps"],
             "learning_recommendations": learning_recommendations,
             "recommended_next_steps": advice_data["recommended_next_steps"],
-            "application_advice": advice_data["application_advice"]
+            "application_advice": advice_data["application_advice"],
         }
 
     def _compare_skill_levels(self, resume_level: str, required_level: str) -> bool:
@@ -851,7 +902,7 @@ class SkillExtractionService:
             "intermediate": 2,
             "advanced": 3,
             "senior": 4,
-            "expert": 4
+            "expert": 4,
         }
 
         resume_score = level_hierarchy.get(resume_level.lower(), 1)
@@ -892,7 +943,7 @@ class SkillExtractionService:
             "node.js": "nodejs",
             "react.js": "react",
             "vue.js": "vue",
-            "angular.js": "angular"
+            "angular.js": "angular",
         }
 
         # Check for direct mappings
@@ -909,7 +960,9 @@ class SkillExtractionService:
 
         return skill_lower
 
-    def _find_matching_resume_skill(self, job_skill: str, resume_skill_map: Dict[str, Any]) -> str:
+    def _find_matching_resume_skill(
+        self, job_skill: str, resume_skill_map: Dict[str, Any]
+    ) -> str:
         """
         Find matching resume skill for a job requirement.
 
@@ -938,184 +991,12 @@ class SkillExtractionService:
 
         return None
 
-    def _convert_enhanced_analysis_to_standard(
-        self, enhanced_analysis: Dict[str, Any], job_title: str
-    ) -> Dict[str, Any]:
-        """
-        Convert enhanced analysis format to standard API response format.
-
-        Args:
-            enhanced_analysis: The enhanced analysis from LLM service
-            job_title: Job title for context
-
-        Returns:
-            Dict in standard SkillGapAnalysisResponse format
-        """
-        try:
-            # Extract match percentage from normalized_analysis
-            normalized_analysis = enhanced_analysis.get("normalized_analysis", {})
-            overall_match_percentage = normalized_analysis.get("match_percentage", 0.0)
-
-            # Generate match summary
-            direct_matches = normalized_analysis.get("direct_matches", 0)
-            total_required = normalized_analysis.get("total_required", 1)
-            match_summary = f"Strong match with {direct_matches} of {total_required} required skills. " + \
-                          f"Overall compatibility: {overall_match_percentage:.1f}%"
-
-            # Convert skill advantages to strengths
-            strengths = []
-            skill_advantages = enhanced_analysis.get("skill_advantages", [])
-            for advantage in skill_advantages:
-                strengths.append({
-                    "skill": advantage.get("skill", ""),
-                    "reason": advantage.get("value", "")
-                })
-
-            # Convert intelligent matches to additional strengths
-            intelligent_matches = enhanced_analysis.get("intelligent_matches", [])
-            for match in intelligent_matches:
-                if match.get("match_strength", 0) > 0.7:  # High confidence matches
-                    strengths.append({
-                        "skill": match.get("candidate_skill", ""),
-                        "reason": f"Transferable to {match.get('required_skill', '')} - {match.get('reasoning', '')}"
-                    })
-
-            # Convert skill_gaps to standard format
-            skill_gaps = []
-            enhanced_gaps = enhanced_analysis.get("skill_gaps", [])
-            for gap in enhanced_gaps:
-                # Convert priority to proper case
-                priority = gap.get("priority", "medium").capitalize()
-                if priority not in ["High", "Medium", "Low"]:
-                    priority = "Medium"  # Default to Medium if invalid
-
-                # Map learning difficulty to gap severity
-                difficulty = gap.get("learning_difficulty", "moderate").lower()
-                gap_severity = "Major" if difficulty in ["hard", "difficult"] else \
-                              "Minor" if difficulty in ["easy", "simple"] else "Major"  # Default to Major for moderate
-
-                skill_gaps.append({
-                    "skill": gap.get("missing_skill", ""),
-                    "required_level": "Intermediate",  # Default level
-                    "current_level": "None",  # Assuming missing skill
-                    "priority": priority,
-                    "impact": f"Required for {job_title} position",
-                    "gap_severity": gap_severity
-                })
-
-            # Convert learning strategy to learning recommendations
-            learning_recommendations = []
-            learning_strategy = enhanced_analysis.get("learning_strategy", {})
-            immediate_focus = learning_strategy.get("immediate_focus", [])
-            medium_term = learning_strategy.get("medium_term", [])
-            estimated_ready_time = learning_strategy.get("estimated_ready_time", "Unknown")
-
-            # Create learning recommendations from gaps
-            for gap in enhanced_gaps:
-                skill_name = gap.get("missing_skill", "")
-                learning_path = gap.get("learning_path", [])
-                estimated_time = gap.get("estimated_time", "2-4 weeks")
-                prerequisites = gap.get("prerequisites", [])
-
-                if skill_name:
-                    learning_recommendations.append({
-                        "skill": skill_name,
-                        "priority": gap.get("priority", "medium").capitalize(),
-                        "estimated_learning_time": estimated_time,
-                        "suggested_approach": " -> ".join(learning_path) if learning_path else f"Study {skill_name} fundamentals",
-                        "resources": ["Online courses", "Official documentation", "Practice projects"],
-                        "immediate_actions": prerequisites if prerequisites else [f"Start with {skill_name} basics"]
-                    })
-
-            # Generate recommended next steps
-            recommended_next_steps = []
-            if immediate_focus:
-                recommended_next_steps.append(f"Focus on learning: {', '.join(immediate_focus)}")
-            if medium_term:
-                recommended_next_steps.append(f"Medium-term goals: {', '.join(medium_term)}")
-            leverage_existing = learning_strategy.get("leverage_existing", "")
-            if leverage_existing:
-                recommended_next_steps.append(leverage_existing)
-
-            # Generate application advice
-            application_advice = f"You're a {overall_match_percentage:.0f}% match for this {job_title} position. "
-            if overall_match_percentage >= 80:
-                application_advice += "Strong candidate - highlight your relevant experience and address minor skill gaps through learning plan."
-            elif overall_match_percentage >= 60:
-                application_advice += "Good candidate - focus on demonstrating transferable skills and create a development plan for missing skills."
-            else:
-                application_advice += "Consider developing key missing skills before applying, or highlight transferable experience."
-
-            return {
-                "overall_match_percentage": float(overall_match_percentage),
-                "match_summary": match_summary,
-                "strengths": strengths,
-                "skill_gaps": skill_gaps,
-                "learning_recommendations": learning_recommendations,
-                "recommended_next_steps": recommended_next_steps,
-                "application_advice": application_advice
-            }
-
-        except Exception as e:
-            logger.error(f"Error converting enhanced analysis to standard format: {str(e)}")
-            # Return a basic fallback structure
-            return {
-                "overall_match_percentage": 50.0,
-                "match_summary": "Analysis completed with some limitations",
-                "strengths": [],
-                "skill_gaps": [],
-                "learning_recommendations": [],
-                "recommended_next_steps": ["Review job requirements and identify key skills to develop"],
-                "application_advice": "Focus on highlighting relevant experience and skills"
-            }
-
-    def _extract_skill_list(self, text: str) -> List[str]:
-        """
-        Extract a simple list of skills from text for enhanced analysis.
-
-        Args:
-            text: Text to extract skills from
-
-        Returns:
-            List of skill names
-        """
-        try:
-            # Use a simple extraction for the enhanced analysis
-            prompt = f"""
-Extract just the skill names from this text as a simple comma-separated list.
-Focus on technical skills, programming languages, frameworks, tools, and technologies.
-
-Text: {text[:1000]}
-
-Return only the skill names separated by commas, no explanations.
-Example: Python, JavaScript, React, Docker, AWS
-"""
-
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Extract skill names from text. Return only comma-separated skill names.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=200,
-                temperature=0.1,
-            )
-
-            skills_text = response.choices[0].message.content.strip()
-            skills = [
-                skill.strip() for skill in skills_text.split(",") if skill.strip()
-            ]
-            return skills[:20]  # Limit to top 20 skills
-
-        except Exception as e:
-            logger.warning(f"Simple skill extraction failed: {str(e)}")
-            return []
-
     def _basic_skill_gap_analysis(
-        self, resume_text: str, job_description: str, job_title: str, normalize: bool = True
+        self,
+        resume_text: str,
+        job_description: str,
+        job_title: str,
+        normalize: bool = True,
     ) -> Dict[str, Any]:
         """
         Fallback basic skill gap analysis when enhanced analysis fails.
@@ -1140,11 +1021,15 @@ Example: Python, JavaScript, React, Docker, AWS
                 max_tokens=1200,
             )
 
-            analysis_data = self._parse_json_response(response, "basic skill gap analysis")
+            analysis_data = self._parse_json_response(
+                response, "basic skill gap analysis"
+            )
 
             # Apply normalization if requested
             if normalize:
-                analysis_data = self._apply_skill_normalization_to_analysis(analysis_data, f"job {job_title}")
+                analysis_data = self._apply_skill_normalization_to_analysis(
+                    analysis_data, f"job {job_title}"
+                )
 
             return analysis_data
 
