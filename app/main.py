@@ -77,3 +77,8 @@ def ping_db():
         return {"db_connected": False, "error": str(e)}
     finally:
         db.close()
+
+
+@app.get("/healthz")
+def health_check():
+    return {"status": "ok"}
