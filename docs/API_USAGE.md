@@ -1,4 +1,4 @@
-# 📃 Usage Examples - ResMatch API
+# 📃 API Usage
 
 This document provides request and response examples for using the ResMatch API.
 
