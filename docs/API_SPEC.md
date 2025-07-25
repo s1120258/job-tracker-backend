@@ -24,8 +24,8 @@ This document describes the API endpoints for the ResMatch backend. All endpoint
 | PUT    | `/jobs/{id}`                    | Update job status or notes                                         | ✅   |
 | DELETE | `/jobs/{id}`                    | Delete a saved job                                                 | ✅   |
 | GET    | `/jobs/{id}/match-score`        | Get match score based on current resume                            | ✅   |
-| GET    | `/jobs/{id}/skill-gap-analysis` | Analyze skill gaps between resume and job                          | ✅   |
 | GET    | `/jobs/{id}/skills`             | Extract skills from job description                                | ✅   |
+| GET    | `/jobs/{id}/skill-gap-analysis` | Analyze skill gaps between resume and job                          | ✅   |
 | POST   | `/jobs/{id}/apply`              | Mark a job as applied                                              | ✅   |
 
 ### 📄 Resume
