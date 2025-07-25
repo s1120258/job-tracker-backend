@@ -17,6 +17,7 @@ from app.main import app
 from app.api.routes_auth import get_current_user
 from app.models.user import User
 from app.services.skill_extraction_service import SkillExtractionServiceError
+from app.services.skill_analysis_service import SkillAnalysisServiceError
 
 # Test client
 client = TestClient(app)
@@ -295,10 +296,14 @@ class TestSkillGapAnalysis:
 
     @patch("app.api.routes_jobs.crud_job.get_job")
     @patch("app.api.routes_jobs.get_resume_by_user")
-    @patch("app.api.routes_jobs.skill_extraction_service.analyze_skill_gap")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_resume")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_job")
+    @patch("app.api.routes_jobs.skill_analysis_service.analyze_skill_gap")
     def test_analyze_skill_gap_success(
         self,
         mock_analyze_gap,
+        mock_extract_job_skills,
+        mock_extract_resume_skills,
         mock_get_resume,
         mock_get_job,
         mock_user,
@@ -310,6 +315,14 @@ class TestSkillGapAnalysis:
         # Setup mocks
         mock_get_job.return_value = mock_job
         mock_get_resume.return_value = mock_resume
+        mock_extract_resume_skills.return_value = {
+            "technical_skills": [],
+            "programming_languages": ["Python"],
+        }
+        mock_extract_job_skills.return_value = {
+            "required_skills": [],
+            "programming_languages": ["Python"],
+        }
         mock_analyze_gap.return_value = mock_gap_analysis_data
 
         # Make request
@@ -325,10 +338,24 @@ class TestSkillGapAnalysis:
         assert len(data["strengths"]) == 1
         assert len(data["skill_gaps"]) == 1
 
-        # Verify service was called correctly with normalization enabled
-        mock_analyze_gap.assert_called_once_with(
-            resume_text=mock_resume.extracted_text,
+        # Verify services were called correctly with normalization enabled
+        mock_extract_resume_skills.assert_called_once_with(
+            resume_text=mock_resume.extracted_text, normalize=True
+        )
+        mock_extract_job_skills.assert_called_once_with(
             job_description=mock_job.description,
+            job_title=mock_job.title,
+            normalize=True,
+        )
+        mock_analyze_gap.assert_called_once_with(
+            resume_skills_data={
+                "technical_skills": [],
+                "programming_languages": ["Python"],
+            },
+            job_skills_data={
+                "required_skills": [],
+                "programming_languages": ["Python"],
+            },
             job_title=mock_job.title,
             normalize=True,
         )
@@ -377,20 +404,27 @@ class TestSkillGapAnalysis:
 
     @patch("app.api.routes_jobs.crud_job.get_job")
     @patch("app.api.routes_jobs.get_resume_by_user")
-    @patch("app.api.routes_jobs.skill_extraction_service.analyze_skill_gap")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_resume")
+    @patch("app.api.routes_jobs.skill_extraction_service.extract_skills_from_job")
+    @patch("app.api.routes_jobs.skill_analysis_service.analyze_skill_gap")
     def test_analyze_skill_gap_service_error(
         self,
         mock_analyze_gap,
+        mock_extract_job_skills,
+        mock_extract_resume_skills,
         mock_get_resume,
         mock_get_job,
         mock_user,
         mock_job,
         mock_resume,
     ):
-        """Test skill extraction service error"""
+        """Test skill analysis service error"""
         mock_get_job.return_value = mock_job
         mock_get_resume.return_value = mock_resume
-        mock_analyze_gap.side_effect = SkillExtractionServiceError("Service error")
+        mock_extract_resume_skills.return_value = {"technical_skills": []}
+        mock_extract_job_skills.side_effect = SkillExtractionServiceError(
+            "Service error"
+        )
 
         response = client.get(f"{API_V1_PREFIX}/jobs/{mock_job.id}/skill-gap-analysis")
 

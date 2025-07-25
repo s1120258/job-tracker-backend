@@ -27,6 +27,10 @@ from app.services.skill_extraction_service import (
     skill_extraction_service,
     SkillExtractionServiceError,
 )
+from app.services.skill_analysis_service import (
+    skill_analysis_service,
+    SkillAnalysisServiceError,
+)
 from app.schemas.skill_analysis import (
     SkillGapAnalysisResponse,
     ResumeSkillsResponse,
@@ -499,10 +503,18 @@ def analyze_skill_gap(
         )
 
     try:
-        # Perform skill gap analysis using the skill extraction service with normalization
-        analysis_data = skill_extraction_service.analyze_skill_gap(
-            resume_text=resume.extracted_text,
-            job_description=job.description,
+        # Extract skills from both resume and job first
+        resume_skills_data = skill_extraction_service.extract_skills_from_resume(
+            resume_text=resume.extracted_text, normalize=True
+        )
+        job_skills_data = skill_extraction_service.extract_skills_from_job(
+            job_description=job.description, job_title=job.title, normalize=True
+        )
+
+        # Perform skill gap analysis using the extracted skills data
+        analysis_data = skill_analysis_service.analyze_skill_gap(
+            resume_skills_data=resume_skills_data,
+            job_skills_data=job_skills_data,
             job_title=job.title,
             normalize=True,
         )
@@ -521,8 +533,8 @@ def analyze_skill_gap(
 
         return response_data
 
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill extraction service error: {str(e)}")
+    except (SkillExtractionServiceError, SkillAnalysisServiceError) as e:
+        logger.error(f"Skill service error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Skill analysis failed: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error in skill gap analysis: {str(e)}", exc_info=True)
