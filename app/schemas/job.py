@@ -127,12 +127,6 @@ class JobSearchResult(BaseModel):
     date_posted: Optional[date] = None
 
 
-class JobMatchRequest(BaseModel):
-    """Schema for job matching request"""
-
-    resume_id: UUID
-
-
 class JobMatchResponse(BaseModel):
     """Schema for job matching response"""
 

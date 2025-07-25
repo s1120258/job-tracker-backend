@@ -3,6 +3,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.models.job import Job, JobStatus
+from app.models.match_score import MatchScore
 from app.schemas.job import JobCreate, JobUpdate
 from app.services.embedding_service import embedding_service
 from typing import List, Optional
@@ -191,3 +192,8 @@ def get_job_count_by_status(db: Session, user_id: UUID) -> dict:
         result[status_enum.value] = count
 
     return result
+
+
+def get_match_score(db: Session, job_id: UUID) -> Optional[MatchScore]:
+    """Get match score for a specific job."""
+    return db.query(MatchScore).filter(MatchScore.job_id == job_id).first()

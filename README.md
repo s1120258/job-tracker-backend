@@ -1,6 +1,6 @@
 # 📂 ResMatch
 
-**ResMatch** is an AI-powered career support platform that identifies high-fit job opportunities and provides actionable insights through resume and skill gap analysis — built with FastAPI, PostgreSQL, and OpenAI embeddings.
+**ResMatch** is an AI-powered career support platform that finds high-fit jobs and delivers insights through resume and skill gap analysis — built with FastAPI, PostgreSQL, and OpenAI embeddings.
 
 ---
 
@@ -64,7 +64,7 @@ Whether you’re building a job tracking dashboard, career advisor, or candidate
 
 ## 🗂️ Documentation
 
-- 📑 [API Spec](docs/API_SPEC.md): Endpoints and example requests/responses
+- 📑 [API Spec](docs/API_SPEC.md): REAT API endpoints
 - 🧬 [Data Model](docs/DATA_MODEL.md): Entity-relationship diagram and table schema
 - ⚙️ [Setup Guide](docs/SETUP.md): Local dev and deployment
 - 🧪 [Testing](docs/TESTING.md): Test strategy and CI

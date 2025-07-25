@@ -22,8 +22,8 @@ docker compose down               # Stop all containers
 ```
 
 App available at: [http://localhost:8000](http://localhost:8000)
-Docs available at: [http://localhost:8000/docs](http://localhost:8000/docs)
-API docs available at: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+OpenAPI schema: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
 
 ---
 
@@ -150,4 +150,6 @@ services:
 
 ---
 
-For API usage and project details, see the [README](../README.md) and other docs in the `docs/` folder.
+🔗 **Live interactive API docs**: visit [`/docs`](http://localhost:8000/docs) (Swagger UI)
+
+For project details, see the [README](../README.md) and other docs in the `docs/` folder.

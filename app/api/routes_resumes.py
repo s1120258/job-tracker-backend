@@ -125,7 +125,7 @@ def get_resume_feedback_job_specific(
     }
 
 
-@router.post("/resume/extract-skills", response_model=ResumeSkillExtractionResponse)
+@router.get("/resume/skills", response_model=ResumeSkillExtractionResponse)
 def extract_resume_skills(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -153,9 +153,9 @@ def extract_resume_skills(
         )
 
     try:
-        # Extract skills from resume text
+        # Extract skills from resume text with normalization
         skills_data = skill_extraction_service.extract_skills_from_resume(
-            resume_text=resume.extracted_text
+            resume_text=resume.extracted_text, normalize=True
         )
 
         # Create ResumeSkillsResponse from extracted data

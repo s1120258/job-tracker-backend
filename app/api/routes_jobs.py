@@ -2,14 +2,13 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from app.db.session import get_db
 from app.schemas.job import (
     JobCreate,
     JobUpdate,
     JobRead,
-    JobMatchRequest,
     JobMatchResponse,
     JobApplyRequest,
     JobApplyResponse,
@@ -28,9 +27,12 @@ from app.services.skill_extraction_service import (
     skill_extraction_service,
     SkillExtractionServiceError,
 )
+from app.services.skill_analysis_service import (
+    skill_analysis_service,
+    SkillAnalysisServiceError,
+)
 from app.schemas.skill_analysis import (
     SkillGapAnalysisResponse,
-    SkillGapAnalysisRequest,
     ResumeSkillsResponse,
     JobSkillsResponse,
 )
@@ -308,14 +310,16 @@ def delete_job(
     return None
 
 
-@router.post("/jobs/{job_id}/match", response_model=JobMatchResponse)
-def calculate_match_score(
+@router.get("/jobs/{job_id}/match-score", response_model=JobMatchResponse)
+def get_or_calculate_match_score(
     job_id: UUID,
-    match_request: JobMatchRequest,
+    force_recalculate: bool = Query(
+        False, description="Force recalculation even if match score already exists"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Calculate match score between job and resume."""
+    """Get or calculate match score between job and resume."""
     # Verify the job belongs to the user
     job = crud_job.get_job(db, job_id)
     if not job or job.user_id != current_user.id:
@@ -327,6 +331,19 @@ def calculate_match_score(
         raise HTTPException(
             status_code=400,
             detail="Resume not found. Please upload a resume first.",
+        )
+
+    # Check if we already have a match score for this job
+    existing_match = crud_job.get_match_score(db, job_id)
+
+    # If force_recalculate is not requested and we have existing score, return it
+    if existing_match and not force_recalculate:
+        logger.info(f"Returning existing match score for job {job_id}")
+        return JobMatchResponse(
+            job_id=job_id,
+            resume_id=existing_match.resume_id,
+            similarity_score=existing_match.similarity_score,
+            status=JobStatus.matched,
         )
 
     # Check if embeddings exist
@@ -359,6 +376,9 @@ def calculate_match_score(
             db, job_id, resume.id, similarity_score
         )
 
+        action = "Recalculated" if existing_match else "Calculated new"
+        logger.info(f"{action} match score {similarity_score:.3f} for job {job_id}")
+
         return JobMatchResponse(
             job_id=job_id,
             resume_id=resume.id,
@@ -375,6 +395,151 @@ def calculate_match_score(
         raise HTTPException(
             status_code=500,
             detail="Internal server error while computing match score",
+        )
+
+
+@router.get("/jobs/{job_id}/skills", response_model=JobSkillExtractionResponse)
+def extract_job_skills(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Extract skills and requirements from a specific job description.
+
+    This endpoint analyzes a job posting to identify:
+    - Required vs preferred skills
+    - Skill categories and importance levels
+    - Experience and education requirements
+    """
+    # Verify the job belongs to the user
+    job = crud_job.get_job(db, job_id)
+    if not job or job.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    try:
+        # Extract skills from job description with normalization
+        skills_data = skill_extraction_service.extract_skills_from_job(
+            job_description=job.description, job_title=job.title, normalize=True
+        )
+
+        # Create JobSkillsResponse from extracted data
+        job_skills_response = JobSkillsResponse(**skills_data)
+
+        response = JobSkillExtractionResponse(
+            job_id=job_id,
+            skills_data=job_skills_response,
+            extraction_timestamp=datetime.utcnow(),
+        )
+
+        logger.info(f"Successfully extracted skills from job {job_id}")
+        return response
+
+    except SkillExtractionServiceError as e:
+        logger.error(f"Skill extraction service error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Skill extraction failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error extracting job skills: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="Internal server error during skill extraction"
+        )
+
+
+@router.get(
+    "/jobs/{job_id}/skill-gap-analysis", response_model=SkillGapAnalysisResponse
+)
+def analyze_skill_gap(
+    job_id: UUID,
+    resume_id: Optional[UUID] = Query(
+        None, description="Specific resume ID to use (optional)"
+    ),
+    include_learning_recommendations: bool = Query(
+        True, description="Whether to include learning recommendations"
+    ),
+    include_experience_analysis: bool = Query(
+        True, description="Whether to include experience gap analysis"
+    ),
+    include_education_analysis: bool = Query(
+        True, description="Whether to include education matching"
+    ),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Perform comprehensive skill gap analysis between user's resume and job requirements.
+
+    This endpoint analyzes the match between a user's skills (from their resume) and
+    the requirements of a specific job, providing detailed insights including:
+    - Skill strengths and gaps
+    - Learning recommendations
+    - Experience and education gap analysis
+    - Application advice
+    """
+    # Verify the job belongs to the user
+    job = crud_job.get_job(db, job_id)
+    if not job or job.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Get user's resume (use specific resume_id if provided, otherwise get user's current resume)
+    if resume_id:
+        resume = get_resume_by_user(db, current_user.id)
+        if not resume or resume.id != resume_id:
+            raise HTTPException(status_code=404, detail="Resume not found")
+    else:
+        resume = get_resume_by_user(db, current_user.id)
+        if not resume:
+            raise HTTPException(
+                status_code=404,
+                detail="Resume not found. Please upload a resume first.",
+            )
+
+    # Validate resume has extracted text
+    if not resume.extracted_text or not resume.extracted_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Resume text not available. Please re-upload your resume.",
+        )
+
+    try:
+        # Extract skills from both resume and job first
+        resume_skills_data = skill_extraction_service.extract_skills_from_resume(
+            resume_text=resume.extracted_text, normalize=True
+        )
+        job_skills_data = skill_extraction_service.extract_skills_from_job(
+            job_description=job.description, job_title=job.title, normalize=True
+        )
+
+        # Perform skill gap analysis using the extracted skills data
+        analysis_data = skill_analysis_service.analyze_skill_gap(
+            resume_skills_data=resume_skills_data,
+            job_skills_data=job_skills_data,
+            job_title=job.title,
+            normalize=True,
+        )
+
+        # Create response with additional metadata
+        response_data = SkillGapAnalysisResponse(
+            job_id=job_id,
+            resume_id=resume.id,
+            analysis_timestamp=datetime.utcnow().isoformat(),
+            **analysis_data,
+        )
+
+        logger.info(
+            f"Successfully completed skill gap analysis for job {job_id} and resume {resume.id}"
+        )
+
+        return response_data
+
+    except (SkillExtractionServiceError, SkillAnalysisServiceError) as e:
+        logger.error(f"Skill service error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Skill analysis failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error in skill gap analysis: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="Internal server error during skill gap analysis"
         )
 
 
@@ -415,128 +580,3 @@ def apply_to_job(
         status=JobStatus.applied,
         applied_at=datetime.utcnow(),
     )
-
-
-@router.post(
-    "/jobs/{job_id}/skill-gap-analysis", response_model=SkillGapAnalysisResponse
-)
-def analyze_skill_gap(
-    job_id: UUID,
-    request: SkillGapAnalysisRequest = SkillGapAnalysisRequest(),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Perform comprehensive skill gap analysis between user's resume and job requirements.
-
-    This endpoint analyzes the match between a user's skills (from their resume) and
-    the requirements of a specific job, providing detailed insights including:
-    - Skill strengths and gaps
-    - Learning recommendations
-    - Experience and education gap analysis
-    - Application advice
-    """
-    # Verify the job belongs to the user
-    job = crud_job.get_job(db, job_id)
-    if not job or job.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    # Get user's resume (use specific resume_id if provided, otherwise get user's current resume)
-    if request.resume_id:
-        resume = get_resume_by_user(db, current_user.id)
-        if not resume or resume.id != request.resume_id:
-            raise HTTPException(status_code=404, detail="Resume not found")
-    else:
-        resume = get_resume_by_user(db, current_user.id)
-        if not resume:
-            raise HTTPException(
-                status_code=404,
-                detail="Resume not found. Please upload a resume first.",
-            )
-
-    # Validate resume has extracted text
-    if not resume.extracted_text or not resume.extracted_text.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Resume text not available. Please re-upload your resume.",
-        )
-
-    try:
-        # Perform skill gap analysis using the skill extraction service
-        analysis_data = skill_extraction_service.analyze_skill_gap(
-            resume_text=resume.extracted_text,
-            job_description=job.description,
-            job_title=job.title,
-        )
-
-        # Create response with additional metadata
-        response_data = SkillGapAnalysisResponse(
-            job_id=job_id,
-            resume_id=resume.id,
-            analysis_timestamp=datetime.utcnow().isoformat(),
-            **analysis_data,
-        )
-
-        logger.info(
-            f"Successfully completed skill gap analysis for job {job_id} and resume {resume.id}"
-        )
-
-        return response_data
-
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill extraction service error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Skill analysis failed: {str(e)}")
-    except Exception as e:
-        logger.error(f"Unexpected error in skill gap analysis: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="Internal server error during skill gap analysis"
-        )
-
-
-@router.post("/jobs/{job_id}/extract-skills", response_model=JobSkillExtractionResponse)
-def extract_job_skills(
-    job_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Extract skills and requirements from a specific job description.
-
-    This endpoint analyzes a job posting to identify:
-    - Required vs preferred skills
-    - Skill categories and importance levels
-    - Experience and education requirements
-    """
-    # Verify the job belongs to the user
-    job = crud_job.get_job(db, job_id)
-    if not job or job.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    try:
-        # Extract skills from job description
-        skills_data = skill_extraction_service.extract_skills_from_job(
-            job_description=job.description, job_title=job.title
-        )
-
-        # Create JobSkillsResponse from extracted data
-        job_skills_response = JobSkillsResponse(**skills_data)
-
-        response = JobSkillExtractionResponse(
-            job_id=job_id,
-            skills_data=job_skills_response,
-            extraction_timestamp=datetime.utcnow(),
-        )
-
-        logger.info(f"Successfully extracted skills from job {job_id}")
-        return response
-
-    except SkillExtractionServiceError as e:
-        logger.error(f"Skill extraction service error: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Skill extraction failed: {str(e)}"
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error extracting job skills: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="Internal server error during skill extraction"
-        )
