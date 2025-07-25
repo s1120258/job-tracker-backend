@@ -11,4 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["/bin/sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# waits for DB, creates pgvector if needed, then runs migrations and API
+CMD ["/bin/sh", "-c", \
+   "./app/wait_for_db.sh $DB_HOST && \
+    PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c 'CREATE EXTENSION IF NOT EXISTS vector;' && \
+    alembic upgrade head && \
+    uvicorn app.main:app --host 0.0.0.0 --port 8000"]
