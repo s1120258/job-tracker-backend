@@ -72,4 +72,4 @@ This document describes the API endpoints for the ResMatch backend. All endpoint
 
 ---
 
-For usage walkthroughs, see [`API_USAGE.md`](API_USAGE.md). For project setup and database schema, refer to the [README](../README.md) and related documentation.
+For project setup and database schema, refer to the [README](../README.md) and related documentation.

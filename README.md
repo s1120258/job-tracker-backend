@@ -65,7 +65,6 @@ Whether you’re building a job tracking dashboard, career advisor, or candidate
 ## 🗂️ Documentation
 
 - 📑 [API Spec](docs/API_SPEC.md): REAT API endpoints
-- 🚀 [API Usage](docs/API_USAGE.md): Sample requests and responses
 - 🧬 [Data Model](docs/DATA_MODEL.md): Entity-relationship diagram and table schema
 - ⚙️ [Setup Guide](docs/SETUP.md): Local dev and deployment
 - 🧪 [Testing](docs/TESTING.md): Test strategy and CI
