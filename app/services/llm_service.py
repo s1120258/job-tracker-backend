@@ -22,7 +22,8 @@ def _cleanup_cache():
     """Remove expired cache entries."""
     current_time = time.time()
     expired_keys = [
-        key for key, timestamp in _cache_timestamps.items()
+        key
+        for key, timestamp in _cache_timestamps.items()
         if current_time - timestamp > CACHE_TTL
     ]
 
@@ -34,7 +35,9 @@ def _cleanup_cache():
     if len(_job_summary_cache) > MAX_CACHE_SIZE:
         # Sort by timestamp and remove oldest
         sorted_keys = sorted(_cache_timestamps.items(), key=lambda x: x[1])
-        keys_to_remove = [key for key, _ in sorted_keys[:len(_job_summary_cache) - MAX_CACHE_SIZE]]
+        keys_to_remove = [
+            key for key, _ in sorted_keys[: len(_job_summary_cache) - MAX_CACHE_SIZE]
+        ]
 
         for key in keys_to_remove:
             _job_summary_cache.pop(key, None)
@@ -288,7 +291,7 @@ class LLMService:
         job_description: str,
         job_title: Optional[str] = None,
         company_name: Optional[str] = None,
-        max_length: int = 150
+        max_length: int = 150,
     ) -> Dict[str, Any]:
         """
         Generate a concise summary of a job description.
@@ -317,7 +320,9 @@ class LLMService:
         if cache_key in _job_summary_cache:
             cache_age = time.time() - _cache_timestamps.get(cache_key, 0)
             if cache_age < CACHE_TTL:
-                logger.info(f"Retrieved job summary from cache: {cache_key[:12]} (age: {cache_age:.1f}s)")
+                logger.info(
+                    f"Retrieved job summary from cache: {cache_key[:12]} (age: {cache_age:.1f}s)"
+                )
                 return _job_summary_cache[cache_key]
             else:
                 # Remove expired entry
@@ -364,7 +369,9 @@ class LLMService:
             _job_summary_cache[cache_key] = summary_data
             _cache_timestamps[cache_key] = time.time()
 
-            logger.info(f"Cached job summary: {cache_key[:12]} (cache size: {len(_job_summary_cache)})")
+            logger.info(
+                f"Cached job summary: {cache_key[:12]} (cache size: {len(_job_summary_cache)})"
+            )
             logger.info("Successfully generated job summary")
             return summary_data
 
@@ -372,13 +379,15 @@ class LLMService:
             logger.error(f"Failed to parse job summary response: {str(e)}")
             # Fallback to basic summary
             cleaned_description = self._clean_html_content(job_description)
-            fallback_summary = self._create_fallback_summary(cleaned_description, max_length)
+            fallback_summary = self._create_fallback_summary(
+                cleaned_description, max_length
+            )
             return {
                 "summary": fallback_summary,
                 "summary_length": len(fallback_summary.split()),
                 "key_points": ["Summary generated with limited processing"],
                 "original_length": len(job_description),
-                "generated_at": datetime.now(timezone.utc)
+                "generated_at": datetime.now(timezone.utc),
             }
         except Exception as e:
             logger.error(f"Error generating job summary: {str(e)}")
@@ -611,14 +620,16 @@ Instructions:
     def _clean_html_content(self, content: str) -> str:
         """Clean HTML tags and excessive whitespace from content."""
         # Remove HTML tags
-        cleaned = re.sub(r'<[^>]+>', ' ', content)
+        cleaned = re.sub(r"<[^>]+>", " ", content)
         # Replace multiple whitespaces with single space
-        cleaned = re.sub(r'\s+', ' ', cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned)
         # Remove excessive newlines
-        cleaned = re.sub(r'\n\s*\n', '\n', cleaned)
+        cleaned = re.sub(r"\n\s*\n", "\n", cleaned)
         return cleaned.strip()
 
-    def _create_job_summary_prompt(self, job_description: str, context: str, max_length: int) -> str:
+    def _create_job_summary_prompt(
+        self, job_description: str, context: str, max_length: int
+    ) -> str:
         """Create prompt for job summary generation."""
         return f"""
 Analyze the following job description and create a concise, informative summary.
@@ -656,7 +667,9 @@ Instructions:
 - Count words accurately for summary_length
 """
 
-    def _create_fallback_summary(self, cleaned_description: str, max_length: int) -> str:
+    def _create_fallback_summary(
+        self, cleaned_description: str, max_length: int
+    ) -> str:
         """Create a basic fallback summary when LLM processing fails."""
         words = cleaned_description.split()
 
@@ -669,12 +682,12 @@ Instructions:
         summary = " ".join(summary_words)
 
         # Try to end at a sentence boundary
-        if '.' in summary:
-            sentences = summary.split('.')
+        if "." in summary:
+            sentences = summary.split(".")
             if len(sentences) > 1:
                 # Keep all complete sentences
                 complete_sentences = sentences[:-1]
-                summary = '. '.join(complete_sentences) + '.'
+                summary = ". ".join(complete_sentences) + "."
 
         return summary
 
@@ -683,19 +696,19 @@ Instructions:
         job_description: str,
         job_title: Optional[str],
         company_name: Optional[str],
-        max_length: int
+        max_length: int,
     ) -> str:
         """Generate a hash-based cache key for job summary."""
         # Combine all inputs that affect the output
-        content = f"{job_description}|{job_title or ''}|{company_name or ''}|{max_length}"
+        content = (
+            f"{job_description}|{job_title or ''}|{company_name or ''}|{max_length}"
+        )
 
         # Create SHA256 hash for consistent, collision-resistant key
-        hash_object = hashlib.sha256(content.encode('utf-8'))
+        hash_object = hashlib.sha256(content.encode("utf-8"))
         cache_key = f"job_summary_{hash_object.hexdigest()}"
 
         return cache_key
-
-
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics for monitoring."""

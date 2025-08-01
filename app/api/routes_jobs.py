@@ -590,7 +590,7 @@ def _generate_summary_response(
     job_title: Optional[str] = None,
     company_name: Optional[str] = None,
     max_length: int = 150,
-    user_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None,
 ) -> JobSummaryResponse:
     """
     Common helper function to generate job summary response.
@@ -614,7 +614,7 @@ def _generate_summary_response(
             job_description=job_description,
             job_title=job_title,
             company_name=company_name,
-            max_length=max_length
+            max_length=max_length,
         )
 
         # Create response
@@ -636,21 +636,23 @@ def _generate_summary_response(
     except LLMServiceError as e:
         logger.error(f"LLM service error: {str(e)}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate job summary: {str(e)}"
+            status_code=500, detail=f"Failed to generate job summary: {str(e)}"
         )
     except Exception as e:
-        logger.error(f"Unexpected error generating job summary: {str(e)}", exc_info=True)
+        logger.error(
+            f"Unexpected error generating job summary: {str(e)}", exc_info=True
+        )
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during summary generation"
+            status_code=500, detail="Internal server error during summary generation"
         )
 
 
 @router.get("/jobs/{job_id}/summary", response_model=JobSummaryResponse)
 def get_saved_job_summary(
     job_id: UUID,
-    max_length: int = Query(150, description="Maximum length of summary in words", ge=50, le=300),
+    max_length: int = Query(
+        150, description="Maximum length of summary in words", ge=50, le=300
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -675,7 +677,7 @@ def get_saved_job_summary(
         job_title=job.title,
         company_name=job.company,
         max_length=max_length,
-        user_id=current_user.id
+        user_id=current_user.id,
     )
 
 
@@ -701,5 +703,5 @@ def generate_job_summary(
         job_title=summary_request.job_title,
         company_name=summary_request.company_name,
         max_length=summary_request.max_length,
-        user_id=current_user.id
+        user_id=current_user.id,
     )
