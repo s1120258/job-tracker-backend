@@ -15,15 +15,17 @@ This document describes the API endpoints for the ResMatch backend. All endpoint
 
 ### 💼 Jobs
 
-| Method | Path               | Description                                                        | Auth |
-| ------ | ------------------ | ------------------------------------------------------------------ | ---- |
-| GET    | `/jobs/search`     | Search jobs from external job boards with AI-powered match scoring | ✅   |
-| POST   | `/jobs/save`       | Save a job manually                                                | ✅   |
-| GET    | `/jobs`            | List saved/matched/applied jobs                                    | ✅   |
-| GET    | `/jobs/{id}`       | Get details of a specific job                                      | ✅   |
-| PUT    | `/jobs/{id}`       | Update job status or notes                                         | ✅   |
-| DELETE | `/jobs/{id}`       | Delete a saved job                                                 | ✅   |
-| POST   | `/jobs/{id}/apply` | Mark a job as applied                                              | ✅   |
+| Method | Path                 | Description                                                        | Auth |
+| ------ | -------------------- | ------------------------------------------------------------------ | ---- |
+| GET    | `/jobs/search`       | Search jobs from external job boards with AI-powered match scoring | ✅   |
+| POST   | `/jobs/save`         | Save a job manually                                                | ✅   |
+| GET    | `/jobs`              | List saved/matched/applied jobs                                    | ✅   |
+| GET    | `/jobs/{id}`         | Get details of a specific job                                      | ✅   |
+| PUT    | `/jobs/{id}`         | Update job status or notes                                         | ✅   |
+| DELETE | `/jobs/{id}`         | Delete a saved job                                                 | ✅   |
+| GET    | `/jobs/{id}/summary` | Generate concise summary from saved job description                | ✅   |
+| POST   | `/jobs/summary`      | Generate summary from external job description (HTML supported)    | ✅   |
+| POST   | `/jobs/{id}/apply`   | Mark a job as applied                                              | ✅   |
 
 ### 📄 Resume
 
