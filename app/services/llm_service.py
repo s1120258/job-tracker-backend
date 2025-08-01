@@ -5,8 +5,40 @@ import openai
 from app.core.config import settings
 import re
 from datetime import datetime, timezone
+import hashlib
+import time
 
 logger = logging.getLogger(__name__)
+
+
+# In-memory cache for job summaries
+_job_summary_cache: Dict[str, Dict[str, Any]] = {}
+_cache_timestamps: Dict[str, float] = {}
+CACHE_TTL = 3600  # 1 hour cache TTL
+MAX_CACHE_SIZE = 256  # Maximum number of cached items
+
+
+def _cleanup_cache():
+    """Remove expired cache entries."""
+    current_time = time.time()
+    expired_keys = [
+        key for key, timestamp in _cache_timestamps.items()
+        if current_time - timestamp > CACHE_TTL
+    ]
+
+    for key in expired_keys:
+        _job_summary_cache.pop(key, None)
+        _cache_timestamps.pop(key, None)
+
+    # If cache is too large, remove oldest entries
+    if len(_job_summary_cache) > MAX_CACHE_SIZE:
+        # Sort by timestamp and remove oldest
+        sorted_keys = sorted(_cache_timestamps.items(), key=lambda x: x[1])
+        keys_to_remove = [key for key, _ in sorted_keys[:len(_job_summary_cache) - MAX_CACHE_SIZE]]
+
+        for key in keys_to_remove:
+            _job_summary_cache.pop(key, None)
+            _cache_timestamps.pop(key, None)
 
 
 class LLMServiceError(Exception):
@@ -273,6 +305,25 @@ class LLMService:
         if not job_description or not job_description.strip():
             raise LLMServiceError("Job description cannot be empty")
 
+        # Generate cache key from content hash
+        cache_key = self._generate_cache_key(
+            job_description, job_title, company_name, max_length
+        )
+
+        # Clean up expired cache entries
+        _cleanup_cache()
+
+        # Try to get from cache first
+        if cache_key in _job_summary_cache:
+            cache_age = time.time() - _cache_timestamps.get(cache_key, 0)
+            if cache_age < CACHE_TTL:
+                logger.info(f"Retrieved job summary from cache: {cache_key[:12]} (age: {cache_age:.1f}s)")
+                return _job_summary_cache[cache_key]
+            else:
+                # Remove expired entry
+                _job_summary_cache.pop(cache_key, None)
+                _cache_timestamps.pop(cache_key, None)
+
         try:
             # Clean HTML tags from job description if present
             cleaned_description = self._clean_html_content(job_description)
@@ -309,6 +360,11 @@ class LLMService:
             summary_data["original_length"] = len(job_description)
             summary_data["generated_at"] = datetime.now(timezone.utc)
 
+            # Cache the result
+            _job_summary_cache[cache_key] = summary_data
+            _cache_timestamps[cache_key] = time.time()
+
+            logger.info(f"Cached job summary: {cache_key[:12]} (cache size: {len(_job_summary_cache)})")
             logger.info("Successfully generated job summary")
             return summary_data
 
@@ -621,6 +677,42 @@ Instructions:
                 summary = '. '.join(complete_sentences) + '.'
 
         return summary
+
+    def _generate_cache_key(
+        self,
+        job_description: str,
+        job_title: Optional[str],
+        company_name: Optional[str],
+        max_length: int
+    ) -> str:
+        """Generate a hash-based cache key for job summary."""
+        # Combine all inputs that affect the output
+        content = f"{job_description}|{job_title or ''}|{company_name or ''}|{max_length}"
+
+        # Create SHA256 hash for consistent, collision-resistant key
+        hash_object = hashlib.sha256(content.encode('utf-8'))
+        cache_key = f"job_summary_{hash_object.hexdigest()}"
+
+        return cache_key
+
+
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics for monitoring."""
+        _cleanup_cache()
+        current_time = time.time()
+
+        # Calculate cache ages
+        ages = [current_time - timestamp for timestamp in _cache_timestamps.values()]
+        avg_age = sum(ages) / len(ages) if ages else 0
+
+        return {
+            "cache_size": len(_job_summary_cache),
+            "max_size": MAX_CACHE_SIZE,
+            "ttl_seconds": CACHE_TTL,
+            "average_age_seconds": avg_age,
+            "oldest_entry_seconds": max(ages) if ages else 0,
+        }
 
 
 # Global instance
