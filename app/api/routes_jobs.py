@@ -585,29 +585,36 @@ def apply_to_job(
     )
 
 
-@router.post("/jobs/summary", response_model=JobSummaryResponse)
-def generate_job_summary(
-    summary_request: JobSummaryRequest,
-    current_user: User = Depends(get_current_user),
-):
+def _generate_summary_response(
+    job_description: str,
+    job_title: Optional[str] = None,
+    company_name: Optional[str] = None,
+    max_length: int = 150,
+    user_id: Optional[UUID] = None
+) -> JobSummaryResponse:
     """
-    Generate a concise summary from a full job description.
+    Common helper function to generate job summary response.
 
-    This endpoint is useful for:
-    - Displaying short summaries in job detail pages
-    - Showing brief descriptions in modal dialogs
-    - Converting HTML job descriptions to readable summaries
+    Args:
+        job_description: Full job description text
+        job_title: Optional job title for context
+        company_name: Optional company name for context
+        max_length: Maximum summary length in words
+        user_id: Optional user ID for logging
 
-    The LLM will clean HTML formatting and generate an engaging summary
-    with key points that job seekers need to know.
+    Returns:
+        JobSummaryResponse: Generated summary response
+
+    Raises:
+        HTTPException: If summary generation fails
     """
     try:
         # Generate summary using LLM service
         summary_data = llm_service.generate_job_summary(
-            job_description=summary_request.job_description,
-            job_title=summary_request.job_title,
-            company_name=summary_request.company_name,
-            max_length=summary_request.max_length
+            job_description=job_description,
+            job_title=job_title,
+            company_name=company_name,
+            max_length=max_length
         )
 
         # Create response
@@ -620,7 +627,7 @@ def generate_job_summary(
         )
 
         logger.info(
-            f"Successfully generated job summary for user {current_user.id}: "
+            f"Successfully generated job summary{f' for user {user_id}' if user_id else ''}: "
             f"{summary_data['original_length']} chars -> {summary_data['summary_length']} words"
         )
 
@@ -638,3 +645,61 @@ def generate_job_summary(
             status_code=500,
             detail="Internal server error during summary generation"
         )
+
+
+@router.get("/jobs/{job_id}/summary", response_model=JobSummaryResponse)
+def get_saved_job_summary(
+    job_id: UUID,
+    max_length: int = Query(150, description="Maximum length of summary in words", ge=50, le=300),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate a concise summary from a saved job description.
+
+    This endpoint is useful for:
+    - Displaying short summaries for saved jobs in detail pages
+    - Showing brief descriptions in modal dialogs for saved jobs
+    - Better performance than POST endpoint for saved jobs (lighter network payload)
+
+    The job must belong to the current user.
+    """
+    # Verify the job belongs to the user
+    job = crud_job.get_job(db, job_id)
+    if not job or job.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Generate summary using the common helper function
+    return _generate_summary_response(
+        job_description=job.description,
+        job_title=job.title,
+        company_name=job.company,
+        max_length=max_length,
+        user_id=current_user.id
+    )
+
+
+@router.post("/jobs/summary", response_model=JobSummaryResponse)
+def generate_job_summary(
+    summary_request: JobSummaryRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate a concise summary from a full job description.
+
+    This endpoint is useful for:
+    - Displaying short summaries for external job search results (not yet saved)
+    - Showing brief descriptions in modal dialogs for job search results
+    - Converting HTML job descriptions to readable summaries
+
+    The LLM will clean HTML formatting and generate an engaging summary
+    with key points that job seekers need to know.
+    """
+    # Generate summary using the common helper function
+    return _generate_summary_response(
+        job_description=summary_request.job_description,
+        job_title=summary_request.job_title,
+        company_name=summary_request.company_name,
+        max_length=summary_request.max_length,
+        user_id=current_user.id
+    )
