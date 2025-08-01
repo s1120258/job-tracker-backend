@@ -41,7 +41,7 @@ class JobScraperService:
         location: str = "",
         source: Optional[str] = None,
         limit: int = 20,
-        fetch_full_description: bool = True,
+        fetch_full_description: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Search for jobs across specified or all available job boards.

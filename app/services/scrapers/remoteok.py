@@ -94,7 +94,7 @@ class RemoteOKScraper(JobBoardScraper):
         location: str = "",
         *,
         limit: int = 20,
-        fetch_full_description: bool = True,
+        fetch_full_description: bool = False,
     ) -> List[JobPosting]:
         """Search RemoteOK for remote jobs.
 
