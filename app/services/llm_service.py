@@ -3,8 +3,45 @@ from typing import List, Optional, Dict, Any
 import json
 import openai
 from app.core.config import settings
+import re
+from datetime import datetime, timezone
+import hashlib
+import time
 
 logger = logging.getLogger(__name__)
+
+
+# In-memory cache for job summaries
+_job_summary_cache: Dict[str, Dict[str, Any]] = {}
+_cache_timestamps: Dict[str, float] = {}
+CACHE_TTL = 3600  # 1 hour cache TTL
+MAX_CACHE_SIZE = 256  # Maximum number of cached items
+
+
+def _cleanup_cache():
+    """Remove expired cache entries."""
+    current_time = time.time()
+    expired_keys = [
+        key
+        for key, timestamp in _cache_timestamps.items()
+        if current_time - timestamp > CACHE_TTL
+    ]
+
+    for key in expired_keys:
+        _job_summary_cache.pop(key, None)
+        _cache_timestamps.pop(key, None)
+
+    # If cache is too large, remove oldest entries
+    if len(_job_summary_cache) > MAX_CACHE_SIZE:
+        # Sort by timestamp and remove oldest
+        sorted_keys = sorted(_cache_timestamps.items(), key=lambda x: x[1])
+        keys_to_remove = [
+            key for key, _ in sorted_keys[: len(_job_summary_cache) - MAX_CACHE_SIZE]
+        ]
+
+        for key in keys_to_remove:
+            _job_summary_cache.pop(key, None)
+            _cache_timestamps.pop(key, None)
 
 
 class LLMServiceError(Exception):
@@ -249,6 +286,113 @@ class LLMService:
             logger.error(f"Error in enhanced skill gap analysis: {str(e)}")
             raise LLMServiceError(f"Failed to perform enhanced analysis: {str(e)}")
 
+    def generate_job_summary(
+        self,
+        job_description: str,
+        job_title: Optional[str] = None,
+        company_name: Optional[str] = None,
+        max_length: int = 150,
+    ) -> Dict[str, Any]:
+        """
+        Generate a concise summary of a job description.
+
+        Args:
+            job_description: Full job description (can include HTML)
+            job_title: Optional job title for context
+            company_name: Optional company name for context
+            max_length: Maximum length of summary in words
+
+        Returns:
+            Dict containing summary and key points
+        """
+        if not job_description or not job_description.strip():
+            raise LLMServiceError("Job description cannot be empty")
+
+        # Generate cache key from content hash
+        cache_key = self._generate_cache_key(
+            job_description, job_title, company_name, max_length
+        )
+
+        # Clean up expired cache entries
+        _cleanup_cache()
+
+        # Try to get from cache first
+        if cache_key in _job_summary_cache:
+            cache_age = time.time() - _cache_timestamps.get(cache_key, 0)
+            if cache_age < CACHE_TTL:
+                logger.info(
+                    f"Retrieved job summary from cache: {cache_key[:12]} (age: {cache_age:.1f}s)"
+                )
+                return _job_summary_cache[cache_key]
+            else:
+                # Remove expired entry
+                _job_summary_cache.pop(cache_key, None)
+                _cache_timestamps.pop(cache_key, None)
+
+        try:
+            # Clean HTML tags from job description if present
+            cleaned_description = self._clean_html_content(job_description)
+
+            # Create context string
+            context = ""
+            if job_title:
+                context += f"Job Title: {job_title}\n"
+            if company_name:
+                context += f"Company: {company_name}\n"
+
+            prompt = self._create_job_summary_prompt(
+                cleaned_description, context, max_length
+            )
+
+            logger.info(f"Generating job summary with max length {max_length} words")
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a professional job description summarizer. Create concise, informative summaries that capture the essence of job postings.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=600,
+                temperature=0.3,
+                response_format={"type": "json_object"},
+            )
+
+            summary_data = json.loads(response.choices[0].message.content)
+
+            # Add metadata
+            summary_data["original_length"] = len(job_description)
+            summary_data["generated_at"] = datetime.now(timezone.utc)
+
+            # Cache the result
+            _job_summary_cache[cache_key] = summary_data
+            _cache_timestamps[cache_key] = time.time()
+
+            logger.info(
+                f"Cached job summary: {cache_key[:12]} (cache size: {len(_job_summary_cache)})"
+            )
+            logger.info("Successfully generated job summary")
+            return summary_data
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse job summary response: {str(e)}")
+            # Fallback to basic summary
+            cleaned_description = self._clean_html_content(job_description)
+            fallback_summary = self._create_fallback_summary(
+                cleaned_description, max_length
+            )
+            return {
+                "summary": fallback_summary,
+                "summary_length": len(fallback_summary.split()),
+                "key_points": ["Summary generated with limited processing"],
+                "original_length": len(job_description),
+                "generated_at": datetime.now(timezone.utc),
+            }
+        except Exception as e:
+            logger.error(f"Error generating job summary: {str(e)}")
+            raise LLMServiceError(f"Failed to generate job summary: {str(e)}")
+
     def _create_general_feedback_prompt(self, resume_text: str) -> str:
         """Create prompt for general resume feedback."""
         return f"""
@@ -472,6 +616,116 @@ Instructions:
             return 500  # Medium input → medium output
         else:
             return 800  # Long input → long output
+
+    def _clean_html_content(self, content: str) -> str:
+        """Clean HTML tags and excessive whitespace from content."""
+        # Remove HTML tags
+        cleaned = re.sub(r"<[^>]+>", " ", content)
+        # Replace multiple whitespaces with single space
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        # Remove excessive newlines
+        cleaned = re.sub(r"\n\s*\n", "\n", cleaned)
+        return cleaned.strip()
+
+    def _create_job_summary_prompt(
+        self, job_description: str, context: str, max_length: int
+    ) -> str:
+        """Create prompt for job summary generation."""
+        return f"""
+Analyze the following job description and create a concise, informative summary.
+
+{context}
+
+Job Description:
+{job_description[:4000]}  # Limit text length to avoid token limits
+
+Requirements:
+- Create a summary of maximum {max_length} words
+- Extract 3-5 key points that job seekers should know
+- Focus on role responsibilities, required skills, and key benefits
+- Make it engaging and informative for potential candidates
+- Remove any HTML formatting or excessive technical jargon
+
+Return JSON with this structure:
+{{
+    "summary": "A {max_length}-word concise summary of the job position highlighting key responsibilities and requirements",
+    "summary_length": 145,
+    "key_points": [
+        "Primary responsibility or main role focus",
+        "Key technical skills or qualifications required",
+        "Notable benefits or company highlights",
+        "Experience level or career stage targeted",
+        "Work arrangement (remote, hybrid, etc.) if mentioned"
+    ]
+}}
+
+Instructions:
+- Keep summary clear and professional
+- Avoid repetitive information
+- Highlight what makes this opportunity unique
+- Ensure key_points are specific and actionable
+- Count words accurately for summary_length
+"""
+
+    def _create_fallback_summary(
+        self, cleaned_description: str, max_length: int
+    ) -> str:
+        """Create a basic fallback summary when LLM processing fails."""
+        words = cleaned_description.split()
+
+        # Take first portion of the description as fallback
+        if len(words) <= max_length:
+            return cleaned_description
+
+        # Extract first max_length words and ensure it ends with complete sentence
+        summary_words = words[:max_length]
+        summary = " ".join(summary_words)
+
+        # Try to end at a sentence boundary
+        if "." in summary:
+            sentences = summary.split(".")
+            if len(sentences) > 1:
+                # Keep all complete sentences
+                complete_sentences = sentences[:-1]
+                summary = ". ".join(complete_sentences) + "."
+
+        return summary
+
+    def _generate_cache_key(
+        self,
+        job_description: str,
+        job_title: Optional[str],
+        company_name: Optional[str],
+        max_length: int,
+    ) -> str:
+        """Generate a hash-based cache key for job summary."""
+        # Combine all inputs that affect the output
+        content = (
+            f"{job_description}|{job_title or ''}|{company_name or ''}|{max_length}"
+        )
+
+        # Create SHA256 hash for consistent, collision-resistant key
+        hash_object = hashlib.sha256(content.encode("utf-8"))
+        cache_key = f"job_summary_{hash_object.hexdigest()}"
+
+        return cache_key
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics for monitoring."""
+        _cleanup_cache()
+        current_time = time.time()
+
+        # Calculate cache ages
+        ages = [current_time - timestamp for timestamp in _cache_timestamps.values()]
+        avg_age = sum(ages) / len(ages) if ages else 0
+
+        return {
+            "cache_size": len(_job_summary_cache),
+            "max_size": MAX_CACHE_SIZE,
+            "ttl_seconds": CACHE_TTL,
+            "average_age_seconds": avg_age,
+            "oldest_entry_seconds": max(ages) if ages else 0,
+        }
 
 
 # Global instance
