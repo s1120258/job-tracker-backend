@@ -3,6 +3,8 @@ from typing import List, Optional, Dict, Any
 import json
 import openai
 from app.core.config import settings
+import re
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -249,6 +251,83 @@ class LLMService:
             logger.error(f"Error in enhanced skill gap analysis: {str(e)}")
             raise LLMServiceError(f"Failed to perform enhanced analysis: {str(e)}")
 
+    def generate_job_summary(
+        self,
+        job_description: str,
+        job_title: Optional[str] = None,
+        company_name: Optional[str] = None,
+        max_length: int = 150
+    ) -> Dict[str, Any]:
+        """
+        Generate a concise summary of a job description.
+
+        Args:
+            job_description: Full job description (can include HTML)
+            job_title: Optional job title for context
+            company_name: Optional company name for context
+            max_length: Maximum length of summary in words
+
+        Returns:
+            Dict containing summary and key points
+        """
+        if not job_description or not job_description.strip():
+            raise LLMServiceError("Job description cannot be empty")
+
+        try:
+            # Clean HTML tags from job description if present
+            cleaned_description = self._clean_html_content(job_description)
+
+            # Create context string
+            context = ""
+            if job_title:
+                context += f"Job Title: {job_title}\n"
+            if company_name:
+                context += f"Company: {company_name}\n"
+
+            prompt = self._create_job_summary_prompt(
+                cleaned_description, context, max_length
+            )
+
+            logger.info(f"Generating job summary with max length {max_length} words")
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a professional job description summarizer. Create concise, informative summaries that capture the essence of job postings.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=600,
+                temperature=0.3,
+                response_format={"type": "json_object"},
+            )
+
+            summary_data = json.loads(response.choices[0].message.content)
+
+            # Add metadata
+            summary_data["original_length"] = len(job_description)
+            summary_data["generated_at"] = datetime.now(timezone.utc)
+
+            logger.info("Successfully generated job summary")
+            return summary_data
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse job summary response: {str(e)}")
+            # Fallback to basic summary
+            cleaned_description = self._clean_html_content(job_description)
+            fallback_summary = self._create_fallback_summary(cleaned_description, max_length)
+            return {
+                "summary": fallback_summary,
+                "summary_length": len(fallback_summary.split()),
+                "key_points": ["Summary generated with limited processing"],
+                "original_length": len(job_description),
+                "generated_at": datetime.now(timezone.utc)
+            }
+        except Exception as e:
+            logger.error(f"Error generating job summary: {str(e)}")
+            raise LLMServiceError(f"Failed to generate job summary: {str(e)}")
+
     def _create_general_feedback_prompt(self, resume_text: str) -> str:
         """Create prompt for general resume feedback."""
         return f"""
@@ -472,6 +551,76 @@ Instructions:
             return 500  # Medium input → medium output
         else:
             return 800  # Long input → long output
+
+    def _clean_html_content(self, content: str) -> str:
+        """Clean HTML tags and excessive whitespace from content."""
+        # Remove HTML tags
+        cleaned = re.sub(r'<[^>]+>', ' ', content)
+        # Replace multiple whitespaces with single space
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+        # Remove excessive newlines
+        cleaned = re.sub(r'\n\s*\n', '\n', cleaned)
+        return cleaned.strip()
+
+    def _create_job_summary_prompt(self, job_description: str, context: str, max_length: int) -> str:
+        """Create prompt for job summary generation."""
+        return f"""
+Analyze the following job description and create a concise, informative summary.
+
+{context}
+
+Job Description:
+{job_description[:4000]}  # Limit text length to avoid token limits
+
+Requirements:
+- Create a summary of maximum {max_length} words
+- Extract 3-5 key points that job seekers should know
+- Focus on role responsibilities, required skills, and key benefits
+- Make it engaging and informative for potential candidates
+- Remove any HTML formatting or excessive technical jargon
+
+Return JSON with this structure:
+{{
+    "summary": "A {max_length}-word concise summary of the job position highlighting key responsibilities and requirements",
+    "summary_length": 145,
+    "key_points": [
+        "Primary responsibility or main role focus",
+        "Key technical skills or qualifications required",
+        "Notable benefits or company highlights",
+        "Experience level or career stage targeted",
+        "Work arrangement (remote, hybrid, etc.) if mentioned"
+    ]
+}}
+
+Instructions:
+- Keep summary clear and professional
+- Avoid repetitive information
+- Highlight what makes this opportunity unique
+- Ensure key_points are specific and actionable
+- Count words accurately for summary_length
+"""
+
+    def _create_fallback_summary(self, cleaned_description: str, max_length: int) -> str:
+        """Create a basic fallback summary when LLM processing fails."""
+        words = cleaned_description.split()
+
+        # Take first portion of the description as fallback
+        if len(words) <= max_length:
+            return cleaned_description
+
+        # Extract first max_length words and ensure it ends with complete sentence
+        summary_words = words[:max_length]
+        summary = " ".join(summary_words)
+
+        # Try to end at a sentence boundary
+        if '.' in summary:
+            sentences = summary.split('.')
+            if len(sentences) > 1:
+                # Keep all complete sentences
+                complete_sentences = sentences[:-1]
+                summary = '. '.join(complete_sentences) + '.'
+
+        return summary
 
 
 # Global instance

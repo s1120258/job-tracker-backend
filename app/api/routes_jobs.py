@@ -13,6 +13,8 @@ from app.schemas.job import (
     JobApplyRequest,
     JobApplyResponse,
     JobStatus,
+    JobSummaryRequest,
+    JobSummaryResponse,
 )
 from app.models.job import JobStatus as ModelJobStatus
 from app.crud import job as crud_job
@@ -31,6 +33,7 @@ from app.services.skill_analysis_service import (
     skill_analysis_service,
     SkillAnalysisServiceError,
 )
+from app.services.llm_service import llm_service, LLMServiceError
 from app.schemas.skill_analysis import (
     SkillGapAnalysisResponse,
     ResumeSkillsResponse,
@@ -580,3 +583,58 @@ def apply_to_job(
         status=JobStatus.applied,
         applied_at=datetime.utcnow(),
     )
+
+
+@router.post("/jobs/summary", response_model=JobSummaryResponse)
+def generate_job_summary(
+    summary_request: JobSummaryRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate a concise summary from a full job description.
+
+    This endpoint is useful for:
+    - Displaying short summaries in job detail pages
+    - Showing brief descriptions in modal dialogs
+    - Converting HTML job descriptions to readable summaries
+
+    The LLM will clean HTML formatting and generate an engaging summary
+    with key points that job seekers need to know.
+    """
+    try:
+        # Generate summary using LLM service
+        summary_data = llm_service.generate_job_summary(
+            job_description=summary_request.job_description,
+            job_title=summary_request.job_title,
+            company_name=summary_request.company_name,
+            max_length=summary_request.max_length
+        )
+
+        # Create response
+        response = JobSummaryResponse(
+            original_length=summary_data["original_length"],
+            summary=summary_data["summary"],
+            summary_length=summary_data["summary_length"],
+            key_points=summary_data["key_points"],
+            generated_at=summary_data["generated_at"],
+        )
+
+        logger.info(
+            f"Successfully generated job summary for user {current_user.id}: "
+            f"{summary_data['original_length']} chars -> {summary_data['summary_length']} words"
+        )
+
+        return response
+
+    except LLMServiceError as e:
+        logger.error(f"LLM service error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate job summary: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error generating job summary: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during summary generation"
+        )

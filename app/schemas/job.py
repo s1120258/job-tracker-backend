@@ -167,3 +167,23 @@ class ResumeSkillExtractionResponse(BaseModel):
     resume_id: UUID
     skills_data: ResumeSkillsResponse
     extraction_timestamp: datetime
+
+
+# Job Summary related schemas
+class JobSummaryRequest(BaseModel):
+    """Schema for job summary generation request"""
+
+    job_description: str = Field(..., description="Full job description (can be HTML format)")
+    job_title: Optional[str] = Field(None, description="Job title for better context")
+    company_name: Optional[str] = Field(None, description="Company name for context")
+    max_length: Optional[int] = Field(150, description="Maximum length of summary in words", ge=50, le=300)
+
+
+class JobSummaryResponse(BaseModel):
+    """Schema for job summary generation response"""
+
+    original_length: int = Field(..., description="Original description length in characters")
+    summary: str = Field(..., description="Generated summary")
+    summary_length: int = Field(..., description="Summary length in words")
+    key_points: List[str] = Field(..., description="Key highlights extracted from the job")
+    generated_at: datetime = Field(..., description="Timestamp when summary was generated")
