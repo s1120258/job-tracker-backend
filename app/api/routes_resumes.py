@@ -16,7 +16,7 @@ from app.services.skill_extraction_service import (
 )
 from app.schemas.skill_analysis import ResumeSkillsResponse
 from app.schemas.job import ResumeSkillExtractionResponse
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -164,7 +164,7 @@ def extract_resume_skills(
         response = ResumeSkillExtractionResponse(
             resume_id=resume.id,
             skills_data=resume_skills_response,
-            extraction_timestamp=datetime.utcnow(),
+            extraction_timestamp=datetime.now(timezone.utc),
         )
 
         return response

@@ -40,7 +40,7 @@ from app.schemas.skill_analysis import (
     JobSkillsResponse,
 )
 from app.schemas.job import JobSkillExtractionResponse, ResumeSkillExtractionResponse
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -432,7 +432,7 @@ def extract_job_skills(
         response = JobSkillExtractionResponse(
             job_id=job_id,
             skills_data=job_skills_response,
-            extraction_timestamp=datetime.utcnow(),
+            extraction_timestamp=datetime.now(timezone.utc),
         )
 
         logger.info(f"Successfully extracted skills from job {job_id}")
@@ -526,7 +526,7 @@ def analyze_skill_gap(
         response_data = SkillGapAnalysisResponse(
             job_id=job_id,
             resume_id=resume.id,
-            analysis_timestamp=datetime.utcnow().isoformat(),
+            analysis_timestamp=datetime.now(timezone.utc).isoformat(),
             **analysis_data,
         )
 
@@ -581,7 +581,7 @@ def apply_to_job(
         job_id=job_id,
         resume_id=resume.id,
         status=JobStatus.applied,
-        applied_at=datetime.utcnow(),
+        applied_at=datetime.now(timezone.utc),
     )
 
 
