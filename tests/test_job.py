@@ -313,17 +313,18 @@ def test_get_saved_job_summary_success(fake_user, fake_job):
             "Python development experience required",
             "Remote work available",
             "Full-stack development focus",
-            "Competitive salary and benefits"
+            "Competitive salary and benefits",
         ],
-        "generated_at": datetime.now(timezone.utc)
+        "generated_at": datetime.now(timezone.utc),
     }
 
-    with patch("app.crud.job.get_job", return_value=fake_job), \
-         patch("app.services.llm_service.llm_service.generate_job_summary", return_value=mock_summary_data):
+    with patch("app.crud.job.get_job", return_value=fake_job), patch(
+        "app.services.llm_service.llm_service.generate_job_summary",
+        return_value=mock_summary_data,
+    ):
 
         response = client.get(
-            f"/api/v1/jobs/{fake_job.id}/summary?max_length=150",
-            headers=auth_headers()
+            f"/api/v1/jobs/{fake_job.id}/summary?max_length=150", headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -342,16 +343,16 @@ def test_get_saved_job_summary_default_max_length(fake_user, fake_job):
         "summary": "Default length summary",
         "summary_length": 3,
         "key_points": ["Point 1", "Point 2"],
-        "generated_at": datetime.now(timezone.utc)
+        "generated_at": datetime.now(timezone.utc),
     }
 
-    with patch("app.crud.job.get_job", return_value=fake_job), \
-         patch("app.services.llm_service.llm_service.generate_job_summary") as mock_llm:
+    with patch("app.crud.job.get_job", return_value=fake_job), patch(
+        "app.services.llm_service.llm_service.generate_job_summary"
+    ) as mock_llm:
         mock_llm.return_value = mock_summary_data
 
         response = client.get(
-            f"/api/v1/jobs/{fake_job.id}/summary",
-            headers=auth_headers()
+            f"/api/v1/jobs/{fake_job.id}/summary", headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -360,17 +361,14 @@ def test_get_saved_job_summary_default_max_length(fake_user, fake_job):
             job_description=fake_job.description,
             job_title=fake_job.title,
             company_name=fake_job.company,
-            max_length=150
+            max_length=150,
         )
 
 
 def test_get_saved_job_summary_not_found(fake_user):
     """Test getting summary for non-existent job."""
     with patch("app.crud.job.get_job", return_value=None):
-        response = client.get(
-            f"/api/v1/jobs/{uuid4()}/summary",
-            headers=auth_headers()
-        )
+        response = client.get(f"/api/v1/jobs/{uuid4()}/summary", headers=auth_headers())
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -381,21 +379,20 @@ def test_get_saved_job_summary_unauthorized(fake_user, fake_job):
 
     with patch("app.crud.job.get_job", return_value=other_job):
         response = client.get(
-            f"/api/v1/jobs/{other_job.id}/summary",
-            headers=auth_headers()
+            f"/api/v1/jobs/{other_job.id}/summary", headers=auth_headers()
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_get_saved_job_summary_llm_error(fake_user, fake_job):
     """Test handling of LLM service errors for saved job summary."""
-    with patch("app.crud.job.get_job", return_value=fake_job), \
-         patch("app.services.llm_service.llm_service.generate_job_summary",
-               side_effect=LLMServiceError("LLM API error")):
+    with patch("app.crud.job.get_job", return_value=fake_job), patch(
+        "app.services.llm_service.llm_service.generate_job_summary",
+        side_effect=LLMServiceError("LLM API error"),
+    ):
 
         response = client.get(
-            f"/api/v1/jobs/{fake_job.id}/summary",
-            headers=auth_headers()
+            f"/api/v1/jobs/{fake_job.id}/summary", headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -408,15 +405,13 @@ def test_get_saved_job_summary_max_length_validation(fake_user, fake_job):
     with patch("app.crud.job.get_job", return_value=fake_job):
         # Test too small max_length
         response = client.get(
-            f"/api/v1/jobs/{fake_job.id}/summary?max_length=30",
-            headers=auth_headers()
+            f"/api/v1/jobs/{fake_job.id}/summary?max_length=30", headers=auth_headers()
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         # Test too large max_length
         response = client.get(
-            f"/api/v1/jobs/{fake_job.id}/summary?max_length=500",
-            headers=auth_headers()
+            f"/api/v1/jobs/{fake_job.id}/summary?max_length=500", headers=auth_headers()
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -432,23 +427,24 @@ def test_post_job_summary_success(fake_user):
             "Modern development practices",
             "Flexible remote work",
             "Growth opportunities",
-            "Competitive compensation"
+            "Competitive compensation",
         ],
-        "generated_at": datetime.now(timezone.utc)
+        "generated_at": datetime.now(timezone.utc),
     }
 
-    with patch("app.services.llm_service.llm_service.generate_job_summary", return_value=mock_summary_data):
+    with patch(
+        "app.services.llm_service.llm_service.generate_job_summary",
+        return_value=mock_summary_data,
+    ):
         payload = {
             "job_description": "<h1>Full Stack Developer</h1><p>We are seeking...</p>",
             "job_title": "Full Stack Developer",
             "company_name": "TechCorp",
-            "max_length": 200
+            "max_length": 200,
         }
 
         response = client.post(
-            "/api/v1/jobs/summary",
-            json=payload,
-            headers=auth_headers()
+            "/api/v1/jobs/summary", json=payload, headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -467,20 +463,16 @@ def test_post_job_summary_minimal_payload(fake_user):
         "summary": "Minimal job description summary",
         "summary_length": 5,
         "key_points": ["Basic requirement"],
-        "generated_at": datetime.now(timezone.utc)
+        "generated_at": datetime.now(timezone.utc),
     }
 
     with patch("app.services.llm_service.llm_service.generate_job_summary") as mock_llm:
         mock_llm.return_value = mock_summary_data
 
-        payload = {
-            "job_description": "Simple job description text"
-        }
+        payload = {"job_description": "Simple job description text"}
 
         response = client.post(
-            "/api/v1/jobs/summary",
-            json=payload,
-            headers=auth_headers()
+            "/api/v1/jobs/summary", json=payload, headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -489,21 +481,15 @@ def test_post_job_summary_minimal_payload(fake_user):
             job_description="Simple job description text",
             job_title=None,
             company_name=None,
-            max_length=150
+            max_length=150,
         )
 
 
 def test_post_job_summary_empty_description(fake_user):
     """Test POST job summary with empty job description."""
-    payload = {
-        "job_description": ""
-    }
+    payload = {"job_description": ""}
 
-    response = client.post(
-        "/api/v1/jobs/summary",
-        json=payload,
-        headers=auth_headers()
-    )
+    response = client.post("/api/v1/jobs/summary", json=payload, headers=auth_headers())
 
     # Empty description causes LLM service error (500), not validation error (422)
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -515,46 +501,32 @@ def test_post_job_summary_empty_description(fake_user):
 def test_post_job_summary_max_length_validation(fake_user):
     """Test POST job summary max_length validation."""
     # Test too small max_length
-    payload = {
-        "job_description": "Valid job description",
-        "max_length": 20
-    }
+    payload = {"job_description": "Valid job description", "max_length": 20}
 
-    response = client.post(
-        "/api/v1/jobs/summary",
-        json=payload,
-        headers=auth_headers()
-    )
+    response = client.post("/api/v1/jobs/summary", json=payload, headers=auth_headers())
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # Test too large max_length
-    payload = {
-        "job_description": "Valid job description",
-        "max_length": 400
-    }
+    payload = {"job_description": "Valid job description", "max_length": 400}
 
-    response = client.post(
-        "/api/v1/jobs/summary",
-        json=payload,
-        headers=auth_headers()
-    )
+    response = client.post("/api/v1/jobs/summary", json=payload, headers=auth_headers())
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def test_post_job_summary_llm_error(fake_user):
     """Test handling of LLM service errors for POST job summary."""
-    with patch("app.services.llm_service.llm_service.generate_job_summary",
-               side_effect=LLMServiceError("OpenAI API rate limit exceeded")):
+    with patch(
+        "app.services.llm_service.llm_service.generate_job_summary",
+        side_effect=LLMServiceError("OpenAI API rate limit exceeded"),
+    ):
 
         payload = {
             "job_description": "Job description text",
-            "job_title": "Software Engineer"
+            "job_title": "Software Engineer",
         }
 
         response = client.post(
-            "/api/v1/jobs/summary",
-            json=payload,
-            headers=auth_headers()
+            "/api/v1/jobs/summary", json=payload, headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -581,7 +553,7 @@ def test_post_job_summary_html_handling(fake_user):
         "summary": "Senior Python developer position with 5+ years experience required.",
         "summary_length": 10,
         "key_points": ["5+ years Python experience", "Django/Flask knowledge required"],
-        "generated_at": datetime.now(timezone.utc)
+        "generated_at": datetime.now(timezone.utc),
     }
 
     with patch("app.services.llm_service.llm_service.generate_job_summary") as mock_llm:
@@ -590,13 +562,11 @@ def test_post_job_summary_html_handling(fake_user):
         payload = {
             "job_description": html_content,
             "job_title": "Senior Python Developer",
-            "max_length": 100
+            "max_length": 100,
         }
 
         response = client.post(
-            "/api/v1/jobs/summary",
-            json=payload,
-            headers=auth_headers()
+            "/api/v1/jobs/summary", json=payload, headers=auth_headers()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -608,7 +578,7 @@ def test_post_job_summary_html_handling(fake_user):
             job_description=html_content,
             job_title="Senior Python Developer",
             company_name=None,
-            max_length=100
+            max_length=100,
         )
 
 
