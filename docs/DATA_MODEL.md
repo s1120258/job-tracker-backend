@@ -11,6 +11,8 @@ erDiagram
     USERS {
         UUID id PK
         string email
+        string firstname
+        string lastname
         string hashed_password
     }
 
@@ -63,6 +65,8 @@ erDiagram
 
 - **id**: UUID, primary key
 - **email**: String, unique
+- **firstname**: String
+- **lastname**: String
 - **hashed_password**: String
 
   **Relations**: One user has many resumes and many jobs

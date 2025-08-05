@@ -6,12 +6,16 @@ from uuid import UUID
 
 class UserCreate(BaseModel):
     email: EmailStr
+    firstname: str
+    lastname: str
     password: str
 
 
 class UserRead(BaseModel):
     id: UUID
     email: EmailStr
+    firstname: str
+    lastname: str
 
 
 class Token(BaseModel):

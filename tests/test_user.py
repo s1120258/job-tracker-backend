@@ -13,12 +13,19 @@ client = TestClient(app)
 
 @pytest.fixture
 def user_create():
-    return {"email": "test@example.com", "password": "testpass"}
+    return {
+        "email": "test@example.com",
+        "firstname": "Test",
+        "lastname": "User",
+        "password": "testpass",
+    }
 
 
 @pytest.fixture
 def user_db():
-    return UserRead(id=uuid4(), email="test@example.com")
+    return UserRead(
+        id=uuid4(), email="test@example.com", firstname="Test", lastname="User"
+    )
 
 
 @pytest.fixture
@@ -27,6 +34,8 @@ def user_db_with_password():
     user = MagicMock()
     user.id = uuid4()
     user.email = "test@example.com"
+    user.firstname = "Test"
+    user.lastname = "User"
     user.hashed_password = "hashed"
     return user
 
@@ -130,11 +139,12 @@ def test_me_success(user_db_with_password, token_response):
             response = client.get(
                 "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
             )
-            print("Response status:", response.status_code)
-            print("Response body:", response.json())
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["email"] == "test@example.com"
+            assert data["firstname"] == "Test"
+            assert data["lastname"] == "User"
+            assert "id" in data
 
 
 def test_me_invalid_token():
@@ -150,8 +160,19 @@ def test_me_invalid_token():
 @pytest.mark.parametrize(
     "payload,missing_field",
     [
-        ({"password": "testpass"}, "email"),
-        ({"email": "test@example.com"}, "password"),
+        ({"password": "testpass", "firstname": "Test", "lastname": "User"}, "email"),
+        (
+            {"email": "test@example.com", "firstname": "Test", "lastname": "User"},
+            "password",
+        ),
+        (
+            {"email": "test@example.com", "password": "testpass", "lastname": "User"},
+            "firstname",
+        ),
+        (
+            {"email": "test@example.com", "password": "testpass", "firstname": "Test"},
+            "lastname",
+        ),
     ],
 )
 def test_register_missing_fields(payload, missing_field):
