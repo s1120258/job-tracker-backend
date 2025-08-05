@@ -17,17 +17,14 @@ def user_create():
         "email": "test@example.com",
         "firstname": "Test",
         "lastname": "User",
-        "password": "testpass"
+        "password": "testpass",
     }
 
 
 @pytest.fixture
 def user_db():
     return UserRead(
-        id=uuid4(),
-        email="test@example.com",
-        firstname="Test",
-        lastname="User"
+        id=uuid4(), email="test@example.com", firstname="Test", lastname="User"
     )
 
 
@@ -164,9 +161,18 @@ def test_me_invalid_token():
     "payload,missing_field",
     [
         ({"password": "testpass", "firstname": "Test", "lastname": "User"}, "email"),
-        ({"email": "test@example.com", "firstname": "Test", "lastname": "User"}, "password"),
-        ({"email": "test@example.com", "password": "testpass", "lastname": "User"}, "firstname"),
-        ({"email": "test@example.com", "password": "testpass", "firstname": "Test"}, "lastname"),
+        (
+            {"email": "test@example.com", "firstname": "Test", "lastname": "User"},
+            "password",
+        ),
+        (
+            {"email": "test@example.com", "password": "testpass", "lastname": "User"},
+            "firstname",
+        ),
+        (
+            {"email": "test@example.com", "password": "testpass", "firstname": "Test"},
+            "lastname",
+        ),
     ],
 )
 def test_register_missing_fields(payload, missing_field):
