@@ -13,12 +13,22 @@ client = TestClient(app)
 
 @pytest.fixture
 def user_create():
-    return {"email": "test@example.com", "password": "testpass"}
+    return {
+        "email": "test@example.com",
+        "firstname": "Test",
+        "lastname": "User",
+        "password": "testpass"
+    }
 
 
 @pytest.fixture
 def user_db():
-    return UserRead(id=uuid4(), email="test@example.com")
+    return UserRead(
+        id=uuid4(),
+        email="test@example.com",
+        firstname="Test",
+        lastname="User"
+    )
 
 
 @pytest.fixture
@@ -27,6 +37,8 @@ def user_db_with_password():
     user = MagicMock()
     user.id = uuid4()
     user.email = "test@example.com"
+    user.firstname = "Test"
+    user.lastname = "User"
     user.hashed_password = "hashed"
     return user
 
@@ -150,8 +162,10 @@ def test_me_invalid_token():
 @pytest.mark.parametrize(
     "payload,missing_field",
     [
-        ({"password": "testpass"}, "email"),
-        ({"email": "test@example.com"}, "password"),
+        ({"password": "testpass", "firstname": "Test", "lastname": "User"}, "email"),
+        ({"email": "test@example.com", "firstname": "Test", "lastname": "User"}, "password"),
+        ({"email": "test@example.com", "password": "testpass", "lastname": "User"}, "firstname"),
+        ({"email": "test@example.com", "password": "testpass", "firstname": "Test"}, "lastname"),
     ],
 )
 def test_register_missing_fields(payload, missing_field):
