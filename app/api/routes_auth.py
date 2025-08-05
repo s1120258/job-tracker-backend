@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.db.session import get_db
 from app.crud import user as crud_user
 from app.schemas.user import UserCreate, UserRead, Token, RefreshToken
+from app.models.user import User
 from app.core import security
 from app.core.config import settings
 from typing import Optional
@@ -54,7 +55,7 @@ def refresh_token(refresh_token: str = Body(..., embed=True)):
 
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
+) -> User:
     from jose import JWTError, jwt
 
     credentials_exception = HTTPException(
@@ -77,5 +78,5 @@ def get_current_user(
 
 
 @router.get("/me", response_model=UserRead)
-def read_users_me(current_user: UserRead = Depends(get_current_user)):
+def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user

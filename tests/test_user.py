@@ -142,11 +142,12 @@ def test_me_success(user_db_with_password, token_response):
             response = client.get(
                 "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
             )
-            print("Response status:", response.status_code)
-            print("Response body:", response.json())
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["email"] == "test@example.com"
+            assert data["firstname"] == "Test"
+            assert data["lastname"] == "User"
+            assert "id" in data
 
 
 def test_me_invalid_token():
