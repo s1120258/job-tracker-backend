@@ -1,75 +1,97 @@
-# 📂 ResMatch
+# 🧠 ResMatch – AI-Powered Career Support Platform
 
-**ResMatch** is an AI-powered career support platform that finds high-fit jobs and delivers insights through resume and skill gap analysis — built with FastAPI, PostgreSQL, and OpenAI embeddings.
-
----
-
-## 🎯 Project Overview
-
-ResMatch provides an API-first backend tailored for developers building intelligent job search and career support platforms. It integrates:
-
-- External job board integration and scraping
-- Resume parsing and skill extraction
-- Matching resumes to jobs using semantic similarity
-- Skill gap analysis with learning recommendations
-
-Whether you’re building a job tracking dashboard, career advisor, or candidate profiling tool, ResMatch provides the intelligence layer.
+**ResMatch** is an AI-powered career support platform that intelligently matches resumes with external job postings, identifies skill gaps, and offers actionable insights through a fully integrated frontend and API-first backend.
 
 ---
 
-## 🚀 Key Features
+## 🔗 Project Structure
 
-### ✅ Job Search & Tracking
+### 📦 Repositories
 
-- Search jobs from external job boards and sort by AI-calculated match score or date.
-- Save, apply to, and manage job applications with status tracking.
+- **Backend**: [`res-match-api`](https://github.com/s1120258/res-match-api) — FastAPI-powered API with OpenAI embeddings and PostgreSQL
+- **Frontend**: [`res-match-ui`](https://github.com/s1120258/res-match-ui) — React + Vite app for the user interface
 
-### 📄 Resume Management & Feedback
+### 🚀 Deployments
 
-- Upload resumes (PDF/DOCX) and auto-extract content.
-- Receive general and job-specific LLM feedback.
+- **🔹 Live Demo**: [res-match-ui.vercel.app](https://res-match-ui.vercel.app)
 
-### 🤖 Matching & Gap Analysis
+  - Fully functional web app starting from the landing page
 
-- Leverage OpenAI embeddings and pgvector to compute resume-to-job similarity scores.
-- Detect missing skills and provide targeted learning plans by analyzing experience and education gaps.
-
-### 📊 Job Application Analytics
-
-- Visualize stats: applications by status, match scores, and historical trends.
-
-### 🔐 User Authentication
-
-- JWT-secured endpoints via OAuth2 Password Flow.
-
-### 🧪 Dev & CI Tools
-
-- Dockerized setup, automated testing (`pytest`), code formatting (`black`), and CI/CD via GitHub Actions.
+- **🔹 API Documentation (Swagger UI)**: [res-match-api.onrender.com/docs](https://res-match-api.onrender.com/docs)
+  - Interactive API explorer via FastAPI's built-in Swagger UI
 
 ---
 
 ## 🧰 Tech Stack
 
-| Layer            | Tools                                     |
-| ---------------- | ----------------------------------------- |
-| **Backend**      | FastAPI (async, API-first)                |
-| **Database**     | PostgreSQL, SQLAlchemy, Alembic, pgvector |
-| **AI/Embedding** | OpenAI (embedding), vector search         |
-| **Parsing**      | PyPDF2, python-docx, BeautifulSoup4       |
-| **Auth**         | JWT, OAuth2                               |
-| **DevOps**       | Docker Compose, GitHub Actions            |
-| **Testing**      | pytest, black                             |
+| Layer           | Tools                                                     |
+| --------------- | --------------------------------------------------------- |
+| **Backend**     | Python, FastAPI, PostgreSQL, SQLAlchemy, Alembic          |
+| **Frontend**    | React, Vite, TypeScript, Chakra UI, Framer Motion         |
+| **AI/Matching** | OpenAI (Embeddings), pgvector                             |
+| **DevOps**      | Docker, GitHub Actions, Vercel, Render                    |
+| **Auth**        | OAuth2, JWT                                               |
+| **Parsing**     | PyPDF2, python-docx, BeautifulSoup4                       |
+| **Testing**     | pytest, black (backend), React Testing Library (frontend) |
 
 ---
 
-## 🗂️ Documentation
+## 📝 Features Overview
 
-- 📑 [API Spec](docs/API_SPEC.md): REAT API endpoints
-- 🧬 [Data Model](docs/DATA_MODEL.md): Entity-relationship diagram and table schema
-- ⚙️ [Setup Guide](docs/SETUP.md): Local dev and deployment
-- 🧪 [Testing](docs/TESTING.md): Test strategy and CI
-- 🧭 [Project Structure](docs/PROJECT_STRUCTURE.md)
+### ✅ Job Search & Management
+
+- Search and save jobs from external boards and sort by match score
+- Track applications with statuses and scores
+
+### 📄 Resume Management
+
+- Upload resumes (PDF/DOCX)
+- Automatically extract skills and analyze resume content
+- Generate AI-powered feedback
+
+### 🤖 Matching & Skill Gap Analysis
+
+- Resume-to-job similarity scoring using OpenAI embeddings
+- Detect missing skills and recommend learning paths
+
+### 📊 Analytics & Reporting
+
+- Visual summaries of applications, statuses, match scores, and trends
 
 ---
 
-_ResMatch — Empower your job search with data-driven decisions._
+## 🔒 Authentication
+
+- OAuth2 password flow
+- JWT-secured endpoints
+- Token refresh mechanism
+
+---
+
+## 📁 Documentation Index
+
+### Backend Docs (`res-match-api`)
+
+- [API_SPEC.md](./docs/API_SPEC.md)
+- [DATA_MODEL.md](./docs/DATA_MODEL.md)
+- [SETUP.md](./docs/SETUP.md)
+- [TESTING.md](./docs/TESTING.md)
+- [PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md)
+
+### Frontend Docs (`res-match-ui`)
+
+- [README.md](https://github.com/s1120258/res-match-ui/blob/main/README.md)
+- [USER_FLOW.md](https://github.com/s1120258/res-match-ui/blob/main/docs/USER_FLOW.md)
+- [DESIGN_SYSTEM.md](https://github.com/s1120258/res-match-ui/blob/main/docs/DESIGN_SYSTEM.md)
+
+---
+
+## ⚙️ Developer Notes
+
+- Backend supports async API, Docker, and CI/CD via GitHub Actions
+- Frontend is mobile-first, responsive, and built with Chakra UI
+- Tests (unit, integration, E2E) are defined across both repos
+
+---
+
+_ResMatch — Empower your job search with data-driven intelligence._
