@@ -1,6 +1,6 @@
 # 🧠 ResMatch – AI-Powered Career Support Platform
 
-**ResMatch** leverages cutting-edge AI technology to revolutionize career development. Using **OpenAI's GPT-3.5-turbo** and **vector embeddings**, it provides intelligent job matching, comprehensive skill gap analysis, and personalized career insights through a production-ready, scalable architecture.
+**ResMatch** leverages cutting-edge AI technology to revolutionize career development. Using **large language models** and **vector embeddings**, it provides intelligent job matching, comprehensive skill gap analysis, and personalized career insights through a production-ready, scalable architecture.
 
 ---
 
@@ -14,16 +14,16 @@
 
 ## 🧰 Tech Stack
 
-| Layer          | Tools                                                      |
-| -------------- | ---------------------------------------------------------- |
-| **Backend**    | Python, FastAPI, PostgreSQL, SQLAlchemy, Alembic           |
-| **Frontend**   | React, Vite, TypeScript, Chakra UI, Framer Motion          |
-| **AI/ML Core** | **OpenAI GPT-3.5-turbo, text-embedding-ada-002, pgvector** |
-| **Vector DB**  | **PostgreSQL + pgVector extension (1536-dim embeddings)**  |
-| **DevOps**     | Docker, GitHub Actions, Vercel, Render                     |
-| **Auth**       | OAuth2, JWT                                                |
-| **Parsing**    | PyPDF2, python-docx, BeautifulSoup4                        |
-| **Testing**    | pytest, black (backend), React Testing Library (frontend)  |
+| Layer          | Tools                                                     |
+| -------------- | --------------------------------------------------------- |
+| **Backend**    | Python, FastAPI, PostgreSQL, SQLAlchemy, Alembic          |
+| **Frontend**   | React, Vite, TypeScript, Chakra UI, Framer Motion         |
+| **AI/ML Core** | **OpenAI LLMs, text-embedding-ada-002, pgvector**         |
+| **Vector DB**  | **PostgreSQL + pgVector extension (1536-dim embeddings)** |
+| **DevOps**     | Docker, GitHub Actions, Vercel, Render                    |
+| **Auth**       | OAuth2, JWT                                               |
+| **Parsing**    | PyPDF2, python-docx, BeautifulSoup4                       |
+| **Testing**    | pytest, black (backend), React Testing Library (frontend) |
 
 ---
 
@@ -77,7 +77,7 @@
 ## 🏆 Technical Achievements
 
 - **⚡ High Performance**: ~50ms embeddings, ~1ms similarity search, sub-second API responses
-- **🤖 AI-First Architecture**: Production-grade LLM integration with OpenAI GPT-3.5-turbo
+- **🤖 AI-First Architecture**: Production-grade LLM integration with advanced language models
 - **📊 Vector Database**: PostgreSQL + pgVector for high-performance semantic matching
 - **🏢 Enterprise Ready**: Service-oriented design, OAuth2/JWT security, comprehensive testing
 - **🚀 DevOps Excellence**: Docker deployment, CI/CD pipelines, monitoring, and cost optimization
