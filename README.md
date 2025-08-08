@@ -4,7 +4,7 @@
 
 ---
 
-## 🔗 Project Structure
+## 🔗 Project Overview
 
 ### 📦 Repositories
 
@@ -45,7 +45,7 @@
 
 ---
 
-## 📝 Features Overview
+## 📝 Core Features
 
 ### ✅ Job Search & Management
 
@@ -67,17 +67,15 @@
 
 - Visual summaries of applications, statuses, match scores, and trends
 
----
+### 🔒 Security & Authentication
 
-## 🔒 Authentication
-
-- OAuth2 password flow
-- JWT-secured endpoints
-- Token refresh mechanism
+- OAuth2 password flow with JWT tokens
+- Secure endpoints with token refresh mechanism
+- bcrypt password hashing and SQL injection prevention
 
 ---
 
-## 📁 Documentation Index
+## 📁 Documentation
 
 ### Backend Documentation (`res-match-api`)
 
@@ -90,15 +88,14 @@
 - [⚙️ SETUP.md](./docs/SETUP.md) — Instructions for setting up the development environment
 - [🧪 TESTING.md](./docs/TESTING.md) — Testing strategies and best practices
 
-### Frontend Documentation (`res-match-ui`)
+### Frontend Application
 
-- [README.md](https://github.com/s1120258/res-match-ui/blob/main/README.md)
-- [USER_FLOW.md](https://github.com/s1120258/res-match-ui/blob/main/docs/USER_FLOW.md)
-- [DESIGN_SYSTEM.md](https://github.com/s1120258/res-match-ui/blob/main/docs/DESIGN_SYSTEM.md)
+- [📱 Frontend Repository](https://github.com/s1120258/res-match-ui) — React + Vite frontend with comprehensive documentation
+- [🎯 Live Demo](https://res-match-ui.vercel.app) — Production deployment
 
 ---
 
-## ⚙️ Developer & Technical Notes
+## 🏆 Technical Highlights
 
 - **AI-First Architecture**: Built on OpenAI's state-of-the-art language models
 - **Vector-Powered Search**: High-performance semantic matching with pgVector
