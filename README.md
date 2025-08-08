@@ -6,19 +6,9 @@
 
 ## 🔗 Project Overview
 
-### 📦 Repositories
-
-- **Backend**: [`res-match-api`](https://github.com/s1120258/res-match-api) — FastAPI-powered API with OpenAI embeddings and PostgreSQL
-- **Frontend**: [`res-match-ui`](https://github.com/s1120258/res-match-ui) — React + Vite app for the user interface
-
-### 🚀 Deployments
-
-- **🔹 Live Demo**: [res-match-ui.vercel.app](https://res-match-ui.vercel.app)
-
-  - Fully functional web app starting from the landing page
-
-- **🔹 API Documentation (Swagger UI)**: [res-match-api.onrender.com/docs](https://res-match-api.onrender.com/docs)
-  - Interactive API explorer via FastAPI's built-in Swagger UI
+- **🌐 Live Application**: [res-match-ui.vercel.app](https://res-match-ui.vercel.app) — Full-stack AI career platform
+- **📱 Frontend Repository**: [`res-match-ui`](https://github.com/s1120258/res-match-ui) — React + Vite interface
+- **🔄 API Explorer**: [res-match-api.onrender.com/docs](https://res-match-api.onrender.com/docs) — Interactive Swagger UI
 
 ---
 
@@ -77,21 +67,16 @@
 
 ## 📁 Documentation
 
-### Backend Documentation (`res-match-api`)
+### 📖 Technical Documentation
 
-- **[🧠 TECHNICAL_ARCHITECTURE.md](./docs/TECHNICAL_ARCHITECTURE.md)** — Detailed overview of AI/ML system architecture and implementation
-- [📁 API_SPEC.md](./docs/API_SPEC.md) — API reference with descriptions of AI-powered endpoints
-- [🗂️ DATA_MODEL.md](./docs/DATA_MODEL.md) — Database schema and vector storage details
+- **[🧠 TECHNICAL_ARCHITECTURE.md](./docs/TECHNICAL_ARCHITECTURE.md)** — Comprehensive AI/ML system architecture and implementation details
+- [📁 API_SPEC.md](./docs/API_SPEC.md) — Complete API reference with AI-powered endpoint descriptions
+- [🗂️ DATA_MODEL.md](./docs/DATA_MODEL.md) — Database schema and vector storage specifications
 
-### 🛠️ Development Guides
+### 🛠️ Development Setup
 
-- [⚙️ SETUP.md](./docs/SETUP.md) — Instructions for setting up the development environment
+- [⚙️ SETUP.md](./docs/SETUP.md) — Environment setup and installation guide
 - [🧪 TESTING.md](./docs/TESTING.md) — Testing strategies and best practices
-
-### Frontend Application
-
-- [📱 Frontend Repository](https://github.com/s1120258/res-match-ui) — React + Vite frontend with comprehensive documentation
-- [🎯 Live Demo](https://res-match-ui.vercel.app) — Production deployment
 
 ---
 
