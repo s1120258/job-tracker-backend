@@ -79,16 +79,19 @@
 
 ## 📁 Documentation Index
 
-### Backend Docs (`res-match-api`)
+### Backend Documentation (`res-match-api`)
 
-- **[🧠 TECHNICAL_ARCHITECTURE.md](./docs/TECHNICAL_ARCHITECTURE.md)** — Comprehensive AI/ML implementation details
-- [📁 API_SPEC.md](./docs/API_SPEC.md) — Enhanced API documentation with AI features
-- [🗂️ DATA_MODEL.md](./docs/DATA_MODEL.md) — Database schema and vector storage
-- [⚙️ SETUP.md](./docs/SETUP.md) — Development environment setup
-- [🧪 TESTING.md](./docs/TESTING.md) — Testing strategy and guidelines
-- [📦 PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md) — Codebase organization
+- **[🧠 TECHNICAL_ARCHITECTURE.md](./docs/TECHNICAL_ARCHITECTURE.md)** — Detailed overview of AI/ML system architecture and implementation
+- [📁 API_SPEC.md](./docs/API_SPEC.md) — API reference with descriptions of AI-powered endpoints
+- [🗂️ DATA_MODEL.md](./docs/DATA_MODEL.md) — Database schema and vector storage details
 
-### Frontend Docs (`res-match-ui`)
+### 🛠️ Development Guides
+
+- [⚙️ SETUP.md](./docs/SETUP.md) — Instructions for setting up the development environment
+- [🧪 TESTING.md](./docs/TESTING.md) — Testing strategies and best practices
+- [📦 PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md) — Explanation of the project’s code organization
+
+### Frontend Documentation (`res-match-ui`)
 
 - [README.md](https://github.com/s1120258/res-match-ui/blob/main/README.md)
 - [USER_FLOW.md](https://github.com/s1120258/res-match-ui/blob/main/docs/USER_FLOW.md)
