@@ -89,7 +89,6 @@
 
 - [⚙️ SETUP.md](./docs/SETUP.md) — Instructions for setting up the development environment
 - [🧪 TESTING.md](./docs/TESTING.md) — Testing strategies and best practices
-- [📦 PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md) — Explanation of the project’s code organization
 
 ### Frontend Documentation (`res-match-ui`)
 
