@@ -1,6 +1,0 @@
-version: 1.0
-runtime: docker
-build:
-  dockerfilePath: ./Dockerfile
-  context: ./
-port: 8000
