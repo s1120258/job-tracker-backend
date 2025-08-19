@@ -5,7 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 
-DB_URL = f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+# Use the dynamically generated DATABASE_URL
+DB_URL = settings.DATABASE_URL
 
 engine = create_engine(DB_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
