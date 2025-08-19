@@ -1,18 +1,23 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
+from .aws_params import get_parameter
 
 
 class Settings(BaseSettings):
     # Database individual settings
     DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres"
     DB_HOST: str = "db"
     DB_PORT: str = "5432"
     DB_NAME: str = "res_match"
 
-    # Supabase API settings
-    SUPABASE_ANON_KEY: Optional[str] = None
+    # Secure parameters from AWS Parameter Store with fallbacks
+    DB_PASSWORD: str = Field(default_factory=lambda: get_parameter("/resmatch/DB_PASSWORD", "DB_PASSWORD") or "postgres")
+    SECRET_KEY: str = Field(default_factory=lambda: get_parameter("/resmatch/SECRET_KEY", "SECRET_KEY") or "dev-secret-key")
+    OPENAI_API_KEY: Optional[str] = Field(default_factory=lambda: get_parameter("/resmatch/OPENAI_API_KEY", "OPENAI_API_KEY"))
+    SUPABASE_ANON_KEY: Optional[str] = Field(default_factory=lambda: get_parameter("/resmatch/SUPABASE_KEY", "SUPABASE_ANON_KEY"))
+
+    # Other Supabase API settings
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
 
     @property
@@ -30,7 +35,6 @@ class Settings(BaseSettings):
         return f"https://{self.DB_HOST}"
 
     # Security
-    SECRET_KEY: str = "dev-secret-key"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
@@ -40,9 +44,6 @@ class Settings(BaseSettings):
 
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
-
-    # Optional: OpenAI API Key for future LLM features
-    OPENAI_API_KEY: Optional[str] = None
 
     # Job Scraper Settings
     JOB_SCRAPER_TIMEOUT: int = 30
