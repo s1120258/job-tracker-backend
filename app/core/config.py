@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
-from pydantic import ConfigDict, Field
+from typing import Optional, Union
+from pydantic import ConfigDict, Field, field_validator
 from .aws_params import get_parameter
+import json
 
 
 class Settings(BaseSettings):
@@ -12,10 +13,24 @@ class Settings(BaseSettings):
     DB_NAME: str = "res_match"
 
     # Secure parameters from AWS Parameter Store with fallbacks
-    DB_PASSWORD: str = Field(default_factory=lambda: get_parameter("/resmatch/DB_PASSWORD", "DB_PASSWORD") or "postgres")
-    SECRET_KEY: str = Field(default_factory=lambda: get_parameter("/resmatch/SECRET_KEY", "SECRET_KEY") or "dev-secret-key")
-    OPENAI_API_KEY: Optional[str] = Field(default_factory=lambda: get_parameter("/resmatch/OPENAI_API_KEY", "OPENAI_API_KEY"))
-    SUPABASE_ANON_KEY: Optional[str] = Field(default_factory=lambda: get_parameter("/resmatch/SUPABASE_KEY", "SUPABASE_ANON_KEY"))
+    DB_PASSWORD: str = Field(
+        default_factory=lambda: get_parameter("/resmatch/DB_PASSWORD", "DB_PASSWORD")
+        or "postgres"
+    )
+    SECRET_KEY: str = Field(
+        default_factory=lambda: get_parameter("/resmatch/SECRET_KEY", "SECRET_KEY")
+        or "dev-secret-key"
+    )
+    OPENAI_API_KEY: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/OPENAI_API_KEY", "OPENAI_API_KEY"
+        )
+    )
+    SUPABASE_ANON_KEY: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/SUPABASE_KEY", "SUPABASE_ANON_KEY"
+        )
+    )
 
     # Other Supabase API settings
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
@@ -42,8 +57,12 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "ResMatch"
 
-    # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    # CORS - Must be set via environment variable as JSON string
+    # For development, defaults to localhost only for security
+    BACKEND_CORS_ORIGINS: Union[str, list[str]] = [
+        "http://localhost:3000",  # Local development
+        "http://localhost:8000",  # Local development (alternative port)
+    ]
 
     # Job Scraper Settings
     JOB_SCRAPER_TIMEOUT: int = 30
@@ -51,6 +70,18 @@ class Settings(BaseSettings):
     JOB_SCRAPER_DELAY: float = 1.0  # Delay between requests (seconds)
     JOB_SCRAPER_USER_AGENT: str = "res-match-api/1.0 (https://res-match.com/bot)"
     JOB_SCRAPER_MAX_RESULTS: int = 100  # Maximum results per search
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS origins from JSON string or return as-is if already a list"""
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                # If not valid JSON, treat as single origin
+                return [v]
+        return v
 
     model_config = ConfigDict(
         env_file=".env", extra="ignore"  # Ignore extra environment variables

@@ -8,6 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ParameterStoreClient:
     """AWS Systems Manager Parameter Store client"""
 
@@ -23,12 +24,16 @@ class ParameterStoreClient:
 
             # Use default AWS credentials (from environment, IAM role, etc.)
             if region:
-                self.ssm = boto3.client('ssm', region_name=region)
+                self.ssm = boto3.client("ssm", region_name=region)
             else:
-                self.ssm = boto3.client('ssm')
-            logger.info(f"AWS SSM client initialized successfully (region: {region or 'default'})")
+                self.ssm = boto3.client("ssm")
+            logger.info(
+                f"AWS SSM client initialized successfully (region: {region or 'default'})"
+            )
         except NoCredentialsError:
-            logger.warning("AWS credentials not found. Parameter Store will be unavailable.")
+            logger.warning(
+                "AWS credentials not found. Parameter Store will be unavailable."
+            )
             self.ssm = None
         except Exception as e:
             logger.error(f"Failed to initialize AWS SSM client: {e}")
@@ -37,16 +42,16 @@ class ParameterStoreClient:
     def _get_aws_region(self) -> Optional[str]:
         """Auto-detect AWS region from environment or EC2 metadata"""
         # 1. Check environment variable
-        region = os.getenv('AWS_REGION') or os.getenv('AWS_DEFAULT_REGION')
+        region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
         if region:
             return region
 
         # 2. Check EC2 metadata (if running on EC2)
         try:
             import requests
+
             response = requests.get(
-                'http://169.254.169.254/latest/meta-data/placement/region',
-                timeout=2
+                "http://169.254.169.254/latest/meta-data/placement/region", timeout=2
             )
             if response.status_code == 200:
                 region = response.text
@@ -56,7 +61,7 @@ class ParameterStoreClient:
             pass  # Not on EC2 or network error
 
         # 3. Default to us-east-1 for Ohio (your Parameter Store location)
-        return 'us-east-1'
+        return "us-east-1"
 
     def get_parameter(self, name: str, with_decryption: bool = True) -> Optional[str]:
         """
@@ -74,17 +79,14 @@ class ParameterStoreClient:
             return None
 
         try:
-            response = self.ssm.get_parameter(
-                Name=name,
-                WithDecryption=with_decryption
-            )
-            value = response['Parameter']['Value']
+            response = self.ssm.get_parameter(Name=name, WithDecryption=with_decryption)
+            value = response["Parameter"]["Value"]
             logger.debug(f"Successfully retrieved parameter: {name}")
             return value
 
         except ClientError as e:
-            error_code = e.response['Error']['Code']
-            if error_code == 'ParameterNotFound':
+            error_code = e.response["Error"]["Code"]
+            if error_code == "ParameterNotFound":
                 logger.debug(f"Parameter not found: {name}")
             else:
                 logger.error(f"Error retrieving parameter {name}: {e}")
@@ -93,8 +95,10 @@ class ParameterStoreClient:
             logger.error(f"Unexpected error retrieving parameter {name}: {e}")
             return None
 
+
 # Global instance
 param_store = ParameterStoreClient()
+
 
 def get_parameter(name: str, fallback: Optional[str] = None) -> Optional[str]:
     """
