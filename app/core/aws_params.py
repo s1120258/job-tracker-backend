@@ -60,8 +60,8 @@ class ParameterStoreClient:
         except Exception:
             pass  # Not on EC2 or network error
 
-        # 3. Default to us-east-1 for Ohio (your Parameter Store location)
-        return "us-east-1"
+        # 3. Default to us-east-2 for Ohio (your Parameter Store location)
+        return "us-east-2"
 
     def get_parameter(self, name: str, with_decryption: bool = True) -> Optional[str]:
         """
