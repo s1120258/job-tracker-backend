@@ -8,7 +8,7 @@
 
 - **🌐 Live Application**: [res-match-ui.vercel.app](https://res-match-ui.vercel.app) — Full-stack AI career platform
 - **📱 Frontend Repository**: [`res-match-ui`](https://github.com/s1120258/res-match-ui) — React + Vite interface
-- **🔄 API Explorer**: [res-match-api.onrender.com/docs](https://res-match-api.onrender.com/docs) — Interactive Swagger UI
+- **🔄 API Explorer**: [resmatch-api.ddns.net/docs](https://resmatch-api.ddns.net/docs) — Interactive Swagger UI
 
 ---
 
@@ -20,7 +20,7 @@
 | **Frontend**   | React, Vite, TypeScript, Chakra UI, Framer Motion         |
 | **AI/ML Core** | **OpenAI LLMs, text-embedding-ada-002, pgvector**         |
 | **Vector DB**  | **PostgreSQL + pgVector extension (1536-dim embeddings)** |
-| **DevOps**     | Docker, GitHub Actions, Vercel, Render                    |
+| **DevOps**     | Docker, GitHub Actions, AWS EC2                           |
 | **Auth**       | OAuth2, JWT                                               |
 | **Parsing**    | PyPDF2, python-docx, BeautifulSoup4                       |
 | **Testing**    | pytest, black (backend), React Testing Library (frontend) |
