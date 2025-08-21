@@ -6,7 +6,7 @@
 
 ## 🔗 Project Overview
 
-- **🌐 Live Application**: [res-match-ui.vercel.app](https://res-match-ui.vercel.app) — Full-stack AI career platform
+- **🌐 Live Application**: [resmatchai.com](https://resmatchai.com/) — Full-stack AI career platform
 - **📱 Frontend Repository**: [`res-match-ui`](https://github.com/s1120258/res-match-ui) — React + Vite interface
 - **🔄 API Explorer**: [resmatch-api.ddns.net/docs](https://resmatch-api.ddns.net/docs) — Interactive Swagger UI
 
