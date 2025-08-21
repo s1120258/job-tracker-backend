@@ -150,6 +150,29 @@ services:
 
 ---
 
+## 📚 Additional Setup Guides
+
+For specialized deployment scenarios and advanced configurations, refer to these detailed guides:
+
+### 🌐 Production Deployment
+
+- **[🚀 EC2 Setup](EC2_SETUP.md)** - Complete EC2 deployment instructions with AWS Parameter Store integration
+- **[🔐 AWS IAM Setup](AWS_IAM_SETUP.md)** - IAM roles, policies, and Parameter Store configuration
+- **[🌐 Nginx Integration](NGINX_INTEGRATION.md)** - Nginx reverse proxy configuration with SSL/TLS
+
+### 🔧 CI/CD & Automation
+
+- **[🔑 GitHub Secrets Setup](GITHUB_SECRETS_SETUP.md)** - GitHub Actions deployment configuration and secrets management
+
+### 📖 Additional Documentation
+
+- **[📋 API Specification](API_SPEC.md)** - Complete API endpoint documentation
+- **[🏗️ Technical Architecture](TECHNICAL_ARCHITECTURE.md)** - System architecture and design decisions
+- **[🧪 Testing Guide](TESTING.md)** - Comprehensive testing strategies and implementation
+- **[📊 Data Model](DATA_MODEL.md)** - Database schema and relationships
+
+---
+
 🔗 **Live interactive API docs**: visit [`/docs`](http://localhost:8000/docs) (Swagger UI)
 
 For project details, see the [README](../README.md) and other docs in the `docs/` folder.
