@@ -23,7 +23,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
 
       # CORS configuration for production
-      - BACKEND_CORS_ORIGINS=["https://res-match-ui.vercel.app","https://resmatch-api.ddns.net"]
+      - BACKEND_CORS_ORIGINS=["https://resmatchai.com", "https://res-match-ui.vercel.app","https://resmatch-api.ddns.net"]
 
       # API configuration
       - API_V1_STR=/api/v1
