@@ -19,6 +19,8 @@ services:
       - db
     volumes:
       - .:/app
+    environment:
+      - BACKEND_CORS_ORIGINS=["https://resmatchai.com", "https://res-match-ui.vercel.app", "http://localhost:3000"]
 
   db:
     image: pgvector/pgvector:pg15

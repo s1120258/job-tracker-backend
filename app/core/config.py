@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: Union[str, list[str]] = [
         "http://localhost:3000",  # Local development
         "http://localhost:8000",  # Local development (alternative port)
+        "https://resmatchai.com",  # Production frontend
+        "https://res-match-ui.vercel.app",  # Vercel deployment
     ]
 
     # Job Scraper Settings
