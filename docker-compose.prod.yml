@@ -1,0 +1,53 @@
+# Production docker-compose for EC2 deployment
+# Place this file at /opt/resmatch/docker-compose.yml on EC2
+
+services:
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    container_name: resmatch-api
+    restart: unless-stopped
+
+    # Bind to localhost only - Nginx will proxy from outside
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    # Environment variables for production
+    # AWS Parameter Store integration maintained via existing config.py
+    environment:
+      # Database connection (Supabase)
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT:-5432}
+
+      # CORS configuration for production
+      - BACKEND_CORS_ORIGINS=["https://res-match-ui.vercel.app","https://resmatch-api.ddns.net"]
+
+      # AWS region for Parameter Store
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+
+      # API configuration
+      - API_V1_STR=/api/v1
+      - PROJECT_NAME=ResMatch
+
+      # Job scraper settings
+      - JOB_SCRAPER_TIMEOUT=30
+      - JOB_SCRAPER_RETRIES=3
+      - JOB_SCRAPER_DELAY=1.0
+      - JOB_SCRAPER_USER_AGENT=res-match-api/1.0 (https://res-match.com/bot)
+      - JOB_SCRAPER_MAX_RESULTS=100
+
+    # Health check using existing endpoint
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
