@@ -16,11 +16,11 @@
 
 | Layer          | Tools                                                     |
 | -------------- | --------------------------------------------------------- |
-| **Backend**    | Python, FastAPI, PostgreSQL, SQLAlchemy, Alembic          |
+| **Backend**    | Python, FastAPI, SQLAlchemy, Alembic                      |
+| **Database**   | PostgreSQL + pgVector extension                           |
 | **Frontend**   | React, Vite, TypeScript, Chakra UI, Framer Motion         |
-| **AI/ML Core** | **OpenAI LLMs, text-embedding-ada-002, pgvector**         |
-| **Vector DB**  | **PostgreSQL + pgVector extension (1536-dim embeddings)** |
-| **DevOps**     | Docker, GitHub Actions, AWS EC2                           |
+| **AI/ML Core** | OpenAI LLMs, Text Embeddings, Vector Similarity Search    |
+| **DevOps**     | Docker, GitHub Actions, AWS EC2, Supabase, NGINX          |
 | **Auth**       | OAuth2, JWT                                               |
 | **Parsing**    | PyPDF2, python-docx, BeautifulSoup4                       |
 | **Testing**    | pytest, black (backend), React Testing Library (frontend) |
