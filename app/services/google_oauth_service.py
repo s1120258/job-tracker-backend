@@ -25,7 +25,14 @@ class GoogleOAuth2Service:
         self.client_id = settings.GOOGLE_CLIENT_ID
         self.client_secret = settings.GOOGLE_CLIENT_SECRET
 
-        if not self.client_id:
+        # Allow missing credentials in test environment
+        import os
+
+        is_testing = os.getenv("TESTING") == "true" or "pytest" in os.environ.get(
+            "_", ""
+        )
+
+        if not self.client_id and not is_testing:
             raise ValueError("GOOGLE_CLIENT_ID must be set in environment variables")
 
     async def verify_id_token(self, id_token: str) -> Dict[str, Any]:
@@ -41,6 +48,13 @@ class GoogleOAuth2Service:
         Raises:
             HTTPException: If token verification fails
         """
+        # Handle test environment where client_id might be None
+        if not self.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Google authentication service not configured",
+            )
+
         try:
             # Fetch Google's public keys for JWT verification
             async with httpx.AsyncClient() as client:

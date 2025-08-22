@@ -1,0 +1,80 @@
+# GitHub Actions workflow for testing
+name: Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: res_match_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          # Database configuration
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: res_match_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+
+          # Security configuration
+          SECRET_KEY: test-secret-key-for-ci
+          ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+          # API configuration
+          API_V1_STR: /api/v1
+          PROJECT_NAME: ResMatch
+
+          # Google OAuth configuration (test values)
+          GOOGLE_CLIENT_ID: test_client_id_for_ci
+          GOOGLE_CLIENT_SECRET: test_client_secret_for_ci
+
+          # Testing flag
+          TESTING: true
+
+          # CORS configuration
+          BACKEND_CORS_ORIGINS: '["http://localhost:3000"]'
+        run: |
+          # Run database migrations
+          alembic upgrade head
+
+          # Run tests with coverage
+          pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'push'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true

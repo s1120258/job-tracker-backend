@@ -1,6 +1,7 @@
 # tests/test_google_auth.py
 
 import pytest
+import os
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -8,6 +9,9 @@ from app.main import app
 from app.services.google_oauth_service import GoogleOAuth2Service
 from app.crud import user as crud_user
 from app.models.user import User
+
+# Set testing environment variable
+os.environ["TESTING"] = "true"
 
 
 @pytest.fixture
