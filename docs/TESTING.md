@@ -41,11 +41,32 @@ env =
     GOOGLE_CLIENT_ID=test_client_id
 ```
 
+**Requirements File:**
+
+- `requirements.txt` - Single file containing all dependencies (production, testing, development tools)
+
+**Installation:**
+
+```bash
+# Install all dependencies
+pip install -r requirements.txt
+
+# Or with timeout and retries for CI environments
+pip install --timeout=1000 --retries=3 -r requirements.txt
+```
+
 **Key Testing Dependencies:**
 
 - `pytest-env==1.1.3` - Environment variable management
 - `pytest-cov==5.0.0` - Coverage reporting
 - `httpx==0.27.0` - Async HTTP client for API testing
+
+**Development Tools (included):**
+
+- `mypy==1.13.0` - Type checking
+- `flake8==7.1.1` - Additional linting
+- `pre-commit==4.0.1` - Git hooks for code quality
+- `memory-profiler==0.61.0` - Performance profiling
 
 ---
 
@@ -141,6 +162,7 @@ env:
   - ✅ Full test suite with coverage reporting
   - ✅ Codecov integration
   - ✅ PostgreSQL with pgVector extension
+  - ✅ Timeout and retry settings for reliable builds
 
 #### **3. deploy.yml** - Production Deployment
 
