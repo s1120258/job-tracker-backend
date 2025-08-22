@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   # Run tests first
   test:
@@ -29,6 +33,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
@@ -74,6 +81,9 @@ jobs:
     needs: [test, build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && always()
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - uses: actions/checkout@v4
