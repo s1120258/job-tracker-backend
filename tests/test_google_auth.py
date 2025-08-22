@@ -117,7 +117,7 @@ class TestGoogleAuthEndpoints:
         mock_verify_token.return_value = mock_google_user_info
         from app.schemas.user import UserRead
         from uuid import uuid4
-        
+
         mock_user = UserRead(
             id=uuid4(),
             email="testuser@gmail.com",
@@ -125,7 +125,7 @@ class TestGoogleAuthEndpoints:
             lastname="User",
             google_id="123456789",
             provider="google",
-            is_oauth=True
+            is_oauth=True,
         )
         mock_get_or_create_user.return_value = mock_user
         mock_create_access_token.return_value = "mock_access_token"
@@ -218,7 +218,7 @@ class TestUserCRUD:
     def test_create_google_user(self, mock_create_user, mock_parsed_user_data):
         """Test creating a new Google user."""
         from app.schemas.user import GoogleUserCreate
-        
+
         # Mock created user
         mock_user = MagicMock()
         mock_user.email = "testuser@gmail.com"

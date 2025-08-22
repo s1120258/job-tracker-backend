@@ -24,13 +24,13 @@ def user_create():
 @pytest.fixture
 def user_db():
     return UserRead(
-        id=uuid4(), 
-        email="test@example.com", 
-        firstname="Test", 
+        id=uuid4(),
+        email="test@example.com",
+        firstname="Test",
         lastname="User",
         provider="email",
         is_oauth=False,
-        google_id=None
+        google_id=None,
     )
 
 

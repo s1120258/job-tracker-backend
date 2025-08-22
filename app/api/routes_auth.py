@@ -120,7 +120,9 @@ async def google_auth_verify(
         logger.info(f"Successfully authenticated Google user: {user.email}")
 
         return GoogleAuthResponse(
-            access_token=access_token, refresh_token=refresh_token, user=UserRead.model_validate(user)
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=UserRead.model_validate(user),
         )
 
     except HTTPException:
@@ -167,7 +169,9 @@ async def google_register(
         logger.info(f"Successfully registered new Google user: {user.email}")
 
         return GoogleAuthResponse(
-            access_token=access_token, refresh_token=refresh_token, user=UserRead.model_validate(user)
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=UserRead.model_validate(user),
         )
 
     except HTTPException:
