@@ -24,7 +24,13 @@ def user_create():
 @pytest.fixture
 def user_db():
     return UserRead(
-        id=uuid4(), email="test@example.com", firstname="Test", lastname="User"
+        id=uuid4(), 
+        email="test@example.com", 
+        firstname="Test", 
+        lastname="User",
+        provider="email",
+        is_oauth=False,
+        google_id=None
     )
 
 
@@ -37,6 +43,9 @@ def user_db_with_password():
     user.firstname = "Test"
     user.lastname = "User"
     user.hashed_password = "hashed"
+    user.provider = "email"
+    user.is_oauth = False
+    user.google_id = None
     return user
 
 

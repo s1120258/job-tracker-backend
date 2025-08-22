@@ -15,7 +15,10 @@ jobs:
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           ALGORITHM: ${{ secrets.ALGORITHM }}
-        run: docker compose run --rm -e SECRET_KEY -e ALGORITHM backend sh -c "pytest"
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: docker compose run --rm -e SECRET_KEY -e ALGORITHM -e GOOGLE_CLIENT_ID -e GOOGLE_CLIENT_SECRET -e TESTING backend sh -c "pytest"
 
       - name: Check formatting with Black
         run: docker compose run --rm backend sh -c "black --check ."

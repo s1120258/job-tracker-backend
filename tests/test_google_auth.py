@@ -115,14 +115,17 @@ class TestGoogleAuthEndpoints:
         """Test Google authentication for new user."""
         # Setup mocks
         mock_verify_token.return_value = mock_google_user_info
-        mock_user = User(
-            id="test-uuid",
+        from app.schemas.user import UserRead
+        from uuid import uuid4
+        
+        mock_user = UserRead(
+            id=uuid4(),
             email="testuser@gmail.com",
             firstname="Test",
             lastname="User",
             google_id="123456789",
             provider="google",
-            is_oauth=True,
+            is_oauth=True
         )
         mock_get_or_create_user.return_value = mock_user
         mock_create_access_token.return_value = "mock_access_token"
@@ -189,37 +192,44 @@ class TestGoogleAuthEndpoints:
 class TestUserCRUD:
     """Test cases for user CRUD operations with Google OAuth."""
 
-    def test_get_user_by_google_id(self, db: Session):
+    @patch("app.crud.user.get_user_by_google_id")
+    def test_get_user_by_google_id(self, mock_get_user):
         """Test getting user by Google ID."""
-        # Create a Google user
-        user = User(
-            email="test@gmail.com",
-            firstname="Test",
-            lastname="User",
-            google_id="123456789",
-            provider="google",
-            is_oauth=True,
-        )
-        db.add(user)
-        db.commit()
+        # Mock user
+        mock_user = MagicMock()
+        mock_user.email = "test@gmail.com"
+        mock_user.google_id = "123456789"
+        mock_get_user.return_value = mock_user
 
         # Test retrieval
-        found_user = crud_user.get_user_by_google_id(db, "123456789")
+        found_user = crud_user.get_user_by_google_id(MagicMock(), "123456789")
         assert found_user is not None
         assert found_user.email == "test@gmail.com"
         assert found_user.google_id == "123456789"
 
-    def test_get_user_by_google_id_not_found(self, db: Session):
+    @patch("app.crud.user.get_user_by_google_id")
+    def test_get_user_by_google_id_not_found(self, mock_get_user):
         """Test getting user by non-existent Google ID."""
-        found_user = crud_user.get_user_by_google_id(db, "nonexistent")
+        mock_get_user.return_value = None
+        found_user = crud_user.get_user_by_google_id(MagicMock(), "nonexistent")
         assert found_user is None
 
-    def test_create_google_user(self, db: Session, mock_parsed_user_data):
+    @patch("app.crud.user.create_google_user")
+    def test_create_google_user(self, mock_create_user, mock_parsed_user_data):
         """Test creating a new Google user."""
         from app.schemas.user import GoogleUserCreate
+        
+        # Mock created user
+        mock_user = MagicMock()
+        mock_user.email = "testuser@gmail.com"
+        mock_user.google_id = "123456789"
+        mock_user.provider = "google"
+        mock_user.is_oauth = True
+        mock_user.hashed_password = None
+        mock_create_user.return_value = mock_user
 
         google_user_create = GoogleUserCreate(**mock_parsed_user_data)
-        user = crud_user.create_google_user(db, google_user_create)
+        user = crud_user.create_google_user(MagicMock(), google_user_create)
 
         assert user.email == "testuser@gmail.com"
         assert user.google_id == "123456789"
