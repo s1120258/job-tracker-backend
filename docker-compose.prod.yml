@@ -7,6 +7,8 @@ services:
     platform: linux/amd64 # Force AMD64 platform with emulation on ARM64 EC2
     container_name: resmatch-api
     restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined  # Allow emulation syscalls
 
     # Use host network to avoid IPv6 issues with Supabase
     network_mode: host
