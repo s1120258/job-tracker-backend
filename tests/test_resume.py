@@ -1,8 +1,10 @@
 import io
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from uuid import uuid4
+
 from app.main import app
 from app.models.user import User
 from app.schemas.resume import ResumeRead
@@ -40,8 +42,9 @@ def test_upload_resume_pdf_unit(fake_user):
         embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
 
-    with patch("PyPDF2.PdfReader") as mock_pdf_reader, patch(
-        "app.crud.resume.create_or_replace_resume", return_value=fake_resume
+    with (
+        patch("PyPDF2.PdfReader") as mock_pdf_reader,
+        patch("app.crud.resume.create_or_replace_resume", return_value=fake_resume),
     ):
         mock_pdf_reader.return_value.pages = [
             MagicMock(extract_text=lambda: "Extracted PDF text")
@@ -68,8 +71,9 @@ def test_upload_resume_docx_unit(fake_user):
         embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
 
-    with patch("docx.Document") as mock_docx, patch(
-        "app.crud.resume.create_or_replace_resume", return_value=fake_resume
+    with (
+        patch("docx.Document") as mock_docx,
+        patch("app.crud.resume.create_or_replace_resume", return_value=fake_resume),
     ):
         mock_docx.return_value.paragraphs = [MagicMock(text="Extracted DOCX text")]
         response = client.post(
@@ -152,8 +156,11 @@ def test_get_resume_feedback_general(fake_user):
         extracted_text="Some extracted text",
         embedding=[0.1, 0.2, 0.3] * 512,  # 1536 dimensions
     )
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.services.resume_feedback.get_general_feedback", return_value=feedback
+    with (
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch(
+            "app.services.resume_feedback.get_general_feedback", return_value=feedback
+        ),
     ):
         response = client.get("/api/v1/resume/feedback")
     assert response.status_code == 200
@@ -173,8 +180,9 @@ def test_get_resume_feedback_job_specific(fake_user):
         embedding=[0.1, 0.2, 0.3] * 512,
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.crud.job.get_job", return_value=None
+    with (
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch("app.crud.job.get_job", return_value=None),
     ):
         response = client.get(f"/api/v1/resume/feedback/{uuid4()}")
 
@@ -183,8 +191,9 @@ def test_get_resume_feedback_job_specific(fake_user):
 
 def test_get_resume_feedback_with_job_id(fake_user):
     """Test getting job-specific feedback using job_id from jobs table."""
-    from app.models.job import Job, JobStatus
     import numpy as np
+
+    from app.models.job import Job, JobStatus
 
     feedback = [
         "Emphasize your Python and FastAPI experience",
@@ -215,11 +224,13 @@ def test_get_resume_feedback_with_job_id(fake_user):
         job_embedding=np.array([0.2] * 1536),
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.crud.job.get_job", return_value=fake_job
-    ), patch(
-        "app.services.resume_feedback.get_job_specific_feedback_with_description",
-        return_value=(feedback, job_excerpt),
+    with (
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch(
+            "app.services.resume_feedback.get_job_specific_feedback_with_description",
+            return_value=(feedback, job_excerpt),
+        ),
     ):
 
         response = client.get(
@@ -244,8 +255,9 @@ def test_get_resume_feedback_job_not_found(fake_user):
         embedding=[0.1, 0.2, 0.3] * 512,
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.crud.job.get_job", return_value=None
+    with (
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch("app.crud.job.get_job", return_value=None),
     ):
 
         response = client.get(
@@ -257,8 +269,9 @@ def test_get_resume_feedback_job_not_found(fake_user):
 
 def test_get_resume_feedback_job_unauthorized(fake_user):
     """Test that users can't get feedback for jobs they don't own."""
-    from app.models.job import Job, JobStatus
     import numpy as np
+
+    from app.models.job import Job, JobStatus
 
     fake_resume = ResumeRead(
         id=uuid4(),
@@ -284,8 +297,9 @@ def test_get_resume_feedback_job_unauthorized(fake_user):
         job_embedding=np.array([0.3] * 1536),
     )
 
-    with patch("app.crud.resume.get_resume_by_user", return_value=fake_resume), patch(
-        "app.crud.job.get_job", return_value=other_job
+    with (
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch("app.crud.job.get_job", return_value=other_job),
     ):
 
         response = client.get(

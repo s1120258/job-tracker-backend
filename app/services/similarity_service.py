@@ -1,13 +1,13 @@
 import logging
 from typing import Optional, Tuple
 from uuid import UUID
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from app.models.resume import Resume
-from app.models.match_score import MatchScore
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.crud.resume import get_resume_by_user
+from app.models.match_score import MatchScore
+from app.models.resume import Resume
 from app.services.embedding_service import embedding_service
 
 logger = logging.getLogger(__name__)

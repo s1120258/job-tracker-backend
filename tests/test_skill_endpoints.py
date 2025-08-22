@@ -7,17 +7,18 @@ Tests cover:
 - /jobs/{job_id}/skill-gap-analysis (Skill gap analysis)
 """
 
-import pytest
-from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
 from datetime import datetime
+from unittest.mock import Mock, patch
 from uuid import UUID, uuid4
 
-from app.main import app
+import pytest
+from fastapi.testclient import TestClient
+
 from app.api.routes_auth import get_current_user
+from app.main import app
 from app.models.user import User
-from app.services.skill_extraction_service import SkillExtractionServiceError
 from app.services.skill_analysis_service import SkillAnalysisServiceError
+from app.services.skill_extraction_service import SkillExtractionServiceError
 
 # Test client
 client = TestClient(app)

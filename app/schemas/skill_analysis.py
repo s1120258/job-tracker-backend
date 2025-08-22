@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Dict, Any
-from uuid import UUID
 from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class SkillLevel(str, Enum):

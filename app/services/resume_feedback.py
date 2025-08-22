@@ -1,10 +1,10 @@
 # app/services/resume_feedback.py
 
+import logging
 from typing import List, Tuple
 from uuid import UUID
-import logging
-from app.services.llm_service import llm_service, LLMServiceError
 
+from app.services.llm_service import LLMServiceError, llm_service
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,14 @@
 # tests/test_user.py
 
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import status
-from unittest.mock import patch, MagicMock
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.schemas.user import UserRead
-from uuid import uuid4
 
 client = TestClient(app)
 
@@ -24,7 +26,13 @@ def user_create():
 @pytest.fixture
 def user_db():
     return UserRead(
-        id=uuid4(), email="test@example.com", firstname="Test", lastname="User"
+        id=uuid4(),
+        email="test@example.com",
+        firstname="Test",
+        lastname="User",
+        provider="email",
+        is_oauth=False,
+        google_id=None,
     )
 
 
@@ -37,6 +45,9 @@ def user_db_with_password():
     user.firstname = "Test"
     user.lastname = "User"
     user.hashed_password = "hashed"
+    user.provider = "email"
+    user.is_oauth = False
+    user.google_id = None
     return user
 
 
@@ -47,8 +58,9 @@ def token_response():
 
 def test_register_success(user_create, user_db):
     """Test successful registration."""
-    with patch("app.crud.user.get_user_by_email", return_value=None), patch(
-        "app.crud.user.create_user", return_value=user_db
+    with (
+        patch("app.crud.user.get_user_by_email", return_value=None),
+        patch("app.crud.user.create_user", return_value=user_db),
     ):
         response = client.post("/api/v1/auth/register", json=user_create)
         assert response.status_code == status.HTTP_200_OK
@@ -89,8 +101,9 @@ def test_login_failures(
     email, password, db_user, verify, expected_status, expected_detail
 ):
     """Test login failures for wrong password and wrong email."""
-    with patch("app.crud.user.get_user_by_email", return_value=db_user), patch(
-        "app.core.security.verify_password", return_value=verify
+    with (
+        patch("app.crud.user.get_user_by_email", return_value=db_user),
+        patch("app.core.security.verify_password", return_value=verify),
     ):
         response = client.post(
             "/api/v1/auth/token",
@@ -103,11 +116,13 @@ def test_login_failures(
 
 def test_login_success(user_db_with_password, token_response):
     """Test successful login."""
-    with patch(
-        "app.crud.user.get_user_by_email", return_value=user_db_with_password
-    ), patch("app.core.security.verify_password", return_value=True), patch(
-        "app.core.security.create_access_token",
-        return_value=token_response["access_token"],
+    with (
+        patch("app.crud.user.get_user_by_email", return_value=user_db_with_password),
+        patch("app.core.security.verify_password", return_value=True),
+        patch(
+            "app.core.security.create_access_token",
+            return_value=token_response["access_token"],
+        ),
     ):
         response = client.post(
             "/api/v1/auth/token",
@@ -123,9 +138,10 @@ def test_login_success(user_db_with_password, token_response):
 def test_me_success(user_db_with_password, token_response):
     """Test /me endpoint with valid token."""
     # Only patch user and password verification
-    with patch(
-        "app.crud.user.get_user_by_email", return_value=user_db_with_password
-    ), patch("app.core.security.verify_password", return_value=True):
+    with (
+        patch("app.crud.user.get_user_by_email", return_value=user_db_with_password),
+        patch("app.core.security.verify_password", return_value=True),
+    ):
         login_resp = client.post(
             "/api/v1/auth/token",
             data={"username": "test@example.com", "password": "testpass"},
@@ -177,8 +193,9 @@ def test_me_invalid_token():
 )
 def test_register_missing_fields(payload, missing_field):
     """Test registration with missing required fields."""
-    with patch("app.crud.user.get_user_by_email", return_value=None), patch(
-        "app.crud.user.create_user", return_value=None
+    with (
+        patch("app.crud.user.get_user_by_email", return_value=None),
+        patch("app.crud.user.create_user", return_value=None),
     ):
         response = client.post("/api/v1/auth/register", json=payload)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

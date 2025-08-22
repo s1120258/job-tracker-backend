@@ -1,10 +1,11 @@
 # app/schemas/resume.py
 
-from pydantic import BaseModel, field_validator
-from uuid import UUID
-from datetime import datetime
-from typing import Optional, List, Union
 import json
+from datetime import datetime
+from typing import List, Optional, Union
+from uuid import UUID
+
+from pydantic import BaseModel, field_validator
 
 
 class ResumeBase(BaseModel):

@@ -1,14 +1,16 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import case, extract, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, case
-from app.db.session import get_db
+
 from app.api.routes_auth import get_current_user
-from app.models.user import User
+from app.db.session import get_db
 from app.models.job import Job, JobStatus
 from app.models.match_score import MatchScore
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

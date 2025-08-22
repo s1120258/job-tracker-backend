@@ -1,12 +1,13 @@
 # app/crud/resume.py
 
-from sqlalchemy.orm import Session
-from uuid import UUID
 import logging
+from uuid import UUID
+
+from sqlalchemy.orm import Session
+
 from app.models.resume import Resume
 from app.schemas.resume import ResumeCreate
 from app.services.embedding_service import embedding_service
-
 
 logger = logging.getLogger(__name__)
 

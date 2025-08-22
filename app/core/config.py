@@ -1,8 +1,10 @@
-from pydantic_settings import BaseSettings
-from typing import Optional, Union
-from pydantic import ConfigDict, Field, field_validator
-from .aws_params import get_parameter
 import json
+from typing import Optional, Union
+
+from pydantic import ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings
+
+from .aws_params import get_parameter
 
 
 class Settings(BaseSettings):
@@ -29,6 +31,16 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: Optional[str] = Field(
         default_factory=lambda: get_parameter(
             "/resmatch/SUPABASE_KEY", "SUPABASE_ANON_KEY"
+        )
+    )
+    GOOGLE_CLIENT_ID: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_ID"
+        )
+    )
+    GOOGLE_CLIENT_SECRET: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_SECRET"
         )
     )
 

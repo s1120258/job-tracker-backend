@@ -1,0 +1,107 @@
+# Docker Compose based testing workflow
+name: Docker Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker compose version
+
+      - name: Build and start services
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: |
+          # Build services
+          docker compose build
+
+          # Start database service
+          docker compose up -d db
+
+          # Wait for database to be ready
+          echo "Waiting for database to be ready..."
+          until docker compose exec db pg_isready -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Create pgvector extension
+          docker compose exec db psql -U postgres -d res_match -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Run database migrations
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: |
+          docker compose run --rm \
+            -e SECRET_KEY \
+            -e ALGORITHM \
+            -e GOOGLE_CLIENT_ID \
+            -e GOOGLE_CLIENT_SECRET \
+            -e TESTING \
+            backend alembic upgrade head
+
+      - name: Run tests with coverage
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: |
+          docker compose run --rm \
+            -e SECRET_KEY \
+            -e ALGORITHM \
+            -e GOOGLE_CLIENT_ID \
+            -e GOOGLE_CLIENT_SECRET \
+            -e TESTING \
+            backend pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Check code formatting
+        run: |
+          docker compose run --rm backend black --check .
+
+      - name: Check import sorting
+        run: |
+          docker compose run --rm backend isort --check .
+
+      - name: Copy coverage report from container
+        run: |
+          # Create a temporary container to copy files from
+          docker compose run --rm \
+            -e SECRET_KEY=${{ secrets.SECRET_KEY }} \
+            -e ALGORITHM=${{ secrets.ALGORITHM }} \
+            -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+            -e TESTING=true \
+            -v ${{ github.workspace }}:/workspace \
+            backend sh -c "cp coverage.xml /workspace/ || echo 'No coverage file found'"
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'push'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v

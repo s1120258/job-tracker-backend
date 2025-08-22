@@ -1,47 +1,50 @@
 # app/api/routes_jobs.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.api.routes_auth import get_current_user
+from app.crud import job as crud_job
+from app.crud.match_score import create_or_update_match_score
+from app.crud.resume import get_resume_by_user
 from app.db.session import get_db
+from app.models.job import JobStatus as ModelJobStatus
+from app.models.user import User
 from app.schemas.job import (
-    JobCreate,
-    JobUpdate,
-    JobRead,
-    JobMatchResponse,
     JobApplyRequest,
     JobApplyResponse,
+    JobCreate,
+    JobMatchResponse,
+    JobRead,
+    JobSkillExtractionResponse,
     JobStatus,
     JobSummaryRequest,
     JobSummaryResponse,
+    JobUpdate,
+    ResumeSkillExtractionResponse,
 )
-from app.models.job import JobStatus as ModelJobStatus
-from app.crud import job as crud_job
-from app.crud.resume import get_resume_by_user
-from app.crud.match_score import create_or_update_match_score
-from app.api.routes_auth import get_current_user
-from app.models.user import User
-from app.services.similarity_service import similarity_service, SimilarityServiceError
-from app.services.job_scraper_service import job_scraper_service, JobBoardType
-from app.services.embedding_service import embedding_service, EmbeddingServiceError
-from app.services.skill_extraction_service import (
-    skill_extraction_service,
-    SkillExtractionServiceError,
-)
-from app.services.skill_analysis_service import (
-    skill_analysis_service,
-    SkillAnalysisServiceError,
-)
-from app.services.llm_service import llm_service, LLMServiceError
 from app.schemas.skill_analysis import (
-    SkillGapAnalysisResponse,
-    ResumeSkillsResponse,
     JobSkillsResponse,
+    ResumeSkillsResponse,
+    SkillGapAnalysisResponse,
 )
-from app.schemas.job import JobSkillExtractionResponse, ResumeSkillExtractionResponse
-from datetime import datetime, timezone
-import logging
+from app.services.embedding_service import EmbeddingServiceError, embedding_service
+from app.services.job_scraper_service import JobBoardType, job_scraper_service
+from app.services.llm_service import LLMServiceError, llm_service
+from app.services.similarity_service import SimilarityServiceError, similarity_service
+from app.services.skill_analysis_service import (
+    SkillAnalysisServiceError,
+    skill_analysis_service,
+)
+from app.services.skill_extraction_service import (
+    SkillExtractionServiceError,
+    skill_extraction_service,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

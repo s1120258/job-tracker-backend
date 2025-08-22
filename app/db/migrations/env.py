@@ -1,17 +1,16 @@
-import sys
 import os
-
+import sys
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from alembic import context
+
 import pgvector.sqlalchemy
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
-from app.db.base_class import Base
-from app.models import user, job, resume, match_score  # Add all import
 from app.core.config import settings
+from app.db.base_class import Base
+from app.models import job, match_score, resume, user  # Add all import
 
 # Build DB URL from settings
 SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"

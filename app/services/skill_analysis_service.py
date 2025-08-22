@@ -1,9 +1,11 @@
-import logging
-from typing import Dict, List, Optional, Any
 import json
+import logging
+from typing import Any, Dict, List, Optional
+
 import openai
+
 from app.core.config import settings
-from app.services.llm_service import llm_service, LLMServiceError
+from app.services.llm_service import LLMServiceError, llm_service
 
 logger = logging.getLogger(__name__)
 

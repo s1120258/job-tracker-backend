@@ -2,7 +2,9 @@
 
 import logging
 from typing import List, Optional
+
 import openai
+
 from app.core.config import settings
 
 # Configure logging

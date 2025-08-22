@@ -1,15 +1,16 @@
 # app/crud/job.py
 
-from sqlalchemy.orm import Session
+import logging
+from typing import List, Optional
+from uuid import UUID
+
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
 from app.models.job import Job, JobStatus
 from app.models.match_score import MatchScore
 from app.schemas.job import JobCreate, JobUpdate
 from app.services.embedding_service import embedding_service
-from typing import List, Optional
-from uuid import UUID
-import logging
-
 
 logger = logging.getLogger(__name__)
 

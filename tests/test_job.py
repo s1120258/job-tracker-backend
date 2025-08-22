@@ -1,16 +1,17 @@
 # tests/test_job.py
 
-import pytest
-from fastapi.testclient import TestClient
-from fastapi import status
-from unittest.mock import patch, MagicMock
-from uuid import uuid4
 from datetime import datetime, timezone
-from app.main import app
-from app.schemas.job import JobRead, JobStatus
-from app.models.user import User
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+import pytest
+from fastapi import HTTPException, status
+from fastapi.testclient import TestClient
+
 from app.api.routes_auth import get_current_user
-from fastapi import HTTPException
+from app.main import app
+from app.models.user import User
+from app.schemas.job import JobRead, JobStatus
 from app.services.llm_service import LLMServiceError
 
 client = TestClient(app)
@@ -146,8 +147,9 @@ def test_update_job(fake_user, fake_job):
     updated_job = fake_job.model_copy()
     updated_job.status = JobStatus.matched
 
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.crud.job.update_job", return_value=updated_job
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.crud.job.update_job", return_value=updated_job),
     ):
         payload = {"status": "matched", "notes": "Updated notes"}
         response = client.put(
@@ -172,8 +174,9 @@ def test_update_job_not_found(fake_user):
 # Test delete job endpoint
 def test_delete_job(fake_user, fake_job):
     """Test deleting a job."""
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.crud.job.delete_job", return_value=True
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.crud.job.delete_job", return_value=True),
     ):
         response = client.delete(f"/api/v1/jobs/{fake_job.id}", headers=auth_headers())
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -212,9 +215,11 @@ def test_get_existing_match_score(fake_user, fake_job):
     fake_resume = FakeResume()
     fake_match_score = FakeMatchScore()
 
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.crud.resume.get_resume_by_user", return_value=fake_resume
-    ), patch("app.crud.job.get_match_score", return_value=fake_match_score):
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.crud.resume.get_resume_by_user", return_value=fake_resume),
+        patch("app.crud.job.get_match_score", return_value=fake_match_score),
+    ):
 
         response = client.get(
             f"/api/v1/jobs/{fake_job.id}/match-score",
@@ -230,9 +235,11 @@ def test_get_existing_match_score(fake_user, fake_job):
 
 def test_get_match_score_no_resume(fake_user, fake_job):
     """Test getting match score when user has no resume uploaded."""
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.crud.resume.get_resume_by_user", return_value=None
-    ), patch("app.crud.job.get_match_score", return_value=None):
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.crud.resume.get_resume_by_user", return_value=None),
+        patch("app.crud.job.get_match_score", return_value=None),
+    ):
 
         response = client.get(
             f"/api/v1/jobs/{fake_job.id}/match-score",
@@ -259,9 +266,11 @@ def test_apply_to_job(fake_user, fake_job):
 
     fake_resume = FakeResume(resume_id, fake_user.id)
 
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.crud.job.mark_job_applied", return_value=applied_job
-    ), patch("app.api.routes_jobs.get_resume_by_user", return_value=fake_resume):
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.crud.job.mark_job_applied", return_value=applied_job),
+        patch("app.api.routes_jobs.get_resume_by_user", return_value=fake_resume),
+    ):
 
         payload = {"resume_id": str(uuid4()), "cover_letter_template": "default"}
         response = client.post(
@@ -318,9 +327,12 @@ def test_get_saved_job_summary_success(fake_user, fake_job):
         "generated_at": datetime.now(timezone.utc),
     }
 
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.services.llm_service.llm_service.generate_job_summary",
-        return_value=mock_summary_data,
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch(
+            "app.services.llm_service.llm_service.generate_job_summary",
+            return_value=mock_summary_data,
+        ),
     ):
 
         response = client.get(
@@ -346,9 +358,10 @@ def test_get_saved_job_summary_default_max_length(fake_user, fake_job):
         "generated_at": datetime.now(timezone.utc),
     }
 
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.services.llm_service.llm_service.generate_job_summary"
-    ) as mock_llm:
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch("app.services.llm_service.llm_service.generate_job_summary") as mock_llm,
+    ):
         mock_llm.return_value = mock_summary_data
 
         response = client.get(
@@ -386,9 +399,12 @@ def test_get_saved_job_summary_unauthorized(fake_user, fake_job):
 
 def test_get_saved_job_summary_llm_error(fake_user, fake_job):
     """Test handling of LLM service errors for saved job summary."""
-    with patch("app.crud.job.get_job", return_value=fake_job), patch(
-        "app.services.llm_service.llm_service.generate_job_summary",
-        side_effect=LLMServiceError("LLM API error"),
+    with (
+        patch("app.crud.job.get_job", return_value=fake_job),
+        patch(
+            "app.services.llm_service.llm_service.generate_job_summary",
+            side_effect=LLMServiceError("LLM API error"),
+        ),
     ):
 
         response = client.get(
