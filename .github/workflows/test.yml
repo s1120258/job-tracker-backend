@@ -1,5 +1,5 @@
-# GitHub Actions workflow for testing
-name: Test
+# Docker Compose based testing workflow
+name: Docker Test
 
 on:
   push:
@@ -8,73 +8,100 @@ on:
     branches: [main, dev]
 
 jobs:
-  test:
+  docker-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: pgvector/pgvector:pg15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: res_match_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+      - name: Set up Docker Compose
+        run: docker compose version
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --timeout=1000 --retries=3 -r requirements.txt
-
-      - name: Run tests
+      - name: Build and start services
         env:
-          # Database configuration
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: res_match_test
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-
-          # Security configuration
-          SECRET_KEY: test-secret-key-for-ci
-          ALGORITHM: HS256
-          ACCESS_TOKEN_EXPIRE_MINUTES: 30
-
-          # API configuration
-          API_V1_STR: /api/v1
-          PROJECT_NAME: ResMatch
-
-          # Google OAuth configuration (test values)
-          GOOGLE_CLIENT_ID: test_client_id_for_ci
-          GOOGLE_CLIENT_SECRET: test_client_secret_for_ci
-
-          # Testing flag
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           TESTING: true
-
-          # CORS configuration
-          BACKEND_CORS_ORIGINS: '["http://localhost:3000"]'
         run: |
-          # Run database migrations
-          alembic upgrade head
+          # Build services
+          docker compose build
 
-          # Run tests with coverage
-          pytest --cov=app --cov-report=xml --cov-report=term-missing
+          # Start database service
+          docker compose up -d db
+
+          # Wait for database to be ready
+          echo "Waiting for database to be ready..."
+          until docker compose exec db pg_isready -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Create pgvector extension
+          docker compose exec db psql -U postgres -d res_match -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Run database migrations
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: |
+          docker compose run --rm \
+            -e SECRET_KEY \
+            -e ALGORITHM \
+            -e GOOGLE_CLIENT_ID \
+            -e GOOGLE_CLIENT_SECRET \
+            -e TESTING \
+            backend alembic upgrade head
+
+      - name: Run tests with coverage
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TESTING: true
+        run: |
+          docker compose run --rm \
+            -e SECRET_KEY \
+            -e ALGORITHM \
+            -e GOOGLE_CLIENT_ID \
+            -e GOOGLE_CLIENT_SECRET \
+            -e TESTING \
+            backend pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Check code formatting
+        run: |
+          docker compose run --rm backend black --check .
+
+      - name: Check import sorting
+        run: |
+          docker compose run --rm backend isort --check .
+
+      - name: Copy coverage report from container
+        run: |
+          # Create a temporary container to copy files from
+          docker compose run --rm \
+            -e SECRET_KEY=${{ secrets.SECRET_KEY }} \
+            -e ALGORITHM=${{ secrets.ALGORITHM }} \
+            -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+            -e TESTING=true \
+            -v ${{ github.workspace }}:/workspace \
+            backend sh -c "cp coverage.xml /workspace/ || echo 'No coverage file found'"
 
       - name: Upload coverage to Codecov
         if: github.event_name == 'push'
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v

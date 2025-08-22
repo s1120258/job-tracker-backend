@@ -132,40 +132,41 @@ mypy app/         # Type checking
 
 ### GitHub Actions Configuration
 
-Three workflows are configured under `.github/workflows/`:
+Workflows are configured under `.github/workflows/`:
 
-#### **1. checks.yml** - Basic Quality Checks
+#### **test.yml** - Comprehensive Docker Compose Testing
 
-- **Trigger**: Every push to any branch
-- **Environment**: Docker Compose
+- **Trigger**: Push/PR to `main` or `dev` branches
+- **Environment**: Docker Compose (Backend + PostgreSQL + pgVector)
 - **Features**:
-  - ✅ Run pytest with Google OAuth support
-  - ✅ Black formatting verification
-  - ✅ Fast feedback for development
+  - ✅ Full Docker Compose environment testing
+  - ✅ Automatic pgVector extension setup
+  - ✅ Database migrations with Alembic
+  - ✅ Comprehensive test suite with coverage
+  - ✅ Code formatting checks (Black + isort)
+  - ✅ Codecov integration
+  - ✅ Production-like environment
+  - ✅ Automatic cleanup
 
 ```yaml
-# Example workflow execution
+# Docker Compose workflow execution
 env:
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   ALGORITHM: ${{ secrets.ALGORITHM }}
   GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
   GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
   TESTING: true
+
+# Workflow steps:
+1. Build Docker services
+2. Start database with pgVector
+3. Run migrations
+4. Execute tests with coverage
+5. Check formatting
+6. Upload coverage reports
 ```
 
-#### **2. test.yml** - Comprehensive Testing
-
-- **Trigger**: Push/PR to `main` or `dev` branches
-- **Environment**: Python 3.11 + PostgreSQL + pgVector
-- **Features**:
-  - ✅ Database migrations with Alembic
-  - ✅ Full test suite with coverage reporting
-  - ✅ Codecov integration
-  - ✅ PostgreSQL with pgVector extension
-  - ✅ Timeout and retry settings for reliable builds
-  - ✅ Modern Python version for better dependency compatibility
-
-#### **3. deploy.yml** - Production Deployment
+#### **deploy.yml** - Production Deployment
 
 - **Trigger**: Push to `main` branch
 - **Features**:
@@ -191,35 +192,78 @@ SSH_PRIVATE_KEY       # SSH private key
 
 ---
 
-## 🐳 Docker Testing
+## 🐳 Docker Compose Testing
 
-### Run Tests in Docker Environment
+### Full Test Suite (CI-like execution)
 
 ```bash
-# Basic test execution
-docker compose run --rm backend pytest
+# Complete test pipeline (matches GitHub Actions)
+./scripts/run-tests-docker.sh
 
-# With coverage reporting
+# Or manually step by step:
+docker compose build
+docker compose up -d db
+
+# Wait for database and setup pgVector
+until docker compose exec db pg_isready -U postgres; do sleep 2; done
+docker compose exec db psql -U postgres -d res_match -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+# Run migrations and tests
+docker compose run --rm backend alembic upgrade head
 docker compose run --rm backend pytest --cov=app --cov-report=term-missing
+
+# Format checks
+docker compose run --rm backend black --check .
+docker compose run --rm backend isort --check .
+
+# Cleanup
+docker compose down -v
+```
+
+### Quick Test Execution
+
+```bash
+# Basic test execution (assumes DB is running)
+docker compose run --rm backend pytest
 
 # Specific test files
 docker compose run --rm backend pytest tests/test_google_auth.py -v
 
-# Run with environment variables
+# With environment variables
 docker compose run --rm -e TESTING=true backend pytest
+
+# Coverage reporting
+docker compose run --rm backend pytest --cov=app --cov-report=html
 ```
 
-### Database Testing with Docker
+### Development Environment Setup
 
 ```bash
-# Start services for testing
+# Start services for development
 docker compose up -d db
 
-# Run migrations
-docker compose exec backend alembic upgrade head
+# Setup database (one-time)
+docker compose exec db psql -U postgres -d res_match -c "CREATE EXTENSION IF NOT EXISTS vector;"
+docker compose run --rm backend alembic upgrade head
 
-# Run database-dependent tests
-docker compose run --rm backend pytest tests/test_user.py
+# Run specific tests during development
+docker compose run --rm backend pytest tests/test_user.py -v
+
+# Run formatting
+docker compose run --rm backend black .
+docker compose run --rm backend isort .
+```
+
+### pgVector Extension Setup
+
+The application uses PostgreSQL with pgVector extension for vector embeddings:
+
+```bash
+# In production or local PostgreSQL
+CREATE EXTENSION IF NOT EXISTS vector;
+
+# Check if extension is installed
+SELECT * FROM pg_extension WHERE extname = 'vector';
 ```
 
 ---
