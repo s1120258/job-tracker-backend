@@ -1,24 +1,26 @@
 # app/api/routes_auth.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from sqlalchemy.orm import Session
+import logging
+from typing import Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.db.session import get_db
-from app.crud import user as crud_user
-from app.schemas.user import (
-    UserCreate,
-    UserRead,
-    Token,
-    RefreshToken,
-    GoogleTokenRequest,
-    GoogleAuthResponse,
-)
-from app.models.user import User
+from sqlalchemy.orm import Session
+
 from app.core import security
 from app.core.config import settings
+from app.crud import user as crud_user
+from app.db.session import get_db
+from app.models.user import User
+from app.schemas.user import (
+    GoogleAuthResponse,
+    GoogleTokenRequest,
+    RefreshToken,
+    Token,
+    UserCreate,
+    UserRead,
+)
 from app.services.google_oauth_service import google_oauth_service
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 

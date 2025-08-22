@@ -1,8 +1,9 @@
 # app/schemas/user.py
 
-from pydantic import BaseModel, EmailStr
-from uuid import UUID
 from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserCreate(BaseModel):

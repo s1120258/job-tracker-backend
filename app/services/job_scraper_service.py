@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from .scrapers.base import JobBoardScraper
 from .scrapers.models import JobPosting

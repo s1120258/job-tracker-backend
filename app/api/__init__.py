@@ -1,7 +1,4 @@
-from . import routes_auth
-from . import routes_jobs
-from . import routes_resumes
-from . import routes_analytics
+from . import routes_analytics, routes_auth, routes_jobs, routes_resumes
 
 __all__ = [
     "routes_auth",

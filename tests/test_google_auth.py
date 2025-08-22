@@ -1,14 +1,16 @@
 # tests/test_google_auth.py
 
-import pytest
 import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from unittest.mock import AsyncMock, MagicMock, patch
-from app.main import app
-from app.services.google_oauth_service import GoogleOAuth2Service
+
 from app.crud import user as crud_user
+from app.main import app
 from app.models.user import User
+from app.services.google_oauth_service import GoogleOAuth2Service
 
 # Set testing environment variable
 os.environ["TESTING"] = "true"
@@ -115,8 +117,9 @@ class TestGoogleAuthEndpoints:
         """Test Google authentication for new user."""
         # Setup mocks
         mock_verify_token.return_value = mock_google_user_info
-        from app.schemas.user import UserRead
         from uuid import uuid4
+
+        from app.schemas.user import UserRead
 
         mock_user = UserRead(
             id=uuid4(),

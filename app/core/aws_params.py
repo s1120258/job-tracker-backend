@@ -1,10 +1,11 @@
 # app/core/aws_params.py
 
-import boto3
+import logging
 import os
 from typing import Optional
+
+import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
-import logging
 
 logger = logging.getLogger(__name__)
 

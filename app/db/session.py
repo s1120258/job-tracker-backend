@@ -2,8 +2,8 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
 
+from app.core.config import settings
 
 # Use the dynamically generated DATABASE_URL
 DB_URL = settings.DATABASE_URL

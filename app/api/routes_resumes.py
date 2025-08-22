@@ -1,22 +1,24 @@
 # app/api/routes_resumes.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
-from app.db.session import get_db
-from app.schemas.resume import ResumeCreate, ResumeRead
-from app.crud import resume as crud_resume
-from app.crud import job as crud_job
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy.orm import Session
+
 from app.api.routes_auth import get_current_user
+from app.crud import job as crud_job
+from app.crud import resume as crud_resume
+from app.db.session import get_db
 from app.models.user import User
-from app.services.skill_extraction_service import (
-    skill_extraction_service,
-    SkillExtractionServiceError,
-)
-from app.schemas.skill_analysis import ResumeSkillsResponse
 from app.schemas.job import ResumeSkillExtractionResponse
-from datetime import datetime, timezone
+from app.schemas.resume import ResumeCreate, ResumeRead
+from app.schemas.skill_analysis import ResumeSkillsResponse
+from app.services.skill_extraction_service import (
+    SkillExtractionServiceError,
+    skill_extraction_service,
+)
 
 router = APIRouter()
 
@@ -34,12 +36,14 @@ async def upload_resume(
     extracted_text = None
     if file_name.lower().endswith(".pdf"):
         import io
+
         from PyPDF2 import PdfReader
 
         reader = PdfReader(io.BytesIO(contents))
         extracted_text = "\n".join(page.extract_text() or "" for page in reader.pages)
     elif file_name.lower().endswith(".docx"):
         import io
+
         from docx import Document
 
         doc = Document(io.BytesIO(contents))

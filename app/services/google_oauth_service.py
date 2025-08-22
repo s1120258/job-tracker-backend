@@ -1,12 +1,14 @@
 # app/services/google_oauth_service.py
 
+import logging
+from typing import Any, Dict, Optional
+
 import httpx
-from typing import Optional, Dict, Any
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError
-from app.core.config import settings
 from fastapi import HTTPException, status
-import logging
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

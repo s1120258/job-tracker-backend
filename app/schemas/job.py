@@ -1,18 +1,19 @@
 # app/schemas/job.py
 
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
-from uuid import UUID
-from datetime import date, datetime
 import enum
 import json
+from datetime import date, datetime
+from typing import List, Optional
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
 
 # Import skill analysis schemas
 from app.schemas.skill_analysis import (
-    SkillGapAnalysisResponse,
-    SkillGapAnalysisRequest,
-    ResumeSkillsResponse,
     JobSkillsResponse,
+    ResumeSkillsResponse,
+    SkillGapAnalysisRequest,
+    SkillGapAnalysisResponse,
     SkillMatchSummary,
 )
 

@@ -1,8 +1,10 @@
-from pydantic_settings import BaseSettings
-from typing import Optional, Union
-from pydantic import ConfigDict, Field, field_validator
-from .aws_params import get_parameter
 import json
+from typing import Optional, Union
+
+from pydantic import ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings
+
+from .aws_params import get_parameter
 
 
 class Settings(BaseSettings):

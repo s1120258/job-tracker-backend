@@ -7,16 +7,16 @@ API Documentation: https://remoteok.io/api
 
 from __future__ import annotations
 
+import datetime
 import logging
 import time
 from typing import List
 
 import requests
 from bs4 import BeautifulSoup
-import datetime
 
-from .models import JobPosting
 from .base import JobBoardScraper
+from .models import JobPosting
 
 logger = logging.getLogger(__name__)
 

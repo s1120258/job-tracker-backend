@@ -1,9 +1,11 @@
 # app/crud/match_score.py
 
-from sqlalchemy.orm import Session
-from uuid import UUID
-from typing import Optional
 import logging
+from typing import Optional
+from uuid import UUID
+
+from sqlalchemy.orm import Session
+
 from app.models.match_score import MatchScore
 
 logger = logging.getLogger(__name__)

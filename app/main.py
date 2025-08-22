@@ -1,17 +1,14 @@
 # app/main.py
 
 import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.db.session import SessionLocal
-from app.api import (
-    routes_auth,
-    routes_resumes,
-    routes_analytics,
-    routes_jobs,
-)
+
+from app.api import routes_analytics, routes_auth, routes_jobs, routes_resumes
 from app.core.config import settings
+from app.db.session import SessionLocal
 
 # Configure logging to show detailed error information
 logging.basicConfig(

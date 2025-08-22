@@ -1,10 +1,12 @@
 # app/crud/user.py
 
-from sqlalchemy.orm import Session
-from app.models.user import User
-from app.schemas.user import UserCreate, GoogleUserCreate
-from app.core.security import get_password_hash
 from typing import Optional
+
+from sqlalchemy.orm import Session
+
+from app.core.security import get_password_hash
+from app.models.user import User
+from app.schemas.user import GoogleUserCreate, UserCreate
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[User]:
