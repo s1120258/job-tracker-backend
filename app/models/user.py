@@ -18,8 +18,12 @@ class User(Base):
 
     # OAuth fields
     google_id = Column(String, unique=True, nullable=True, index=True)  # Google user ID
-    provider = Column(String, nullable=False, server_default=text("'email'"))  # Auth provider: 'email', 'google'
-    is_oauth = Column(Boolean, nullable=False, server_default=text("false"))  # OAuth authentication flag
+    provider = Column(
+        String, nullable=False, server_default=text("'email'")
+    )  # Auth provider: 'email', 'google'
+    is_oauth = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )  # OAuth authentication flag
 
     jobs = relationship("Job", back_populates="user")
     resumes = relationship("Resume", back_populates="user")

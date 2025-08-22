@@ -45,9 +45,9 @@ class TestGoogleOAuth2Service:
         """Test user data parsing from Google response."""
         service = GoogleOAuth2Service()
         service.client_id = "test_client_id"
-        
+
         result = service.parse_user_data(mock_google_user_info)
-        
+
         assert result["google_id"] == "123456789"
         assert result["email"] == "testuser@gmail.com"
         assert result["firstname"] == "Test"
@@ -60,16 +60,16 @@ class TestGoogleOAuth2Service:
         """Test user data parsing when given/family names are missing."""
         service = GoogleOAuth2Service()
         service.client_id = "test_client_id"
-        
+
         user_info = {
             "google_id": "123456789",
             "email": "testuser@gmail.com",
             "name": "John Doe",
             "email_verified": True,
         }
-        
+
         result = service.parse_user_data(user_info)
-        
+
         assert result["firstname"] == "John"
         assert result["lastname"] == "Doe"
 
@@ -78,15 +78,15 @@ class TestGoogleOAuth2Service:
         """Test user data parsing when no name information is available."""
         service = GoogleOAuth2Service()
         service.client_id = "test_client_id"
-        
+
         user_info = {
             "google_id": "123456789",
             "email": "testuser@gmail.com",
             "email_verified": True,
         }
-        
+
         result = service.parse_user_data(user_info)
-        
+
         assert result["firstname"] == "Unknown"
         assert result["lastname"] == "User"
 
@@ -126,8 +126,7 @@ class TestGoogleAuthEndpoints:
 
         # Make request
         response = client.post(
-            "/api/v1/auth/google/verify",
-            json={"id_token": "mock_id_token"}
+            "/api/v1/auth/google/verify", json={"id_token": "mock_id_token"}
         )
 
         # Assertions
@@ -139,20 +138,20 @@ class TestGoogleAuthEndpoints:
         assert data["user"]["email"] == "testuser@gmail.com"
 
     @patch("app.services.google_oauth_service.google_oauth_service.verify_id_token")
-    def test_google_auth_verify_invalid_token(self, mock_verify_token, client: TestClient):
+    def test_google_auth_verify_invalid_token(
+        self, mock_verify_token, client: TestClient
+    ):
         """Test Google authentication with invalid token."""
         from fastapi import HTTPException
-        
+
         # Setup mock to raise exception
         mock_verify_token.side_effect = HTTPException(
-            status_code=401, 
-            detail="Invalid ID token"
+            status_code=401, detail="Invalid ID token"
         )
 
         # Make request
         response = client.post(
-            "/api/v1/auth/google/verify",
-            json={"id_token": "invalid_token"}
+            "/api/v1/auth/google/verify", json={"id_token": "invalid_token"}
         )
 
         # Assertions
@@ -162,11 +161,11 @@ class TestGoogleAuthEndpoints:
     @patch("app.services.google_oauth_service.google_oauth_service.verify_id_token")
     @patch("app.crud.user.get_user_by_email")
     def test_google_register_existing_user(
-        self, 
-        mock_get_user_by_email, 
-        mock_verify_token, 
+        self,
+        mock_get_user_by_email,
+        mock_verify_token,
         client: TestClient,
-        mock_google_user_info
+        mock_google_user_info,
     ):
         """Test Google registration when user already exists."""
         # Setup mocks
@@ -175,8 +174,7 @@ class TestGoogleAuthEndpoints:
 
         # Make request
         response = client.post(
-            "/api/v1/auth/google/register",
-            json={"id_token": "mock_id_token"}
+            "/api/v1/auth/google/register", json={"id_token": "mock_id_token"}
         )
 
         # Assertions
@@ -215,7 +213,7 @@ class TestUserCRUD:
     def test_create_google_user(self, db: Session, mock_parsed_user_data):
         """Test creating a new Google user."""
         from app.schemas.user import GoogleUserCreate
-        
+
         google_user_create = GoogleUserCreate(**mock_parsed_user_data)
         user = crud_user.create_google_user(db, google_user_create)
 
