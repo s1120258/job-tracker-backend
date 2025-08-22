@@ -4,7 +4,7 @@
 services:
   api:
     image: ghcr.io/${GITHUB_REPOSITORY}:latest
-    platform: linux/amd64 # Force AMD64 platform for ARM64 EC2 instances
+    platform: linux/arm64 # Use ARM64 platform for ARM64 EC2 instances
     container_name: resmatch-api
     restart: unless-stopped
 
