@@ -31,6 +31,16 @@ class Settings(BaseSettings):
             "/resmatch/SUPABASE_KEY", "SUPABASE_ANON_KEY"
         )
     )
+    GOOGLE_CLIENT_ID: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_ID"
+        )
+    )
+    GOOGLE_CLIENT_SECRET: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/GOOGLE_CLIENT_SECRET", "GOOGLE_CLIENT_SECRET"
+        )
+    )
 
     # Other Supabase API settings
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
