@@ -156,13 +156,14 @@ env:
 #### **2. test.yml** - Comprehensive Testing
 
 - **Trigger**: Push/PR to `main` or `dev` branches
-- **Environment**: Python + PostgreSQL + pgVector
+- **Environment**: Python 3.11 + PostgreSQL + pgVector
 - **Features**:
   - ✅ Database migrations with Alembic
   - ✅ Full test suite with coverage reporting
   - ✅ Codecov integration
   - ✅ PostgreSQL with pgVector extension
   - ✅ Timeout and retry settings for reliable builds
+  - ✅ Modern Python version for better dependency compatibility
 
 #### **3. deploy.yml** - Production Deployment
 
