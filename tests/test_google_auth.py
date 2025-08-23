@@ -180,11 +180,11 @@ class TestGoogleAuthEndpoints:
         """Test Google authentication for existing user (account linking)."""
         # Setup mocks
         mock_verify_token.return_value = mock_google_user_info
-        
+
         # Mock existing user
         from uuid import uuid4
         from app.schemas.user import UserRead
-        
+
         existing_user = UserRead(
             id=uuid4(),
             email="testuser@gmail.com",
@@ -242,17 +242,19 @@ class TestUserCRUD:
     def test_get_or_create_google_user_new_user(self, mock_parsed_user_data):
         """Test creating a new Google user through get_or_create_google_user."""
         from app.crud.user import get_or_create_google_user
-        
+
         # Mock database session
         mock_db = MagicMock()
-        
+
         # Mock that no user exists by Google ID or email
-        with patch("app.crud.user.get_user_by_google_id") as mock_get_by_google_id, \
-             patch("app.crud.user.get_user_by_email") as mock_get_by_email:
-            
+        with (
+            patch("app.crud.user.get_user_by_google_id") as mock_get_by_google_id,
+            patch("app.crud.user.get_user_by_email") as mock_get_by_email,
+        ):
+
             mock_get_by_google_id.return_value = None
             mock_get_by_email.return_value = None
-            
+
             # Mock the User model creation
             with patch("app.models.user.User") as mock_user_model:
                 mock_user = MagicMock()
@@ -262,17 +264,17 @@ class TestUserCRUD:
                 mock_user.is_oauth = True
                 mock_user.hashed_password = None
                 mock_user_model.return_value = mock_user
-                
+
                 # Call the function
                 result = get_or_create_google_user(mock_db, mock_parsed_user_data)
-                
+
                 # Assertions
                 assert result.email == "testuser@gmail.com"
                 assert result.google_id == "123456789"
                 assert result.provider == "google"
                 assert result.is_oauth is True
                 assert result.hashed_password is None
-                
+
                 # Verify database operations
                 mock_db.add.assert_called_once()
                 mock_db.commit.assert_called_once()
