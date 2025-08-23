@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI  # ARM64 build trigger
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
