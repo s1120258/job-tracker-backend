@@ -12,14 +12,14 @@ from app.db.session import SessionLocal
 
 # Configure logging to show detailed error information
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-# Set specific loggers to DEBUG level
-logging.getLogger("app").setLevel(logging.DEBUG)
+# Set specific loggers to appropriate levels
+logging.getLogger("app").setLevel(logging.INFO)
 # Match scores logging is now part of routes_jobs
-logging.getLogger("app.services.similarity_service").setLevel(logging.DEBUG)
-logging.getLogger("app.crud").setLevel(logging.DEBUG)
+logging.getLogger("app.services.similarity_service").setLevel(logging.INFO)
+logging.getLogger("app.crud").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
