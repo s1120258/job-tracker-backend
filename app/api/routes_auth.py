@@ -104,20 +104,41 @@ async def google_auth_verify(
     This endpoint is used by frontend-driven OAuth flow.
     """
     try:
+        logger.info(f"Starting Google authentication for token length: {len(token_request.id_token)}")
+
         # Verify the Google ID token
         google_user_info = await google_oauth_service.verify_id_token(
             token_request.id_token
         )
 
+        logger.info(f"Google token verified successfully for user: {google_user_info['email']}")
+
         # Parse user data for database operations
         user_data = google_oauth_service.parse_user_data(google_user_info)
+        logger.info(f"Parsed user data: {user_data}")
 
         # Get or create user in database
-        user = crud_user.get_or_create_google_user(db, user_data)
+        try:
+            user = crud_user.get_or_create_google_user(db, user_data)
+            logger.info(f"User retrieved/created successfully: {user.email}")
+        except Exception as db_error:
+            logger.error(f"Database operation failed: {db_error}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database operation failed: {str(db_error)}",
+            )
 
         # Generate JWT tokens
-        access_token = security.create_access_token(data={"sub": user.email})
-        refresh_token = security.create_refresh_token(data={"sub": user.email})
+        try:
+            access_token = security.create_access_token(data={"sub": user.email})
+            refresh_token = security.create_refresh_token(data={"sub": user.email})
+            logger.info(f"JWT tokens generated successfully for user: {user.email}")
+        except Exception as token_error:
+            logger.error(f"Token generation failed: {token_error}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Token generation failed: {str(token_error)}",
+            )
 
         logger.info(f"Successfully authenticated Google user: {user.email}")
 
@@ -129,12 +150,13 @@ async def google_auth_verify(
 
     except HTTPException:
         # Re-raise HTTP exceptions from the service
+        logger.warning(f"Google authentication failed with HTTP exception")
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in Google authentication: {e}")
+        logger.error(f"Unexpected error in Google authentication: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authentication failed",
+            detail=f"Authentication failed: {str(e)}",
         )
 
 
@@ -184,4 +206,32 @@ async def google_register(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed",
+        )
+
+
+@router.get("/google/status")
+async def google_auth_status():
+    """
+    Check Google OAuth service status and configuration.
+    Useful for debugging authentication issues.
+    """
+    try:
+        from app.services.google_oauth_service import google_oauth_service
+
+        status_info = {
+            "service_configured": bool(google_oauth_service.client_id),
+            "client_id_configured": bool(google_oauth_service.client_id),
+            "client_secret_configured": bool(google_oauth_service.client_secret),
+            "client_id_prefix": google_oauth_service.client_id[:20] + "..." if google_oauth_service.client_id else None,
+            "jwks_url": google_oauth_service.GOOGLE_JWKS_URL,
+        }
+
+        logger.info(f"Google OAuth status check: {status_info}")
+        return status_info
+
+    except Exception as e:
+        logger.error(f"Error checking Google OAuth status: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Status check failed: {str(e)}",
         )

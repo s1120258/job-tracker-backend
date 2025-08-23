@@ -34,8 +34,18 @@ class GoogleOAuth2Service:
             "_", ""
         )
 
+        logger.info(f"Initializing Google OAuth service - Testing mode: {is_testing}")
+        logger.info(f"Client ID configured: {'Yes' if self.client_id else 'No'}")
+        logger.info(f"Client Secret configured: {'Yes' if self.client_secret else 'No'}")
+
         if not self.client_id and not is_testing:
+            logger.error("GOOGLE_CLIENT_ID is missing in production environment")
             raise ValueError("GOOGLE_CLIENT_ID must be set in environment variables")
+
+        if self.client_id:
+            logger.info(f"Google OAuth service initialized with client ID: {self.client_id[:20]}...")
+        else:
+            logger.warning("Google OAuth service initialized in test mode without credentials")
 
     async def verify_id_token(self, id_token: str) -> Dict[str, Any]:
         """
@@ -52,20 +62,26 @@ class GoogleOAuth2Service:
         """
         # Handle test environment where client_id might be None
         if not self.client_id:
+            logger.error("Google OAuth service not configured: GOOGLE_CLIENT_ID is missing")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Google authentication service not configured",
             )
 
         try:
+            logger.info(f"Starting Google ID token verification for client_id: {self.client_id}")
+
             # Fetch Google's public keys for JWT verification
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                logger.info(f"Fetching Google JWKS from: {self.GOOGLE_JWKS_URL}")
                 response = await client.get(self.GOOGLE_JWKS_URL)
                 response.raise_for_status()
                 jwks = response.json()
+                logger.info(f"Successfully fetched JWKS with {len(jwks.get('keys', []))} keys")
 
             # Verify and decode the ID token
             try:
+                logger.info("Attempting to decode and verify JWT token")
                 claims = jwt.decode(
                     id_token,
                     jwks,
@@ -80,10 +96,14 @@ class GoogleOAuth2Service:
                         },
                     },
                 )
+                logger.info(f"JWT verification successful, claims: {list(claims.keys())}")
+
             except JoseError as e:
                 logger.error(f"JWT verification failed: {e}")
+                logger.error(f"Token details - Length: {len(id_token)}, Client ID: {self.client_id}")
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid ID token"
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Invalid ID token: {str(e)}"
                 )
 
             # Extract required user information
@@ -97,14 +117,18 @@ class GoogleOAuth2Service:
                 "email_verified": claims.get("email_verified", False),
             }
 
+            logger.info(f"Extracted user info: email={user_info['email']}, google_id={user_info['google_id']}")
+
             # Validate required fields
             if not user_info["google_id"] or not user_info["email"]:
+                logger.error(f"Missing required fields: google_id={user_info['google_id']}, email={user_info['email']}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Missing required user information in ID token",
                 )
 
             if not user_info["email_verified"]:
+                logger.warning(f"Email not verified for user: {user_info['email']}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Email not verified by Google",
@@ -117,15 +141,19 @@ class GoogleOAuth2Service:
 
         except httpx.HTTPError as e:
             logger.error(f"Failed to fetch Google JWKS: {e}")
+            logger.error(f"HTTP status: {getattr(e, 'response', {}).get('status_code', 'unknown')}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Google authentication service unavailable",
+                detail=f"Google authentication service unavailable: {str(e)}",
             )
+        except HTTPException:
+            # Re-raise HTTP exceptions
+            raise
         except Exception as e:
-            logger.error(f"Unexpected error during ID token verification: {e}")
+            logger.error(f"Unexpected error during ID token verification: {e}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Authentication service error",
+                detail=f"Authentication service error: {str(e)}",
             )
 
     async def get_user_info(self, access_token: str) -> Dict[str, Any]:
