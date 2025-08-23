@@ -87,3 +87,4 @@
 ---
 
 _ResMatch — Empower your job search with data-driven intelligence._
+# Force ARM64 multiplatform build Fri Aug 22 20:07:16 EDT 2025
