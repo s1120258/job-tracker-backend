@@ -53,9 +53,11 @@
 
 ### 🔒 Security & Authentication
 
-- OAuth2 password flow with JWT tokens
-- Secure endpoints with token refresh mechanism
-- bcrypt password hashing and SQL injection prevention
+- **OAuth2 + JWT**: Secure token-based authentication with refresh capability
+- **Google OAuth Integration**: Single endpoint for login/signup with automatic account linking
+- **Password Security**: bcrypt hashing for traditional email/password accounts
+- **SQL Injection Prevention**: SQLAlchemy ORM with parameterized queries
+- **CORS Protection**: Restricted origins for production security
 
 ---
 
@@ -87,4 +89,3 @@
 ---
 
 _ResMatch — Empower your job search with data-driven intelligence._
-

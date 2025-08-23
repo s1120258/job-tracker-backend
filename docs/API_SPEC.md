@@ -141,11 +141,20 @@ This document describes the comprehensive API endpoints for the ResMatch backend
 
 ### 🔑 Auth
 
-| Method | Path             | Description           |
-| ------ | ---------------- | --------------------- |
-| POST   | `/auth/register` | Register new user     |
-| POST   | `/auth/token`    | Login (JWT)           |
-| GET    | `/auth/me`       | Get current user info |
+| Method | Path                  | Description                                  |
+| ------ | --------------------- | -------------------------------------------- |
+| POST   | `/auth/register`      | Register new user                            |
+| POST   | `/auth/token`         | Login (JWT)                                  |
+| POST   | `/auth/refresh`       | Refresh JWT token                            |
+| GET    | `/auth/me`            | Get current user info                        |
+| POST   | `/auth/google/verify` | **Google OAuth login/signup** (unified flow) |
+
+**🔐 Google OAuth Authentication:**
+
+- **Unified Endpoint**: `/auth/google/verify` handles both login and signup
+- **Automatic User Management**: Creates new users or links existing accounts
+- **JWT Token Generation**: Returns access and refresh tokens
+- **Account Linking**: Links Google accounts to existing email-based accounts
 
 ---
 

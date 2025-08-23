@@ -506,7 +506,7 @@ def search_jobs(...):
 ### 1. Authentication Architecture
 
 ```python
-# OAuth2 + JWT implementation
+# OAuth2 + JWT implementation with Google OAuth integration
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
@@ -518,12 +518,45 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
         algorithm=settings.ALGORITHM
     )
 
+# Google OAuth unified endpoint
+@router.post("/auth/google/verify")
+async def google_auth_verify(token_request: GoogleTokenRequest, db: Session):
+    """
+    Unified Google OAuth endpoint for both login and signup.
+    Automatically creates new users or links existing accounts.
+    """
+    # Verify Google ID token
+    google_user_info = await google_oauth_service.verify_id_token(
+        token_request.id_token
+    )
+
+    # Get or create user (handles both new and existing users)
+    user = crud_user.get_or_create_google_user(db, google_user_info)
+
+    # Generate JWT tokens
+    access_token = security.create_access_token(data={"sub": user.email})
+    refresh_token = security.create_refresh_token(data={"sub": user.email})
+
+    return GoogleAuthResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserRead.model_validate(user)
+    )
+
 # Route protection
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     # Token validation and user extraction
     payload = jose.jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     # ... user lookup and validation
 ```
+
+**🔐 Google OAuth Implementation Features:**
+
+- **Unified Authentication Flow**: Single endpoint handles both login and signup
+- **Automatic Account Linking**: Links Google accounts to existing email-based accounts
+- **JWT Token Management**: Access tokens (15min) with refresh capability
+- **Secure Token Verification**: Google's JWKS for ID token validation
+- **User Data Normalization**: Consistent user profile management across auth methods
 
 ### 2. Data Security
 
