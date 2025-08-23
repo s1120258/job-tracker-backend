@@ -23,6 +23,10 @@ services:
       # AWS region for Parameter Store
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-2}
 
+      # Google OAuth credentials
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+
       # CORS configuration for production
       - BACKEND_CORS_ORIGINS=["https://resmatchai.com", "https://res-match-ui.vercel.app","https://resmatch-api.ddns.net"]
 

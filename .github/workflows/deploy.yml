@@ -119,6 +119,10 @@ jobs:
             # Pull latest changes
             git pull origin main
 
+            # Set environment variables for production
+            export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+            export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+
             # Check if we need to pull new image or just restart
             CODE_CHANGED="${{ steps.changes.outputs.code }}"
 
