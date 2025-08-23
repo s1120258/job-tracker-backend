@@ -13,13 +13,6 @@ class UserCreate(BaseModel):
     password: str
 
 
-class GoogleUserCreate(BaseModel):
-    email: EmailStr
-    firstname: str
-    lastname: str
-    google_id: str
-
-
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

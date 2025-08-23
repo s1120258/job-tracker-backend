@@ -39,9 +39,13 @@ class GoogleOAuth2Service:
             raise ValueError("GOOGLE_CLIENT_ID must be set in environment variables")
 
         if self.client_id:
-            logger.info(f"Google OAuth service initialized with client ID: {self.client_id[:20]}...")
+            logger.info(
+                f"Google OAuth service initialized with client ID: {self.client_id[:20]}..."
+            )
         else:
-            logger.warning("Google OAuth service initialized in test mode without credentials")
+            logger.warning(
+                "Google OAuth service initialized in test mode without credentials"
+            )
 
     async def verify_id_token(self, id_token: str) -> Dict[str, Any]:
         """
@@ -67,14 +71,18 @@ class GoogleOAuth2Service:
             )
 
         try:
-            logger.info(f"Starting Google ID token verification for client_id: {self.client_id}")
+            logger.info(
+                f"Starting Google ID token verification for client_id: {self.client_id}"
+            )
 
             # Fetch Google's public keys for JWT verification
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(self.GOOGLE_JWKS_URL)
                 response.raise_for_status()
                 jwks = response.json()
-                logger.info(f"Successfully fetched JWKS with {len(jwks.get('keys', []))} keys")
+                logger.info(
+                    f"Successfully fetched JWKS with {len(jwks.get('keys', []))} keys"
+                )
 
             # Verify and decode the ID token
             try:
@@ -92,11 +100,15 @@ class GoogleOAuth2Service:
                         },
                     },
                 )
-                logger.info(f"JWT verification successful, claims: {list(claims.keys())}")
+                logger.info(
+                    f"JWT verification successful, claims: {list(claims.keys())}"
+                )
 
             except JoseError as e:
                 logger.error(f"JWT verification failed: {e}")
-                logger.error(f"Token details - Length: {len(id_token)}, Client ID: {self.client_id}")
+                logger.error(
+                    f"Token details - Length: {len(id_token)}, Client ID: {self.client_id}"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Invalid ID token: {str(e)}",
@@ -113,11 +125,15 @@ class GoogleOAuth2Service:
                 "email_verified": claims.get("email_verified", False),
             }
 
-            logger.info(f"Extracted user info: email={user_info['email']}, google_id={user_info['google_id']}")
+            logger.info(
+                f"Extracted user info: email={user_info['email']}, google_id={user_info['google_id']}"
+            )
 
             # Validate required fields
             if not user_info["google_id"] or not user_info["email"]:
-                logger.error(f"Missing required fields: google_id={user_info['google_id']}, email={user_info['email']}")
+                logger.error(
+                    f"Missing required fields: google_id={user_info['google_id']}, email={user_info['email']}"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Missing required user information in ID token",

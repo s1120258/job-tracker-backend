@@ -104,14 +104,18 @@ async def google_auth_verify(
     This endpoint is used by frontend-driven OAuth flow.
     """
     try:
-        logger.info(f"Starting Google authentication for token length: {len(token_request.id_token)}")
+        logger.info(
+            f"Starting Google authentication for token length: {len(token_request.id_token)}"
+        )
 
         # Verify the Google ID token
         google_user_info = await google_oauth_service.verify_id_token(
             token_request.id_token
         )
 
-        logger.info(f"Google token verified successfully for user: {google_user_info['email']}")
+        logger.info(
+            f"Google token verified successfully for user: {google_user_info['email']}"
+        )
 
         # Parse user data for database operations
         user_data = google_oauth_service.parse_user_data(google_user_info)
@@ -155,53 +159,4 @@ async def google_auth_verify(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Authentication failed: {str(e)}",
-        )
-
-
-@router.post("/google/register", response_model=GoogleAuthResponse)
-async def google_register(
-    token_request: GoogleTokenRequest, db: Session = Depends(get_db)
-):
-    """
-    Register new user with Google OAuth.
-    Alternative endpoint that ensures user doesn't already exist.
-    """
-    try:
-        # Verify the Google ID token
-        google_user_info = await google_oauth_service.verify_id_token(
-            token_request.id_token
-        )
-
-        # Check if user already exists
-        existing_user = crud_user.get_user_by_email(db, google_user_info["email"])
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists",
-            )
-
-        # Parse user data and create new user
-        user_data = google_oauth_service.parse_user_data(google_user_info)
-        user = crud_user.create_google_user(db, user_data)
-
-        # Generate JWT tokens
-        access_token = security.create_access_token(data={"sub": user.email})
-        refresh_token = security.create_refresh_token(data={"sub": user.email})
-
-        logger.info(f"Successfully registered new Google user: {user.email}")
-
-        return GoogleAuthResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            user=UserRead.model_validate(user),
-        )
-
-    except HTTPException:
-        # Re-raise HTTP exceptions from the service
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in Google registration: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed",
         )

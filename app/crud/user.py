@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.models.user import User
-from app.schemas.user import GoogleUserCreate, UserCreate
+from app.schemas.user import UserCreate
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[User]:
@@ -28,23 +28,6 @@ def create_user(db: Session, user: UserCreate) -> User:
         hashed_password=get_password_hash(user.password),
         provider="email",
         is_oauth=False,
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
-def create_google_user(db: Session, user_data: GoogleUserCreate) -> User:
-    """Create a new user with Google OAuth authentication."""
-    db_user = User(
-        email=user_data.email,
-        firstname=user_data.firstname,
-        lastname=user_data.lastname,
-        google_id=user_data.google_id,
-        provider="google",
-        is_oauth=True,
-        hashed_password=None,  # No password for OAuth users
     )
     db.add(db_user)
     db.commit()
@@ -75,5 +58,16 @@ def get_or_create_google_user(db: Session, google_user_data: dict) -> User:
         return user
 
     # Create new Google user
-    google_user = GoogleUserCreate(**google_user_data)
-    return create_google_user(db, google_user)
+    db_user = User(
+        email=google_user_data["email"],
+        firstname=google_user_data["firstname"],
+        lastname=google_user_data["lastname"],
+        google_id=google_user_data["google_id"],
+        provider="google",
+        is_oauth=True,
+        hashed_password=None,  # No password for OAuth users
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
