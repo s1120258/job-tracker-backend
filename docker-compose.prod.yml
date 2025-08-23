@@ -4,7 +4,7 @@
 services:
   api:
     image: ghcr.io/${GITHUB_REPOSITORY}:latest
-    platform: linux/amd64 # Unified AMD64 platform with QEMU emulation
+    platform: linux/arm64 # Native ARM64 platform for optimal performance
     container_name: resmatch-api
     restart: unless-stopped
 
