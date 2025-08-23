@@ -1,11 +1,12 @@
 # tests/test_google_auth.py
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.crud import user as crud_user
+from app.main import app
 
 
 @pytest.fixture
@@ -183,6 +184,7 @@ class TestGoogleAuthEndpoints:
 
         # Mock existing user
         from uuid import uuid4
+
         from app.schemas.user import UserRead
 
         existing_user = UserRead(
