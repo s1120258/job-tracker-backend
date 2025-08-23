@@ -104,14 +104,18 @@ async def google_auth_verify(
     This endpoint is used by frontend-driven OAuth flow.
     """
     try:
-        logger.info(f"Starting Google authentication for token length: {len(token_request.id_token)}")
+        logger.info(
+            f"Starting Google authentication for token length: {len(token_request.id_token)}"
+        )
 
         # Verify the Google ID token
         google_user_info = await google_oauth_service.verify_id_token(
             token_request.id_token
         )
 
-        logger.info(f"Google token verified successfully for user: {google_user_info['email']}")
+        logger.info(
+            f"Google token verified successfully for user: {google_user_info['email']}"
+        )
 
         # Parse user data for database operations
         user_data = google_oauth_service.parse_user_data(google_user_info)
@@ -222,7 +226,11 @@ async def google_auth_status():
             "service_configured": bool(google_oauth_service.client_id),
             "client_id_configured": bool(google_oauth_service.client_id),
             "client_secret_configured": bool(google_oauth_service.client_secret),
-            "client_id_prefix": google_oauth_service.client_id[:20] + "..." if google_oauth_service.client_id else None,
+            "client_id_prefix": (
+                google_oauth_service.client_id[:20] + "..."
+                if google_oauth_service.client_id
+                else None
+            ),
             "jwks_url": google_oauth_service.GOOGLE_JWKS_URL,
         }
 
