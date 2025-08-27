@@ -4,6 +4,10 @@
 
 ResMatch is an AI-powered career platform that leverages modern machine learning techniques to provide intelligent job matching, skill gap analysis, and career recommendations. The system combines **OpenAI's large language models**, **vector embeddings**, and **semantic similarity search** to deliver personalized career insights at scale.
 
+**🌐 Live Application**: [resmatchai.com](https://resmatchai.com/)
+**📱 Frontend Repository**: [`res-match-ui`](https://github.com/s1120258/res-match-ui)
+**🔄 API Explorer**: [resmatch-api.ddns.net/docs](https://resmatch-api.ddns.net/docs)
+
 ---
 
 ## 🏗️ System Architecture Overview
@@ -13,11 +17,13 @@ ResMatch is an AI-powered career platform that leverages modern machine learning
 ```mermaid
 graph TB
     subgraph "Frontend Layer"
-        UI[React + Vite Frontend]
+        UI[React + Vite + Chakra UI]
+        VERCEL[Vercel Deployment]
     end
 
     subgraph "API Gateway"
         API[FastAPI Backend]
+        NGINX[NGINX Reverse Proxy]
     end
 
     subgraph "AI/ML Services"
@@ -28,40 +34,52 @@ graph TB
     end
 
     subgraph "Data Layer"
-        PG[(PostgreSQL + pgVector)]
+        SUPABASE[(Supabase PostgreSQL + pgVector)]
         CACHE[In-Memory Cache]
     end
 
     subgraph "External Services"
         JOBS[Job Board APIs]
-        AUTH[OAuth2 Providers]
+        AUTH[Google OAuth2]
+        AWS[AWS Parameter Store]
     end
 
-    UI --> API
+    subgraph "DevOps & CI/CD"
+        GHCR[GitHub Container Registry]
+        EC2[AWS EC2 Instance]
+        GITHUB[GitHub Actions]
+    end
+
+    UI --> VERCEL
+    VERCEL --> NGINX
+    NGINX --> API
     API --> LLM
     API --> EMB
     API --> SKILL
     API --> SIM
-    API --> PG
+    API --> SUPABASE
     API --> CACHE
     API --> JOBS
     API --> AUTH
-
-    EMB --> PG
-    SIM --> PG
+    API --> AWS
+    GITHUB --> GHCR
+    GHCR --> EC2
+    EC2 --> NGINX
 ```
 
 ### Technology Stack
 
-| **Layer**           | **Technologies**                             | **Purpose**                        |
-| ------------------- | -------------------------------------------- | ---------------------------------- |
-| **AI/ML Core**      | OpenAI GPT-3.5-turbo, text-embedding-ada-002 | LLM reasoning, vector embeddings   |
-| **Vector Search**   | PostgreSQL + pgVector extension              | High-performance similarity search |
-| **Backend API**     | FastAPI, SQLAlchemy, Alembic                 | REST API, ORM, database migrations |
-| **Authentication**  | OAuth2, JWT, bcrypt                          | Secure user authentication         |
-| **Data Processing** | PyPDF2, python-docx, BeautifulSoup4          | Document parsing, web scraping     |
-| **Caching**         | In-memory Python dictionaries with TTL       | LLM response caching               |
-| **DevOps**          | Docker, GitHub Actions, Render, Vercel       | Containerization, CI/CD            |
+| **Layer**           | **Technologies**                             | **Purpose**                         |
+| ------------------- | -------------------------------------------- | ----------------------------------- |
+| **AI/ML Core**      | OpenAI GPT-3.5-turbo, text-embedding-ada-002 | LLM reasoning, vector embeddings    |
+| **Vector Search**   | Supabase PostgreSQL + pgVector extension     | High-performance similarity search  |
+| **Backend API**     | FastAPI, SQLAlchemy, Alembic                 | REST API, ORM, database migrations  |
+| **Frontend**        | React, Vite, TypeScript, Chakra UI           | Modern, responsive user interface   |
+| **Authentication**  | OAuth2, JWT, bcrypt, Google OAuth            | Secure user authentication          |
+| **Data Processing** | PyPDF2, python-docx, BeautifulSoup4          | Document parsing, web scraping      |
+| **Caching**         | In-memory Python dictionaries with TTL       | LLM response caching                |
+| **DevOps**          | Docker, GitHub Actions, GHCR, AWS EC2, NGINX | Containerization, CI/CD, deployment |
+| **Configuration**   | AWS Parameter Store, environment variables   | Secure credential management        |
 
 ---
 
@@ -89,13 +107,13 @@ class EmbeddingService:
 
 - **Model**: OpenAI's `text-embedding-ada-002` (1536 dimensions)
 - **Use Cases**: Resume content, job descriptions, skill normalization
-- **Storage**: PostgreSQL with pgVector extension for efficient vector operations
+- **Storage**: Supabase PostgreSQL with pgVector extension for efficient vector operations
 - **Performance**: ~50ms per embedding generation, cached for 1 hour
 
 #### **Vector Storage Schema**
 
 ```sql
--- PostgreSQL with pgVector extension
+-- Supabase PostgreSQL with pgVector extension
 CREATE EXTENSION vector;
 
 -- Resume embeddings
@@ -290,24 +308,71 @@ app/
 ├── api/                    # Route handlers (thin layer)
 │   ├── routes_jobs.py     # Job management endpoints
 │   ├── routes_resumes.py  # Resume processing endpoints
-│   └── routes_auth.py     # Authentication endpoints
+│   ├── routes_auth.py     # Authentication endpoints
+│   └── routes_analytics.py # Analytics and reporting
 ├── services/              # Business logic layer
 │   ├── llm_service.py     # LLM operations
 │   ├── embedding_service.py
 │   ├── skill_analysis_service.py
 │   ├── skill_extraction_service.py
-│   └── similarity_service.py
+│   ├── similarity_service.py
+│   ├── job_scraper_service.py
+│   └── google_oauth_service.py
 ├── crud/                  # Data access layer
 │   ├── job.py
 │   ├── resume.py
 │   └── user.py
+├── core/                  # Configuration and utilities
+│   ├── config.py          # Settings management
+│   ├── aws_params.py      # AWS Parameter Store integration
+│   └── security.py        # Authentication utilities
 └── models/                # SQLAlchemy ORM models
     ├── job.py
     ├── resume.py
     └── user.py
 ```
 
-### 2. Error Handling & Resilience
+### 2. Configuration Management with AWS Parameter Store
+
+```python
+# Secure parameter management
+class Settings(BaseSettings):
+    # Database individual settings
+    DB_USER: str = "postgres"
+    DB_HOST: str = "db"
+    DB_PORT: str = "5432"
+    DB_NAME: str = "res_match"
+
+    # Secure parameters from AWS Parameter Store with fallbacks
+    DB_PASSWORD: str = Field(
+        default_factory=lambda: get_parameter("/resmatch/DB_PASSWORD", "DB_PASSWORD")
+        or "postgres"
+    )
+    SECRET_KEY: str = Field(
+        default_factory=lambda: get_parameter("/resmatch/SECRET_KEY", "SECRET_KEY")
+        or "dev-secret-key"
+    )
+    OPENAI_API_KEY: Optional[str] = Field(
+        default_factory=lambda: get_parameter(
+            "/resmatch/OPENAI_API_KEY", "OPENAI_API_KEY"
+        )
+    )
+
+    @property
+    def DATABASE_URL(self) -> str:
+        """Generate DATABASE_URL from individual DB settings"""
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    @property
+    def SUPABASE_URL(self) -> str:
+        """Generate SUPABASE_URL from DB_HOST (assuming Supabase pattern)"""
+        if "supabase.co" in self.DB_HOST:
+            project_id = self.DB_HOST.replace("db.", "").replace(".supabase.co", "")
+            return f"https://{project_id}.supabase.co"
+        return f"https://{self.DB_HOST}"
+```
+
+### 3. Error Handling & Resilience
 
 ```python
 # Custom exception hierarchy
@@ -330,7 +395,7 @@ except openai.APIError as e:
     raise LLMServiceError(f"OpenAI API error: {str(e)}")
 ```
 
-### 3. Database Schema Design
+### 4. Database Schema Design
 
 #### **Optimized for Vector Operations**
 
@@ -350,7 +415,7 @@ USING ivfflat (job_embedding vector_cosine_ops)
 WITH (lists = 100);
 ```
 
-### 4. Caching Strategy
+### 5. Caching Strategy
 
 ```python
 # LLM response caching with TTL
@@ -367,6 +432,276 @@ def _generate_cache_key(self, job_description: str, job_title: str,
 
 ---
 
+## 🚀 DevOps & CI/CD Architecture
+
+### 1. GitHub Actions Workflow
+
+#### **Test & Build Pipeline**
+
+```yaml
+name: Simple Deploy to EC2
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # Run tests first
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Compose
+        run: docker compose version
+      - name: Run Tests
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ALGORITHM: ${{ secrets.ALGORITHM }}
+        run: docker compose run --rm -e SECRET_KEY -e ALGORITHM backend sh -c "pytest"
+      - name: Check formatting with Black
+        run: docker compose run --rm backend sh -c "black --check ."
+
+  # Build and push Docker image
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+#### **Smart Deployment Strategy**
+
+```yaml
+# Smart deployment based on changes
+deploy:
+  needs: [test, build]
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main' && always()
+  steps:
+    - name: Check for changes
+      id: changes
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          code:
+            - 'app/**'
+            - 'requirements.txt'
+            - 'Dockerfile'
+            - 'Dockerfile.prod'
+            - 'alembic.ini'
+            - 'wait_for_db.sh'
+          config:
+            - 'docker-compose.prod.yml'
+            - '.env'
+            - 'docs/**'
+
+    - name: Deploy to EC2
+      if: steps.changes.outputs.code == 'true' || steps.changes.outputs.config == 'true'
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd ~/res-match-api
+          git pull origin main
+
+          # Set environment variables for production
+          export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+          export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+
+          # Smart deployment based on change type
+          CODE_CHANGED="${{ steps.changes.outputs.code }}"
+          if [ "$CODE_CHANGED" = "true" ]; then
+            echo "Code changes detected - pulling new image and restarting"
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d
+          else
+            echo "Config changes only - restarting services"
+            docker-compose -f docker-compose.prod.yml restart api
+          fi
+
+          # Health check
+          sleep 10
+          if curl -f http://localhost:8000/healthz; then
+            echo "Deployment successful! Service is healthy."
+          else
+            echo "Deployment failed! Service health check failed."
+            exit 1
+          fi
+```
+
+### 2. Production Deployment Architecture
+
+#### **Docker Compose Production Configuration**
+
+```yaml
+# Production docker-compose for EC2 deployment
+services:
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    platform: linux/arm64 # Native ARM64 platform for optimal performance
+    container_name: resmatch-api
+    restart: unless-stopped
+
+    # Use host network to avoid IPv6 issues with Supabase
+    network_mode: host
+
+    # Environment variables for production
+    environment:
+      # Database connection (Supabase)
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT:-5432}
+
+      # AWS region for Parameter Store
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-2}
+
+      # Google OAuth credentials
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+
+      # CORS configuration for production
+      - BACKEND_CORS_ORIGINS=["https://resmatchai.com", "https://res-match-ui.vercel.app","https://resmatch-api.ddns.net"]
+
+      # API configuration
+      - API_V1_STR=/api/v1
+      - PROJECT_NAME=ResMatch
+
+      # Job scraper settings
+      - JOB_SCRAPER_TIMEOUT=30
+      - JOB_SCRAPER_RETRIES=3
+      - JOB_SCRAPER_DELAY=1.0
+      - JOB_SCRAPER_USER_AGENT=res-match-api/1.0 (https://res-match.com/bot)
+      - JOB_SCRAPER_MAX_RESULTS=100
+
+    command:
+      ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"]
+
+    # Health check using existing endpoint
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+#### **NGINX Reverse Proxy Configuration**
+
+```nginx
+# NGINX configuration for ResMatch API
+server {
+    listen 80;
+    server_name resmatch-api.ddns.net;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name resmatch-api.ddns.net;
+
+    # SSL configuration
+    ssl_certificate /etc/letsencrypt/live/resmatch-api.ddns.net/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/resmatch-api.ddns.net/privkey.pem;
+
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # API proxy
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support for real-time features
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Health check endpoint
+    location /healthz {
+        proxy_pass http://127.0.0.1:8000/healthz;
+        access_log off;
+    }
+}
+```
+
+### 3. Containerization Strategy
+
+#### **Multi-Stage Docker Builds**
+
+```dockerfile
+# Production Dockerfile with optimization
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+FROM python:3.11-slim as runtime
+
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
+COPY . .
+
+# Install system dependencies for document processing
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set PATH for user-installed packages
+ENV PATH=/root/.local/bin:$PATH
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/healthz || exit 1
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+---
+
 ## 📊 Data Flow & API Integration
 
 ### 1. Resume Processing Pipeline
@@ -378,13 +713,13 @@ sequenceDiagram
     participant Parser
     participant LLM
     participant Embedding
-    participant DB
+    participant Supabase
 
     User->>API: Upload Resume (PDF/DOCX)
     API->>Parser: Extract Text Content
     Parser->>API: Raw Text
     API->>Embedding: Generate Vector
-    Embedding->>DB: Store Resume + Embedding
+    Embedding->>Supabase: Store Resume + Embedding
     API->>LLM: Extract Skills
     LLM->>API: Structured Skills Data
     API->>User: Success Response
@@ -470,7 +805,7 @@ def analyze_skill_gap(job_id: UUID, db: Session, current_user: User):
 #### **Caching Strategy**
 
 - **LLM Response Caching**: SHA256-based keys with TTL
-- **Vector Embedding Caching**: Persistent storage in PostgreSQL
+- **Vector Embedding Caching**: Persistent storage in Supabase
 - **API Response Caching**: HTTP caching headers for static content
 
 #### **Rate Limiting & Cost Control**
@@ -564,7 +899,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 - **SQL Injection Prevention**: SQLAlchemy ORM with parameterized queries
 - **Input Validation**: Pydantic schemas for all API inputs
 - **CORS Configuration**: Restricted origins for production
-- **Environment Variables**: Secure credential management
+- **Environment Variables**: Secure credential management via AWS Parameter Store
 
 ---
 
@@ -598,6 +933,102 @@ def test_extract_resume_skills_success(test_client, test_user_with_resume):
 - **Integration Tests**: End-to-end skill extraction and analysis workflows
 - **Performance Tests**: Vector similarity calculation benchmarks
 - **Error Handling Tests**: OpenAI API failure scenarios
+
+### 3. Code Quality Tools
+
+```toml
+# pyproject.toml configuration
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--strict-markers",
+    "--strict-config",
+]
+```
+
+---
+
+## 🌐 Frontend Integration
+
+### 1. React + Vite Architecture
+
+```typescript
+// Modern React setup with TypeScript
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+
+// Chakra UI theme customization
+const theme = extendTheme({
+  colors: {
+    brand: {
+      50: "#E6F6FF",
+      500: "#0066CC",
+      900: "#003366",
+    },
+  },
+  components: {
+    Button: {
+      defaultProps: {
+        colorScheme: "brand",
+      },
+    },
+  },
+});
+
+// Framer Motion animations
+const MotionBox = motion(Box);
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 },
+};
+```
+
+### 2. API Integration
+
+```typescript
+// OpenAPI-generated SDK integration
+import { DefaultApi } from "./generated/api";
+
+const api = new DefaultApi({
+  basePath: process.env.REACT_APP_API_URL || "http://localhost:8000/api/v1",
+  accessToken: () => localStorage.getItem("accessToken") || "",
+});
+
+// Type-safe API calls
+const searchJobs = async (query: string) => {
+  try {
+    const response = await api.searchJobs({
+      query,
+      limit: 20,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Job search failed:", error);
+    throw error;
+  }
+};
+```
+
+### 3. Deployment Strategy
+
+- **Vercel Frontend**: Automatic deployments from main branch
+- **Environment Variables**: Secure configuration management
+- **Build Optimization**: Vite for fast development and optimized production builds
+- **Type Safety**: Full TypeScript integration with generated API types
 
 ---
 
@@ -648,6 +1079,14 @@ def test_extract_resume_skills_success(test_client, test_user_with_resume):
 - **Security Implementation**: Industry-standard authentication and authorization
 - **Monitoring & Logging**: Comprehensive observability for production systems
 
+### 4. DevOps & Deployment Excellence
+
+- **GitHub Actions CI/CD**: Automated testing, building, and deployment
+- **GitHub Container Registry**: Secure Docker image distribution
+- **AWS EC2 + NGINX**: Production-grade hosting with reverse proxy
+- **Smart Deployment**: Change-based deployment optimization
+- **Health Monitoring**: Automated health checks and rollback capabilities
+
 ---
 
-_This technical architecture demonstrates proficiency in modern AI/ML engineering, vector databases, LLM integration, and scalable backend development._
+_This technical architecture demonstrates proficiency in modern AI/ML engineering, vector databases, LLM integration, scalable backend development, and enterprise-grade DevOps practices._
