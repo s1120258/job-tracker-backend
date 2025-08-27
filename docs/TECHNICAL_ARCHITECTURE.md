@@ -22,8 +22,8 @@ graph TB
     end
 
     subgraph "API Gateway"
-        API[FastAPI Backend]
         NGINX[NGINX Reverse Proxy]
+        API[FastAPI Backend]
     end
 
     subgraph "AI/ML Services"
@@ -45,26 +45,54 @@ graph TB
     end
 
     subgraph "DevOps & CI/CD"
+        GITHUB[GitHub Actions]
         GHCR[GitHub Container Registry]
         EC2[AWS EC2 Instance]
-        GITHUB[GitHub Actions]
     end
 
+    %% Frontend flow
     UI --> VERCEL
     VERCEL --> NGINX
+
+    %% API Gateway flow
     NGINX --> API
+
+    %% Backend service connections
     API --> LLM
     API --> EMB
     API --> SKILL
     API --> SIM
+
+    %% Data connections
     API --> SUPABASE
     API --> CACHE
+    EMB --> SUPABASE
+    SIM --> SUPABASE
+
+    %% External service connections
     API --> JOBS
     API --> AUTH
     API --> AWS
+
+    %% DevOps flow
     GITHUB --> GHCR
     GHCR --> EC2
     EC2 --> NGINX
+
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef api fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef ai fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    classDef devops fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+
+    class UI,VERCEL frontend
+    class NGINX,API api
+    class LLM,EMB,SKILL,SIM ai
+    class SUPABASE,CACHE data
+    class JOBS,AUTH,AWS external
+    class GITHUB,GHCR,EC2 devops
 ```
 
 ### Technology Stack
