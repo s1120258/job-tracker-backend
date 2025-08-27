@@ -79,13 +79,13 @@ graph TB
     GHCR --> EC2
     EC2 --> NGINX
 
-    %% Styling
-    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef api fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef ai fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:2px
-    classDef devops fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    %% Styling with better contrast and larger text
+    classDef frontend fill:#e3f2fd,stroke:#0277bd,stroke-width:3px,color:#000000
+    classDef api fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000000
+    classDef ai fill:#e8f5e8,stroke:#388e3c,stroke-width:3px,color:#000000
+    classDef data fill:#fff8e1,stroke:#f57c00,stroke-width:3px,color:#000000
+    classDef external fill:#ffebee,stroke:#d32f2f,stroke-width:3px,color:#000000
+    classDef devops fill:#f1f8e9,stroke:#558b2f,stroke-width:3px,color:#000000
 
     class UI,VERCEL frontend
     class NGINX,API api
