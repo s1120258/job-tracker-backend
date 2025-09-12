@@ -6,7 +6,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api import routes_analytics, routes_auth, routes_jobs, routes_resumes, routes_intelligent_matching
+from app.api import (
+    routes_analytics,
+    routes_auth,
+    routes_jobs,
+    routes_resumes,
+    routes_intelligent_matching,
+)
 from app.core.config import settings
 from app.db.session import SessionLocal
 
@@ -66,7 +72,9 @@ app.include_router(
 
 # Intelligent matching routes (RAG-powered job analysis)
 app.include_router(
-    routes_intelligent_matching.router, prefix=f"{settings.API_V1_STR}", tags=["intelligent-matching"]
+    routes_intelligent_matching.router,
+    prefix=f"{settings.API_V1_STR}",
+    tags=["intelligent-matching"],
 )
 
 

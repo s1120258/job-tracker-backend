@@ -19,9 +19,12 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class IntelligentMatchingServiceError(Exception):
     """Exception raised when intelligent matching operations fail."""
+
     pass
+
 
 class IntelligentMatchingService:
     """
@@ -36,11 +39,7 @@ class IntelligentMatchingService:
         self.similarity_service = similarity_service
 
     def analyze_job_with_market_context(
-        self,
-        job_id: UUID,
-        user_id: UUID,
-        db: Session,
-        context_depth: int = 5
+        self, job_id: UUID, user_id: UUID, db: Session, context_depth: int = 5
     ) -> Dict[str, Any]:
         """
         Perform intelligent job analysis using RAG approach.
@@ -65,9 +64,7 @@ class IntelligentMatchingService:
             )
 
             # Step 3: Extract market trends using LLM
-            market_intelligence = self._analyze_market_trends(
-                target_job, similar_jobs
-            )
+            market_intelligence = self._analyze_market_trends(target_job, similar_jobs)
 
             # Step 4: Generate strategic recommendations
             strategic_analysis = self._generate_strategic_analysis(
@@ -85,10 +82,14 @@ class IntelligentMatchingService:
             )
 
         except Exception as e:
-            logger.error(f"Error in intelligent job analysis for job {job_id}: {str(e)}")
+            logger.error(
+                f"Error in intelligent job analysis for job {job_id}: {str(e)}"
+            )
             raise IntelligentMatchingServiceError(f"Analysis failed: {str(e)}")
 
-    def _get_job_by_id(self, db: Session, job_id: UUID, user_id: UUID) -> Dict[str, Any]:
+    def _get_job_by_id(
+        self, db: Session, job_id: UUID, user_id: UUID
+    ) -> Dict[str, Any]:
         """Retrieve job by ID with ownership validation."""
         job = get_job(db, job_id)
         if not job:
@@ -103,7 +104,7 @@ class IntelligentMatchingService:
             "company": job.company,
             "description": job.description,
             "location": job.location,
-            "url": job.url
+            "url": job.url,
         }
 
     def _get_user_resume(self, db: Session, user_id: UUID) -> Dict[str, Any]:
@@ -118,7 +119,7 @@ class IntelligentMatchingService:
         return {
             "id": str(resume.id),
             "extracted_text": resume.extracted_text,
-            "embedding": resume.embedding
+            "embedding": resume.embedding,
         }
 
     def _retrieve_similar_jobs(
@@ -126,7 +127,7 @@ class IntelligentMatchingService:
         db: Session,
         job_description: str,
         limit: int = 5,
-        exclude_job_id: Optional[UUID] = None
+        exclude_job_id: Optional[UUID] = None,
     ) -> List[Dict[str, Any]]:
         """
         Retrieve similar jobs using existing pgVector infrastructure.
@@ -145,7 +146,8 @@ class IntelligentMatchingService:
             query_embedding = self.embedding_service.generate_embedding(job_description)
 
             # Use existing pgVector setup for similarity search
-            query = text("""
+            query = text(
+                """
                 SELECT
                     id, title, company, description, location,
                     1 - (job_embedding <=> :query_embedding) as similarity_score
@@ -154,36 +156,44 @@ class IntelligentMatchingService:
                   AND (:exclude_job_id IS NULL OR id != :exclude_job_id)
                 ORDER BY job_embedding <=> :query_embedding
                 LIMIT :limit
-            """)
+            """
+            )
 
-            result = db.execute(query, {
-                "query_embedding": query_embedding,
-                "limit": limit,
-                "exclude_job_id": exclude_job_id
-            })
+            result = db.execute(
+                query,
+                {
+                    "query_embedding": query_embedding,
+                    "limit": limit,
+                    "exclude_job_id": exclude_job_id,
+                },
+            )
 
             similar_jobs = []
             for row in result:
-                similar_jobs.append({
-                    "id": str(row.id),
-                    "title": row.title,
-                    "company": row.company,
-                    "description": row.description,
-                    "location": row.location,
-                    "similarity_score": float(row.similarity_score)
-                })
+                similar_jobs.append(
+                    {
+                        "id": str(row.id),
+                        "title": row.title,
+                        "company": row.company,
+                        "description": row.description,
+                        "location": row.location,
+                        "similarity_score": float(row.similarity_score),
+                    }
+                )
 
-            logger.info(f"Retrieved {len(similar_jobs)} similar jobs for market analysis")
+            logger.info(
+                f"Retrieved {len(similar_jobs)} similar jobs for market analysis"
+            )
             return similar_jobs
 
         except Exception as e:
             logger.error(f"Error retrieving similar jobs: {str(e)}")
-            raise IntelligentMatchingServiceError(f"Failed to retrieve similar jobs: {str(e)}")
+            raise IntelligentMatchingServiceError(
+                f"Failed to retrieve similar jobs: {str(e)}"
+            )
 
     def _analyze_market_trends(
-        self,
-        target_job: Dict[str, Any],
-        similar_jobs: List[Dict[str, Any]]
+        self, target_job: Dict[str, Any], similar_jobs: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """
         Extract market trends and insights using LLM analysis.
@@ -203,12 +213,14 @@ class IntelligentMatchingService:
                     "market_positioning": "Insufficient market data",
                     "salary_range_insight": None,
                     "skill_trend_analysis": ["Limited market data available"],
-                    "demand_assessment": "Cannot assess market demand"
+                    "demand_assessment": "Cannot assess market demand",
                 }
 
             # Build context from similar jobs
             context = self._build_market_context(similar_jobs)
-            avg_similarity = sum(job["similarity_score"] for job in similar_jobs) / len(similar_jobs)
+            avg_similarity = sum(job["similarity_score"] for job in similar_jobs) / len(
+                similar_jobs
+            )
 
             # Create market analysis prompt
             market_prompt = f"""
@@ -234,18 +246,21 @@ class IntelligentMatchingService:
 
             # Use existing LLM service for analysis
             analysis_result = self.llm_service.generate_feedback(
-                resume_text=market_prompt,
-                feedback_type="general"
+                resume_text=market_prompt, feedback_type="general"
             )
 
             # Parse and structure the analysis
-            parsed_analysis = self._parse_market_analysis(analysis_result[0] if analysis_result else "")
+            parsed_analysis = self._parse_market_analysis(
+                analysis_result[0] if analysis_result else ""
+            )
 
             # Add quantitative data
-            parsed_analysis.update({
-                "similar_jobs_analyzed": len(similar_jobs),
-                "average_similarity_score": avg_similarity
-            })
+            parsed_analysis.update(
+                {
+                    "similar_jobs_analyzed": len(similar_jobs),
+                    "average_similarity_score": avg_similarity,
+                }
+            )
 
             return parsed_analysis
 
@@ -257,7 +272,7 @@ class IntelligentMatchingService:
                 "market_positioning": f"Analysis error: {str(e)}",
                 "salary_range_insight": None,
                 "skill_trend_analysis": ["Analysis unavailable due to error"],
-                "demand_assessment": "Unable to assess"
+                "demand_assessment": "Unable to assess",
             }
 
     def _build_market_context(self, similar_jobs: List[Dict[str, Any]]) -> str:
@@ -282,8 +297,11 @@ class IntelligentMatchingService:
         default_result = {
             "market_positioning": "Standard market position",
             "salary_range_insight": "Competitive salary range expected",
-            "skill_trend_analysis": ["Technology skills in demand", "Communication skills valued"],
-            "demand_assessment": "Moderate market demand"
+            "skill_trend_analysis": [
+                "Technology skills in demand",
+                "Communication skills valued",
+            ],
+            "demand_assessment": "Moderate market demand",
         }
 
         if not analysis_text:
@@ -291,24 +309,27 @@ class IntelligentMatchingService:
 
         try:
             # Extract key insights from analysis text
-            lines = analysis_text.split('\n')
+            lines = analysis_text.split("\n")
 
             for line in lines:
                 line = line.strip().lower()
-                if 'premium' in line or 'high-end' in line:
+                if "premium" in line or "high-end" in line:
                     default_result["market_positioning"] = "Premium market position"
-                elif 'entry' in line or 'junior' in line:
+                elif "entry" in line or "junior" in line:
                     default_result["market_positioning"] = "Entry-level market position"
 
-                if 'high demand' in line or 'strong demand' in line:
+                if "high demand" in line or "strong demand" in line:
                     default_result["demand_assessment"] = "High market demand"
-                elif 'low demand' in line or 'limited demand' in line:
+                elif "low demand" in line or "limited demand" in line:
                     default_result["demand_assessment"] = "Low market demand"
 
             # Extract skill trends - look for bullet points or numbered items
             skill_trends = []
             for line in lines:
-                if any(indicator in line.lower() for indicator in ['skill', 'technology', 'framework', 'language']):
+                if any(
+                    indicator in line.lower()
+                    for indicator in ["skill", "technology", "framework", "language"]
+                ):
                     if len(line.strip()) > 10 and len(line.strip()) < 100:
                         skill_trends.append(line.strip())
 
@@ -325,7 +346,7 @@ class IntelligentMatchingService:
         self,
         target_job: Dict[str, Any],
         user_resume: Dict[str, Any],
-        market_intelligence: Dict[str, Any]
+        market_intelligence: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
         Generate strategic recommendations based on job and market analysis.
@@ -365,8 +386,7 @@ class IntelligentMatchingService:
             """
 
             strategic_analysis = self.llm_service.generate_feedback(
-                resume_text=strategic_prompt,
-                feedback_type="general"
+                resume_text=strategic_prompt, feedback_type="general"
             )
 
             return self._parse_strategic_recommendations(
@@ -377,10 +397,14 @@ class IntelligentMatchingService:
             logger.error(f"Error generating strategic analysis: {str(e)}")
             return {
                 "strategic_recommendations": [
-                    {"category": "General", "recommendation": "Review job requirements carefully", "priority": "Medium"}
+                    {
+                        "category": "General",
+                        "recommendation": "Review job requirements carefully",
+                        "priority": "Medium",
+                    }
                 ],
                 "competitive_advantages": ["Review your unique strengths"],
-                "improvement_suggestions": ["Continue professional development"]
+                "improvement_suggestions": ["Continue professional development"],
             }
 
     def _parse_strategic_recommendations(self, analysis_text: str) -> Dict[str, Any]:
@@ -388,54 +412,70 @@ class IntelligentMatchingService:
         default_result = {
             "strategic_recommendations": [],
             "competitive_advantages": [],
-            "improvement_suggestions": []
+            "improvement_suggestions": [],
         }
 
         if not analysis_text:
             return default_result
 
         try:
-            lines = [line.strip() for line in analysis_text.split('\n') if line.strip()]
+            lines = [line.strip() for line in analysis_text.split("\n") if line.strip()]
 
             current_section = None
             for line in lines:
                 # Identify sections
-                if any(keyword in line.lower() for keyword in ['position', 'selling', 'advantage']):
+                if any(
+                    keyword in line.lower()
+                    for keyword in ["position", "selling", "advantage"]
+                ):
                     current_section = "recommendations"
-                elif any(keyword in line.lower() for keyword in ['competitive', 'strength']):
+                elif any(
+                    keyword in line.lower() for keyword in ["competitive", "strength"]
+                ):
                     current_section = "advantages"
-                elif any(keyword in line.lower() for keyword in ['improvement', 'develop', 'concern']):
+                elif any(
+                    keyword in line.lower()
+                    for keyword in ["improvement", "develop", "concern"]
+                ):
                     current_section = "improvements"
 
                 # Extract actionable items
-                if line.startswith(('-', '•', '*')) or any(char.isdigit() and '.' in line for char in line[:3]):
-                    clean_line = line.lstrip('-•*0123456789. ').strip()
+                if line.startswith(("-", "•", "*")) or any(
+                    char.isdigit() and "." in line for char in line[:3]
+                ):
+                    clean_line = line.lstrip("-•*0123456789. ").strip()
                     if len(clean_line) > 10:  # Meaningful content
                         if current_section == "recommendations":
-                            default_result["strategic_recommendations"].append({
-                                "category": "Strategic",
-                                "recommendation": clean_line,
-                                "priority": "High"
-                            })
+                            default_result["strategic_recommendations"].append(
+                                {
+                                    "category": "Strategic",
+                                    "recommendation": clean_line,
+                                    "priority": "High",
+                                }
+                            )
                         elif current_section == "advantages":
                             default_result["competitive_advantages"].append(clean_line)
                         elif current_section == "improvements":
                             default_result["improvement_suggestions"].append(clean_line)
                         else:
                             # General recommendation
-                            default_result["strategic_recommendations"].append({
-                                "category": "General",
-                                "recommendation": clean_line,
-                                "priority": "Medium"
-                            })
+                            default_result["strategic_recommendations"].append(
+                                {
+                                    "category": "General",
+                                    "recommendation": clean_line,
+                                    "priority": "Medium",
+                                }
+                            )
 
             # Ensure we have at least some content
             if not default_result["strategic_recommendations"]:
-                default_result["strategic_recommendations"].append({
-                    "category": "General",
-                    "recommendation": "Tailor your application to highlight relevant experience",
-                    "priority": "High"
-                })
+                default_result["strategic_recommendations"].append(
+                    {
+                        "category": "General",
+                        "recommendation": "Tailor your application to highlight relevant experience",
+                        "priority": "High",
+                    }
+                )
 
             return default_result
 
@@ -444,15 +484,15 @@ class IntelligentMatchingService:
             return default_result
 
     def _calculate_basic_match_score(
-        self,
-        user_resume: Dict[str, Any],
-        target_job: Dict[str, Any]
+        self, user_resume: Dict[str, Any], target_job: Dict[str, Any]
     ) -> Optional[float]:
         """Calculate basic match score using existing similarity service."""
         try:
             resume_embedding = user_resume.get("embedding")
             if not resume_embedding:
-                logger.warning("Resume embedding not available for match score calculation")
+                logger.warning(
+                    "Resume embedding not available for match score calculation"
+                )
                 return None
 
             # Generate job embedding
@@ -476,19 +516,26 @@ class IntelligentMatchingService:
         target_job: Dict[str, Any],
         basic_match_score: Optional[float],
         market_intelligence: Dict[str, Any],
-        strategic_analysis: Dict[str, Any]
+        strategic_analysis: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Compile comprehensive analysis result."""
         return {
             "basic_match_score": basic_match_score,
             "market_intelligence": market_intelligence,
-            "strategic_recommendations": strategic_analysis.get("strategic_recommendations", []),
-            "competitive_advantages": strategic_analysis.get("competitive_advantages", []),
-            "improvement_suggestions": strategic_analysis.get("improvement_suggestions", []),
+            "strategic_recommendations": strategic_analysis.get(
+                "strategic_recommendations", []
+            ),
+            "competitive_advantages": strategic_analysis.get(
+                "competitive_advantages", []
+            ),
+            "improvement_suggestions": strategic_analysis.get(
+                "improvement_suggestions", []
+            ),
             "job_title": target_job.get("title"),
             "company_name": target_job.get("company"),
-            "analysis_summary": f"Analyzed {market_intelligence.get('similar_jobs_analyzed', 0)} similar positions"
+            "analysis_summary": f"Analyzed {market_intelligence.get('similar_jobs_analyzed', 0)} similar positions",
         }
+
 
 # Global instance
 intelligent_matching_service = IntelligentMatchingService()
