@@ -33,10 +33,8 @@ class IntelligentMatchingService:
     """
 
     def __init__(self):
-        # Reuse existing services - hybrid approach
-        self.embedding_service = embedding_service
-        self.llm_service = llm_service
-        self.similarity_service = similarity_service
+        # Services will be used directly from module level for better testability
+        pass
 
     def analyze_job_with_market_context(
         self, job_id: UUID, user_id: UUID, db: Session, context_depth: int = 5
@@ -143,7 +141,7 @@ class IntelligentMatchingService:
         """
         try:
             # Generate embedding using existing service
-            query_embedding = self.embedding_service.generate_embedding(job_description)
+            query_embedding = embedding_service.generate_embedding(job_description)
 
             # Use existing pgVector setup for similarity search
             query = text(
@@ -245,7 +243,7 @@ class IntelligentMatchingService:
             """
 
             # Use existing LLM service for analysis
-            analysis_result = self.llm_service.generate_feedback(
+            analysis_result = llm_service.generate_feedback(
                 resume_text=market_prompt, feedback_type="general"
             )
 
@@ -385,7 +383,7 @@ class IntelligentMatchingService:
             Be specific and actionable based on the market context.
             """
 
-            strategic_analysis = self.llm_service.generate_feedback(
+            strategic_analysis = llm_service.generate_feedback(
                 resume_text=strategic_prompt, feedback_type="general"
             )
 
@@ -423,28 +421,38 @@ class IntelligentMatchingService:
 
             current_section = None
             for line in lines:
-                # Identify sections
-                if any(
-                    keyword in line.lower()
-                    for keyword in ["position", "selling", "advantage"]
-                ):
-                    current_section = "recommendations"
-                elif any(
-                    keyword in line.lower() for keyword in ["competitive", "strength"]
-                ):
-                    current_section = "advantages"
-                elif any(
-                    keyword in line.lower()
-                    for keyword in ["improvement", "develop", "concern"]
-                ):
-                    current_section = "improvements"
+                # Identify sections - be more specific about section headers
+                line_lower = line.lower()
 
-                # Extract actionable items
+                # Check for section headers first (usually have colons)
+                if ":" in line and not line.startswith(
+                    ("-", "•", "*", "1.", "2.", "3.")
+                ):
+                    if any(
+                        keyword in line_lower
+                        for keyword in ["strategic", "position", "recommendation"]
+                    ):
+                        current_section = "recommendations"
+                        continue
+                    elif any(
+                        keyword in line_lower
+                        for keyword in ["competitive", "advantage", "strength"]
+                    ):
+                        current_section = "advantages"
+                        continue
+                    elif any(
+                        keyword in line_lower
+                        for keyword in ["improvement", "area", "develop", "concern"]
+                    ):
+                        current_section = "improvements"
+                        continue
+
+                # Extract actionable items (numbered or bulleted lists)
                 if line.startswith(("-", "•", "*")) or any(
                     char.isdigit() and "." in line for char in line[:3]
                 ):
                     clean_line = line.lstrip("-•*0123456789. ").strip()
-                    if len(clean_line) > 10:  # Meaningful content
+                    if len(clean_line) > 5:  # Meaningful content (reduced threshold)
                         if current_section == "recommendations":
                             default_result["strategic_recommendations"].append(
                                 {
@@ -496,12 +504,12 @@ class IntelligentMatchingService:
                 return None
 
             # Generate job embedding
-            job_embedding = self.embedding_service.generate_embedding(
+            job_embedding = embedding_service.generate_embedding(
                 target_job.get("description", "")
             )
 
             # Calculate similarity using existing service
-            similarity_score = self.similarity_service.calculate_similarity_score(
+            similarity_score = similarity_service.calculate_similarity_score(
                 resume_embedding, job_embedding
             )
 

@@ -392,7 +392,7 @@ class TestIntelligentMatchingAPI:
         try:
             # Make API call
             response = client.get(
-                f"/jobs/{self.mock_job_id}/intelligent-analysis?include_market_context=true&context_depth=5"
+                f"/api/v1/jobs/{self.mock_job_id}/intelligent-analysis?include_market_context=true&context_depth=5"
             )
 
             # Verify response
@@ -445,7 +445,7 @@ class TestIntelligentMatchingAPI:
         try:
             # Make API call
             response = client.get(
-                f"/jobs/{self.mock_job_id}/market-intelligence?context_depth=3"
+                f"/api/v1/jobs/{self.mock_job_id}/market-intelligence?context_depth=3"
             )
 
             # Verify response
@@ -467,7 +467,7 @@ class TestIntelligentMatchingAPI:
 
         client = TestClient(app)
 
-        response = client.get("/health/intelligent-matching")
+        response = client.get("/api/v1/health/intelligent-matching")
 
         assert response.status_code == 200
         data = response.json()
@@ -507,7 +507,9 @@ class TestIntelligentMatchingAPI:
 
         try:
             # Make API call
-            response = client.get(f"/jobs/{self.mock_job_id}/intelligent-analysis")
+            response = client.get(
+                f"/api/v1/jobs/{self.mock_job_id}/intelligent-analysis"
+            )
 
             # Verify error response
             assert response.status_code == 404
@@ -536,14 +538,14 @@ class TestIntelligentMatchingAPI:
         try:
             # Test invalid context_depth (too high)
             response = client.get(
-                f"/jobs/{self.mock_job_id}/intelligent-analysis?context_depth=15"
+                f"/api/v1/jobs/{self.mock_job_id}/intelligent-analysis?context_depth=15"
             )
 
             assert response.status_code == 422  # Validation error
 
             # Test invalid context_depth (too low)
             response = client.get(
-                f"/jobs/{self.mock_job_id}/intelligent-analysis?context_depth=0"
+                f"/api/v1/jobs/{self.mock_job_id}/intelligent-analysis?context_depth=0"
             )
 
             assert response.status_code == 422  # Validation error
