@@ -12,6 +12,7 @@ from app.api import (
     routes_jobs,
     routes_resumes,
     routes_intelligent_matching,
+    routes_career_strategy,
 )
 from app.core.config import settings
 from app.db.session import SessionLocal
@@ -75,6 +76,13 @@ app.include_router(
     routes_intelligent_matching.router,
     prefix=f"{settings.API_V1_STR}",
     tags=["intelligent-matching"],
+)
+
+# Career strategy routes (LangChain agent-based career planning)
+app.include_router(
+    routes_career_strategy.router,
+    prefix=f"{settings.API_V1_STR}",
+    tags=["career-strategy"],
 )
 
 
