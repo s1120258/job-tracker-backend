@@ -53,11 +53,11 @@ class LLMServiceError(Exception):
 
 
 class LLMService:
-    """Service for generating AI feedback using OpenAI GPT-3.5-turbo."""
+    """Service for generating AI feedback using OpenAI GPT-4o mini."""
 
     def __init__(self):
         self._client = None
-        self.model = "gpt-3.5-turbo"  # Cheaper model for cost optimization
+        self.model = "gpt-4o-mini"  # High-quality model with better reasoning
 
     @property
     def client(self):

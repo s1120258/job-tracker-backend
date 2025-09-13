@@ -383,7 +383,7 @@ class CareerStrategyAgent:
         """Initialize the career strategy agent."""
         self.llm = ChatOpenAI(
             api_key=settings.OPENAI_API_KEY,
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             temperature=0.7,
             max_tokens=2000,
         )
