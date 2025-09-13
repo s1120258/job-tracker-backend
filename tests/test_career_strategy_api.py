@@ -413,7 +413,7 @@ class TestCareerStrategyAPI:
     def test_get_agent_status_success(self, mock_agent):
         """Test successful agent status check."""
         # Mock agent properties
-        mock_agent.llm.model_name = "gpt-3.5-turbo"
+        mock_agent.llm.model_name = "gpt-4o-mini"
 
         response = self.client.get("/api/v1/career/agent-status")
 

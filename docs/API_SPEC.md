@@ -25,7 +25,7 @@ This document describes the comprehensive API endpoints for the ResMatch backend
 | GET    | `/jobs/{id}`         | Get details of a specific job                                      | ✅   | Includes ML-generated insights             |
 | PUT    | `/jobs/{id}`         | Update job status or notes                                         | ✅   | -                                          |
 | DELETE | `/jobs/{id}`         | Delete a saved job                                                 | ✅   | -                                          |
-| GET    | `/jobs/{id}/summary` | Generate concise summary from saved job description                | ✅   | **GPT-3.5-turbo** with HTML cleaning       |
+| GET    | `/jobs/{id}/summary` | Generate concise summary from saved job description                | ✅   | **GPT-4o mini** with HTML cleaning         |
 | POST   | `/jobs/summary`      | Generate summary from external job description (HTML supported)    | ✅   | **LLM-powered** summarization with caching |
 | POST   | `/jobs/{id}/apply`   | Mark a job as applied                                              | ✅   | -                                          |
 
@@ -66,7 +66,7 @@ This document describes the comprehensive API endpoints for the ResMatch backend
 
 | Method | Path                        | Description                                      | Auth | AI Features                             |
 | ------ | --------------------------- | ------------------------------------------------ | ---- | --------------------------------------- |
-| GET    | `/resume/feedback`          | Get general LLM feedback for current resume      | ✅   | **GPT-3.5-turbo** professional analysis |
+| GET    | `/resume/feedback`          | Get general LLM feedback for current resume      | ✅   | **GPT-4o mini** professional analysis   |
 | GET    | `/resume/feedback/{job_id}` | Get job-specific LLM feedback for current resume | ✅   | **Context-aware** tailoring suggestions |
 
 **🤖 AI Features:**
@@ -95,7 +95,7 @@ This document describes the comprehensive API endpoints for the ResMatch backend
 
 #### Skill Extraction & Normalization
 
-- **LLM-Powered Extraction**: GPT-3.5-turbo with structured JSON output
+- **LLM-Powered Extraction**: GPT-4o mini with structured JSON output
 - **Skill Normalization**: "JS" → "JavaScript" with confidence scores
 - **Multi-Category Classification**: Programming languages, frameworks, tools, domains
 - **Experience Estimation**: Years of experience inferred from context
@@ -178,7 +178,7 @@ graph LR
 | -------------------- | ----------- | ------------------- | ------------------ |
 | Embedding Generation | ~50ms       | OpenAI Ada-002      | Batch processing   |
 | Vector Similarity    | ~1ms        | PostgreSQL pgVector | Indexed search     |
-| LLM Text Generation  | 2-5s        | GPT-3.5-turbo       | Token optimization |
+| LLM Text Generation  | 2-5s        | GPT-4o mini         | Token optimization |
 | Database Queries     | 5-20ms      | PostgreSQL          | Connection pooling |
 
 ### Error Handling

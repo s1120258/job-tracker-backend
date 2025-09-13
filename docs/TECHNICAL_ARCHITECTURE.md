@@ -27,7 +27,7 @@ graph TB
     end
 
     subgraph "AI/ML Services"
-        LLM[OpenAI GPT-3.5-turbo]
+        LLM[OpenAI GPT-4o mini]
         EMB[OpenAI text-embedding-ada-002]
         SKILL[Skill Analysis Engine]
         SIM[Vector Similarity Service]
@@ -99,7 +99,7 @@ graph TB
 
 | **Layer**           | **Technologies**                             | **Purpose**                         |
 | ------------------- | -------------------------------------------- | ----------------------------------- |
-| **AI/ML Core**      | OpenAI GPT-3.5-turbo, text-embedding-ada-002 | LLM reasoning, vector embeddings    |
+| **AI/ML Core**      | OpenAI GPT-4o mini, text-embedding-ada-002   | LLM reasoning, vector embeddings    |
 | **Vector Search**   | Supabase PostgreSQL + pgVector extension     | High-performance similarity search  |
 | **Backend API**     | FastAPI, SQLAlchemy, Alembic                 | REST API, ORM, database migrations  |
 | **Frontend**        | React, Vite, TypeScript, Chakra UI           | Modern, responsive user interface   |
@@ -199,7 +199,7 @@ class SimilarityService:
 ```python
 class LLMService:
     def __init__(self):
-        self.model = "gpt-3.5-turbo"  # Cost-optimized choice
+        self.model = "gpt-4o-mini"  # High-quality model with cost efficiency
 
     # Resume feedback generation
     def generate_feedback(self, resume_text: str, job_description: str = None):
@@ -246,7 +246,7 @@ class LLMService:
 
 #### **Cost Optimization Strategies**
 
-- **Model Selection**: GPT-3.5-turbo for cost efficiency (~10x cheaper than GPT-4)
+- **Model Selection**: GPT-4o mini for optimal balance of quality and cost efficiency
 - **Token Management**: Dynamic `max_tokens` calculation based on input length
 - **Caching**: SHA256-hashed cache keys for repeated requests
 - **Request Batching**: Process multiple skills in single API calls

@@ -21,7 +21,7 @@ class SkillAnalysisService:
 
     def __init__(self):
         self._client = None
-        self.model = "gpt-3.5-turbo"
+        self.model = "gpt-4o-mini"
 
     @property
     def client(self):

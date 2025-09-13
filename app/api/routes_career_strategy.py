@@ -427,7 +427,7 @@ def get_agent_status() -> Dict[str, Any]:
             },
             "llm_status": llm_status,
             "model_info": {
-                "model": "gpt-3.5-turbo",
+                "model": "gpt-4o-mini",
                 "temperature": 0.7,
                 "max_tokens": 2000,
             },

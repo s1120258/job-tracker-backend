@@ -168,7 +168,7 @@ class CareerStrategyAgent:
     def __init__(self):
         self.llm = ChatOpenAI(
             openai_api_key=settings.OPENAI_API_KEY,
-            model_name="gpt-3.5-turbo",
+            model_name="gpt-4o-mini",
             temperature=0.2  # Low temperature for consistent planning
         )
 

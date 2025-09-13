@@ -370,7 +370,7 @@ class IntelligentMatchingService:
             analysis_result = llm_service.generate_intelligent_analysis(
                 prompt=market_prompt,
                 analysis_type="market_intelligence",
-                max_tokens=1500
+                max_tokens=1500,
             )
 
             # Parse and structure the analysis
@@ -433,22 +433,35 @@ class IntelligentMatchingService:
                 line_lower = line.lower()
 
                 # Detect sections
-                if any(keyword in line_lower for keyword in ["market positioning", "1. market"]):
+                if any(
+                    keyword in line_lower
+                    for keyword in ["market positioning", "1. market"]
+                ):
                     current_section = "positioning"
                     continue
-                elif any(keyword in line_lower for keyword in ["salary insights", "2. salary"]):
+                elif any(
+                    keyword in line_lower
+                    for keyword in ["salary insights", "2. salary"]
+                ):
                     current_section = "salary"
                     continue
-                elif any(keyword in line_lower for keyword in ["skill trends", "3. skill"]):
+                elif any(
+                    keyword in line_lower for keyword in ["skill trends", "3. skill"]
+                ):
                     current_section = "skills"
                     continue
-                elif any(keyword in line_lower for keyword in ["competitive landscape", "4. competitive"]):
+                elif any(
+                    keyword in line_lower
+                    for keyword in ["competitive landscape", "4. competitive"]
+                ):
                     current_section = "demand"
                     continue
 
                 # Extract content based on section
                 if current_section == "positioning":
-                    result["market_positioning"] = self._extract_market_positioning(line)
+                    result["market_positioning"] = self._extract_market_positioning(
+                        line
+                    )
                 elif current_section == "salary":
                     salary_insight = self._extract_salary_insights(line)
                     if salary_insight:
@@ -464,7 +477,9 @@ class IntelligentMatchingService:
 
             # Ensure we have meaningful skill trends
             if not result["skill_trend_analysis"]:
-                result["skill_trend_analysis"] = self._extract_skills_fallback(analysis_text)
+                result["skill_trend_analysis"] = self._extract_skills_fallback(
+                    analysis_text
+                )
 
             return result
 
@@ -476,15 +491,29 @@ class IntelligentMatchingService:
         """Extract market positioning from analysis line."""
         line_lower = line.lower()
 
-        if any(keyword in line_lower for keyword in ["senior", "principal", "staff", "lead", "expert"]):
+        if any(
+            keyword in line_lower
+            for keyword in ["senior", "principal", "staff", "lead", "expert"]
+        ):
             return "Senior-level market position"
-        elif any(keyword in line_lower for keyword in ["entry", "junior", "associate", "beginning"]):
+        elif any(
+            keyword in line_lower
+            for keyword in ["entry", "junior", "associate", "beginning"]
+        ):
             return "Entry-level market position"
-        elif any(keyword in line_lower for keyword in ["executive", "director", "vp", "head", "chief"]):
+        elif any(
+            keyword in line_lower
+            for keyword in ["executive", "director", "vp", "head", "chief"]
+        ):
             return "Executive-level market position"
-        elif any(keyword in line_lower for keyword in ["premium", "high-end", "top-tier"]):
+        elif any(
+            keyword in line_lower for keyword in ["premium", "high-end", "top-tier"]
+        ):
             return "Premium market position"
-        elif any(keyword in line_lower for keyword in ["mid-level", "intermediate", "experienced"]):
+        elif any(
+            keyword in line_lower
+            for keyword in ["mid-level", "intermediate", "experienced"]
+        ):
             return "Mid-level market position"
 
         return "Standard market position"
@@ -494,7 +523,9 @@ class IntelligentMatchingService:
         line_lower = line.lower()
 
         # Look for salary ranges or compensation mentions
-        if any(keyword in line_lower for keyword in ["$", "salary", "compensation", "pay"]):
+        if any(
+            keyword in line_lower for keyword in ["$", "salary", "compensation", "pay"]
+        ):
             if len(line) > 20 and len(line) < 150:  # Reasonable length
                 return line.strip()
 
@@ -512,11 +543,19 @@ class IntelligentMatchingService:
         """Extract demand assessment from analysis line."""
         line_lower = line.lower()
 
-        if any(keyword in line_lower for keyword in ["high demand", "strong demand", "very competitive"]):
+        if any(
+            keyword in line_lower
+            for keyword in ["high demand", "strong demand", "very competitive"]
+        ):
             return "High market demand"
-        elif any(keyword in line_lower for keyword in ["low demand", "limited demand", "less competitive"]):
+        elif any(
+            keyword in line_lower
+            for keyword in ["low demand", "limited demand", "less competitive"]
+        ):
             return "Low market demand"
-        elif any(keyword in line_lower for keyword in ["moderate", "medium", "average"]):
+        elif any(
+            keyword in line_lower for keyword in ["moderate", "medium", "average"]
+        ):
             return "Moderate market demand"
 
         return None
@@ -525,9 +564,22 @@ class IntelligentMatchingService:
         """Fallback skill extraction from full analysis text."""
         skills = []
         common_tech_skills = [
-            "python", "javascript", "react", "aws", "docker", "kubernetes",
-            "machine learning", "ai", "data science", "cloud", "devops",
-            "typescript", "node.js", "postgresql", "mongodb", "redis"
+            "python",
+            "javascript",
+            "react",
+            "aws",
+            "docker",
+            "kubernetes",
+            "machine learning",
+            "ai",
+            "data science",
+            "cloud",
+            "devops",
+            "typescript",
+            "node.js",
+            "postgresql",
+            "mongodb",
+            "redis",
         ]
 
         text_lower = analysis_text.lower()
@@ -538,7 +590,10 @@ class IntelligentMatchingService:
                     break
 
         if not skills:
-            skills = ["Technical skills alignment important", "Communication skills valued"]
+            skills = [
+                "Technical skills alignment important",
+                "Communication skills valued",
+            ]
 
         return skills
 
@@ -550,7 +605,7 @@ class IntelligentMatchingService:
             "skill_trend_analysis": [
                 "Technical expertise in core technologies",
                 "Problem-solving and analytical skills",
-                "Communication and collaboration abilities"
+                "Communication and collaboration abilities",
             ],
             "demand_assessment": "Moderate market demand",
         }
@@ -630,7 +685,7 @@ class IntelligentMatchingService:
             strategic_analysis = llm_service.generate_intelligent_analysis(
                 prompt=strategic_prompt,
                 analysis_type="strategic_recommendations",
-                max_tokens=2000
+                max_tokens=2000,
             )
 
             return self._parse_strategic_recommendations(strategic_analysis)
@@ -668,16 +723,28 @@ class IntelligentMatchingService:
                 line_lower = line.lower()
 
                 # Detect section headers
-                if any(keyword in line_lower for keyword in ["positioning strategy", "1. positioning"]):
+                if any(
+                    keyword in line_lower
+                    for keyword in ["positioning strategy", "1. positioning"]
+                ):
                     current_section = "positioning"
                     continue
-                elif any(keyword in line_lower for keyword in ["competitive advantages", "2. competitive"]):
+                elif any(
+                    keyword in line_lower
+                    for keyword in ["competitive advantages", "2. competitive"]
+                ):
                     current_section = "advantages"
                     continue
-                elif any(keyword in line_lower for keyword in ["improvement areas", "3. improvement"]):
+                elif any(
+                    keyword in line_lower
+                    for keyword in ["improvement areas", "3. improvement"]
+                ):
                     current_section = "improvements"
                     continue
-                elif any(keyword in line_lower for keyword in ["application tactics", "4. application"]):
+                elif any(
+                    keyword in line_lower
+                    for keyword in ["application tactics", "4. application"]
+                ):
                     current_section = "tactics"
                     continue
 
@@ -687,21 +754,25 @@ class IntelligentMatchingService:
 
                     if len(clean_line) > 10:  # Meaningful content
                         if current_section == "positioning":
-                            result["strategic_recommendations"].append({
-                                "category": "Positioning",
-                                "recommendation": clean_line,
-                                "priority": "High",
-                            })
+                            result["strategic_recommendations"].append(
+                                {
+                                    "category": "Positioning",
+                                    "recommendation": clean_line,
+                                    "priority": "High",
+                                }
+                            )
                         elif current_section == "advantages":
                             result["competitive_advantages"].append(clean_line)
                         elif current_section == "improvements":
                             result["improvement_suggestions"].append(clean_line)
                         elif current_section == "tactics":
-                            result["strategic_recommendations"].append({
-                                "category": "Application Tactics",
-                                "recommendation": clean_line,
-                                "priority": "Medium",
-                            })
+                            result["strategic_recommendations"].append(
+                                {
+                                    "category": "Application Tactics",
+                                    "recommendation": clean_line,
+                                    "priority": "Medium",
+                                }
+                            )
                         else:
                             # If no section detected, try to categorize by content
                             category = self._categorize_recommendation(clean_line)
@@ -710,18 +781,22 @@ class IntelligentMatchingService:
                             elif category == "improvement":
                                 result["improvement_suggestions"].append(clean_line)
                             else:
-                                result["strategic_recommendations"].append({
-                                    "category": "General",
-                                    "recommendation": clean_line,
-                                    "priority": "Medium",
-                                })
+                                result["strategic_recommendations"].append(
+                                    {
+                                        "category": "General",
+                                        "recommendation": clean_line,
+                                        "priority": "Medium",
+                                    }
+                                )
 
             # Ensure minimum quality content
-            if not any([
-                result["strategic_recommendations"],
-                result["competitive_advantages"],
-                result["improvement_suggestions"]
-            ]):
+            if not any(
+                [
+                    result["strategic_recommendations"],
+                    result["competitive_advantages"],
+                    result["improvement_suggestions"],
+                ]
+            ):
                 return self._get_fallback_strategic_analysis()
 
             return result
@@ -733,9 +808,9 @@ class IntelligentMatchingService:
     def _is_actionable_item(self, line: str) -> bool:
         """Check if line contains an actionable recommendation."""
         return (
-            line.startswith(("-", "•", "*")) or
-            any(char.isdigit() and "." in line for char in line[:3]) or
-            line.startswith(("→", ">>", "✓"))
+            line.startswith(("-", "•", "*"))
+            or any(char.isdigit() and "." in line for char in line[:3])
+            or line.startswith(("→", ">>", "✓"))
         )
 
     def _clean_recommendation_text(self, line: str) -> str:
@@ -750,8 +825,23 @@ class IntelligentMatchingService:
         """Categorize recommendation based on content keywords."""
         text_lower = text.lower()
 
-        advantage_keywords = ["strength", "advantage", "unique", "standout", "excel", "superior"]
-        improvement_keywords = ["improve", "develop", "learn", "gap", "weak", "missing", "need"]
+        advantage_keywords = [
+            "strength",
+            "advantage",
+            "unique",
+            "standout",
+            "excel",
+            "superior",
+        ]
+        improvement_keywords = [
+            "improve",
+            "develop",
+            "learn",
+            "gap",
+            "weak",
+            "missing",
+            "need",
+        ]
 
         if any(keyword in text_lower for keyword in advantage_keywords):
             return "advantage"
@@ -773,15 +863,15 @@ class IntelligentMatchingService:
                     "category": "Application Tactics",
                     "recommendation": "Customize resume keywords to match job requirements exactly",
                     "priority": "High",
-                }
+                },
             ],
             "competitive_advantages": [
                 "Technical expertise in specified technologies",
-                "Problem-solving and analytical skills"
+                "Problem-solving and analytical skills",
             ],
             "improvement_suggestions": [
                 "Research company culture and values for targeted application",
-                "Prepare specific examples demonstrating required skills"
+                "Prepare specific examples demonstrating required skills",
             ],
         }
 

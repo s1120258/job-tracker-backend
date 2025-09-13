@@ -165,11 +165,15 @@ class LLMService:
 
             content = response.choices[0].message.content.strip()
 
-            logger.info(f"Successfully generated {analysis_type} analysis of {len(content)} characters")
+            logger.info(
+                f"Successfully generated {analysis_type} analysis of {len(content)} characters"
+            )
             return content
 
         except openai.AuthenticationError as e:
-            logger.error(f"OpenAI authentication error in intelligent analysis: {str(e)}")
+            logger.error(
+                f"OpenAI authentication error in intelligent analysis: {str(e)}"
+            )
             raise LLMServiceError(f"OpenAI authentication failed: {str(e)}")
         except openai.RateLimitError as e:
             logger.error(f"OpenAI rate limit error in intelligent analysis: {str(e)}")
