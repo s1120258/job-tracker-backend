@@ -40,7 +40,7 @@ class TestJobAnalysisTool:
             Mock(title="DevOps Engineer", description="AWS, Docker, Kubernetes"),
         ]
 
-    @patch("app.services.career_strategy_agent.get_jobs_by_user")
+    @patch("app.services.career_strategy_agent.get_jobs")
     @patch("app.services.career_strategy_agent.llm_service")
     def test_job_analysis_tool_success(self, mock_llm_service, mock_get_jobs):
         """Test successful job market analysis."""
@@ -75,10 +75,10 @@ class TestJobAnalysisTool:
         assert "Python" in parsed_result["skill_requirements"]
 
         # Verify service calls
-        mock_get_jobs.assert_called_once_with(self.mock_db, self.mock_user_id, limit=50)
+        mock_get_jobs.assert_called_once_with(self.mock_db, self.mock_user_id)
         mock_llm_service.generate_feedback.assert_called_once()
 
-    @patch("app.services.career_strategy_agent.get_jobs_by_user")
+    @patch("app.services.career_strategy_agent.get_jobs")
     def test_job_analysis_no_jobs_found(self, mock_get_jobs):
         """Test job analysis when no jobs are found."""
         # Setup: no jobs found
@@ -503,7 +503,7 @@ class TestCareerStrategyIntegration:
         self.mock_user_id = uuid4()
         self.mock_db = Mock()
 
-    @patch("app.services.career_strategy_agent.get_jobs_by_user")
+    @patch("app.services.career_strategy_agent.get_jobs")
     @patch("app.services.career_strategy_agent.get_resume_by_user")
     @patch("app.services.career_strategy_agent.llm_service")
     def test_tool_integration(self, mock_llm_service, mock_get_resume, mock_get_jobs):

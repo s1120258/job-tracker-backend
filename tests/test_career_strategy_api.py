@@ -254,7 +254,7 @@ class TestCareerStrategyAPI:
         finally:
             self._cleanup_overrides()
 
-    @patch("app.api.routes_career_strategy.SkillGapAnalysisTool")
+    @patch("app.services.career_strategy_agent.SkillGapAnalysisTool")
     def test_analyze_skill_gaps_success(self, mock_tool_class):
         """Test successful skill gap analysis API call."""
         # Setup mocks
@@ -339,7 +339,7 @@ class TestCareerStrategyAPI:
         finally:
             self._cleanup_overrides()
 
-    @patch("app.api.routes_career_strategy.JobAnalysisTool")
+    @patch("app.services.career_strategy_agent.JobAnalysisTool")
     def test_get_market_insights_success(self, mock_tool_class):
         """Test successful market insights API call."""
         # Setup mocks
@@ -462,11 +462,9 @@ class TestCareerStrategyAPI:
 
     def test_get_agent_status_error(self):
         """Test agent status check when error occurs."""
-        # Mock agent to raise exception
-        with patch(
-            "app.api.routes_career_strategy.career_strategy_agent"
-        ) as mock_agent:
-            mock_agent.llm = None  # This will cause an error
+        # Mock datetime to raise exception in the status data creation
+        with patch("app.api.routes_career_strategy.datetime") as mock_datetime:
+            mock_datetime.now.side_effect = Exception("Datetime access failed")
 
             response = self.client.get("/api/v1/career/agent-status")
 

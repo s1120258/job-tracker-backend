@@ -225,6 +225,7 @@ def analyze_skill_gaps(
             )
 
         # Create a simplified agent execution focused on skill analysis
+        import json
         from app.services.career_strategy_agent import SkillGapAnalysisTool
 
         skill_tool = SkillGapAnalysisTool(db)
@@ -241,7 +242,6 @@ def analyze_skill_gaps(
         tool_result = skill_tool._run(json.dumps(tool_input))
 
         # Parse tool result
-        import json
 
         try:
             skill_analysis = json.loads(tool_result)
@@ -326,6 +326,7 @@ def get_market_insights(
             )
 
         # Create job analysis tool
+        import json
         from app.services.career_strategy_agent import JobAnalysisTool
 
         job_tool = JobAnalysisTool(db)
@@ -342,7 +343,6 @@ def get_market_insights(
         tool_result = job_tool._run(json.dumps(tool_input))
 
         # Parse tool result
-        import json
 
         try:
             market_analysis = json.loads(tool_result)
