@@ -5,7 +5,7 @@ Provides multi-step autonomous career planning and analysis using agent patterns
 
 import json
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 from uuid import UUID
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
@@ -16,12 +16,12 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from langchain.tools import BaseTool, tool
 from langchain.memory import ConversationBufferMemory
-from langchain.callbacks import get_openai_callback
+from langchain_community.callbacks.manager import get_openai_callback
 
 from app.services.embedding_service import embedding_service
 from app.services.llm_service import llm_service
 from app.services.similarity_service import similarity_service
-from app.crud.job import get_jobs_by_user
+from app.crud.job import get_jobs
 from app.crud.resume import get_resume_by_user
 from app.core.config import settings
 
@@ -37,16 +37,16 @@ class CareerStrategyAgentError(Exception):
 class JobAnalysisTool(BaseTool):
     """Tool for analyzing job market trends and opportunities."""
 
-    name = "job_analysis_tool"
-    description = """
+    name: str = "job_analysis_tool"
+    description: str = """
     Analyze job market trends and opportunities for career planning.
     Input should be a JSON string with keys: user_id, target_roles, location_preference.
     Returns market analysis including demand trends, salary insights, and skill requirements.
     """
+    db: Union[Session, Any]
 
     def __init__(self, db: Session):
-        super().__init__()
-        self.db = db
+        super().__init__(db=db)
 
     def _run(self, query: str) -> str:
         """Execute job market analysis."""
@@ -58,7 +58,7 @@ class JobAnalysisTool(BaseTool):
             location_preference = query_data.get("location_preference", "")
 
             # Get user's job postings for market context
-            user_jobs = get_jobs_by_user(self.db, UUID(user_id), limit=50)
+            user_jobs = get_jobs(self.db, UUID(user_id))[:50]
 
             if not user_jobs:
                 return json.dumps(
@@ -144,16 +144,16 @@ class JobAnalysisTool(BaseTool):
 class SkillGapAnalysisTool(BaseTool):
     """Tool for analyzing skill gaps and learning recommendations."""
 
-    name = "skill_gap_analysis_tool"
-    description = """
+    name: str = "skill_gap_analysis_tool"
+    description: str = """
     Analyze skill gaps between current profile and target career goals.
     Input should be a JSON string with keys: user_id, target_roles, career_goals.
     Returns skill gap analysis and learning recommendations.
     """
+    db: Union[Session, Any]
 
     def __init__(self, db: Session):
-        super().__init__()
-        self.db = db
+        super().__init__(db=db)
 
     def _run(self, query: str) -> str:
         """Execute skill gap analysis."""
@@ -255,8 +255,8 @@ class SkillGapAnalysisTool(BaseTool):
 class CareerPathPlannerTool(BaseTool):
     """Tool for creating structured career progression plans."""
 
-    name = "career_path_planner_tool"
-    description = """
+    name: str = "career_path_planner_tool"
+    description: str = """
     Create structured career progression plans with timelines and milestones.
     Input should be a JSON string with keys: current_role, target_role, timeframe, constraints.
     Returns detailed career progression plan with actionable steps.
@@ -426,7 +426,7 @@ class CareerStrategyAgent:
         tools = [
             JobAnalysisTool(db),
             SkillGapAnalysisTool(db),
-            CareerPathPlannerTool(db),
+            CareerPathPlannerTool(),
         ]
 
         # Create the agent
@@ -448,7 +448,7 @@ class CareerStrategyAgent:
     def analyze_career_strategy(
         self,
         user_id: UUID,
-        db: Session,
+        db: Union[Session, Any],
         career_goals: str,
         target_roles: List[str] = None,
         timeframe: str = "2-3 years",
