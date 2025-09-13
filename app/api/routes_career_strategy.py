@@ -162,7 +162,7 @@ def create_career_strategy_plan(
     except HTTPException:
         # Re-raise HTTP exceptions (e.g., validation errors) as-is
         raise
-    
+
     except Exception as e:
         logger.error(
             f"Unexpected error in career strategy planning for user {current_user.id}: {str(e)}",
