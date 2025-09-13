@@ -135,6 +135,52 @@ class LLMService:
             logger.error(f"Unexpected error generating feedback: {str(e)}")
             raise LLMServiceError(f"Failed to generate feedback: {str(e)}")
 
+    def generate_intelligent_analysis(
+        self,
+        prompt: str,
+        analysis_type: str = "market",
+        max_tokens: int = 1500,
+    ) -> str:
+        """Generate detailed intelligent analysis with higher token limits for RAG features."""
+        if not prompt or not prompt.strip():
+            raise LLMServiceError("Analysis prompt cannot be empty")
+
+        try:
+            logger.info(
+                f"Generating {analysis_type} analysis with max_tokens={max_tokens}"
+            )
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert tech recruiter and career strategist with deep market knowledge. Provide specific, actionable, and data-driven insights.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.3,  # Lower temperature for more consistent analysis
+                max_tokens=max_tokens,
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            logger.info(f"Successfully generated {analysis_type} analysis of {len(content)} characters")
+            return content
+
+        except openai.AuthenticationError as e:
+            logger.error(f"OpenAI authentication error in intelligent analysis: {str(e)}")
+            raise LLMServiceError(f"OpenAI authentication failed: {str(e)}")
+        except openai.RateLimitError as e:
+            logger.error(f"OpenAI rate limit error in intelligent analysis: {str(e)}")
+            raise LLMServiceError(f"OpenAI rate limit exceeded: {str(e)}")
+        except openai.APIError as e:
+            logger.error(f"OpenAI API error in intelligent analysis: {str(e)}")
+            raise LLMServiceError(f"OpenAI API error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in intelligent analysis: {str(e)}")
+            raise LLMServiceError(f"Failed to generate intelligent analysis: {str(e)}")
+
     def normalize_skills(self, skills: List[str], context: str = "") -> Dict[str, Any]:
         """
         Normalize and standardize skill names using LLM intelligence.
